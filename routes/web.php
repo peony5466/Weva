@@ -11,6 +11,10 @@ Route::get('/client/token', function () {
     return Inertia::render('client/token');
 })->name('token');
 
+Route::get('/avatar', function () {
+    return Inertia::render('client/avatar');
+})->name('avatar');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');

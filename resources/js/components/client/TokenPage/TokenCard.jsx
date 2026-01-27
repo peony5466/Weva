@@ -1,18 +1,28 @@
 import React from 'react';
-import { Link, router } from '@inertiajs/react';
+import { usePage, router } from '@inertiajs/react';
 
 import wevaXP from '@/assets/images/wevaXP.png';
 import wevaRang from '@/assets/images/wava-rang.png';
 
 const TokenPage = () => {
 
-    const isAuthenticated = false;
+
+    const { auth } = usePage().props;
+    const user = auth.user;
 
     const handleCardClick = () => {
-        if (isAuthenticated) {
-            router.visit('/avatar');
-        } else {
+
+        // verifie si co
+        if (!user) {
             router.visit('/register');
+            return;
+        }
+
+        // redirection de role
+        if (user.role === 'admin') {
+            router.visit('/admin/dashboard');
+        } else {
+            router.visit('/avatar');
         }
     };
 
