@@ -1,10 +1,13 @@
 import React from 'react'
 import Navbar from '@/components/home/navbar'
+import TokenCTA from '@/components/client/TokenPage/TokenCTA'
+import TokenCard from '@/components/client/TokenPage/TokenCard'
 const token = () => {
     return (
         <>
-            <div>token</div>
             <Navbar />
+            <TokenCTA />
+            <TokenCard />
         </>
 
     )
