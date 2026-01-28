@@ -2,10 +2,11 @@
 
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 
 /*
 |--------------------------------------------------------------------------
-| 1. ROUTES PUBLIQUES (Accessibles par tous)
+| 1. ROUTES PUBLIQUES (Accessibles à tous)
 |--------------------------------------------------------------------------
 */
 
@@ -17,42 +18,50 @@ Route::get('/shop', function () {
     return Inertia::render('shop/index');
 })->name('shop');
 
-Route::get('/client/token', function () {
+// Ta page Token reste publique ici
+Route::get('/token', function () {
     return Inertia::render('client/token');
 })->name('token');
 
 
 /*
 |--------------------------------------------------------------------------
-| 2. ROUTES PROTÉGÉES (Utilisateurs connectés uniquement)
+| 2. ROUTES PROTÉGÉES (Connexion requise)
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    // --- ZONE ADMIN ---
-    // Seuls les utilisateurs avec role === 'admin' entrent ici
-    Route::middleware(['role:admin'])->group(function () {
-        Route::get('/dashboard', function () {
+    // Redirection automatique selon le rôle
+    Route::get('/dashboard', function () {
+        if (Auth::user()->role === 'admin') {
             return Inertia::render('dashboard');
-        })->name('dashboard');
+        }
+        // Pour le client, on affiche ton dashboard personnalisé
+        return Inertia::render('client/index');
+    })->name('dashboard');
 
-        // Ajoute ici tes autres routes d'administration (ex: gestion users, etc.)
+    // --- ZONE ADMIN ---
+    Route::middleware(['role:admin'])->prefix('admin')->group(function () {
+        // Tes futures routes admin...
     });
 
     // --- ZONE CLIENT ---
-    // Seuls les utilisateurs avec role === 'client' entrent ici
     Route::middleware(['role:client'])->group(function () {
-        Route::get('/avatar', function () {
+
+        // L'avatar est bien "sous" le dashboard logiquement
+        Route::get('/dashboard/avatar', function () {
             return Inertia::render('client/avatar');
         })->name('avatar');
-
-        // Ajoute ici tes autres routes client (ex: historique tokens, etc.)
     });
+
+    Route::get('/tokens', function () {
+        return Inertia::render('client/mytoken');
+    })->name('token');
 });
 
 /*
 |--------------------------------------------------------------------------
-| 3. AUTHENTIFICATION & PARAMÈTRES (Généré par Laravel)
+| 3. AUTHENTIFICATION & PARAMÈTRES
 |--------------------------------------------------------------------------
 */
 require __DIR__ . '/settings.php';
