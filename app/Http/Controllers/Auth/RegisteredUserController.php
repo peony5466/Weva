@@ -32,7 +32,7 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+            'email' => 'required|string|lowercase|email|max:255|unique:' . User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
@@ -45,7 +45,19 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
 
         Auth::login($user);
+        $origin = $request->input('origin', 'navbar');
 
-        return to_route('dashboard');
+        // Si c'est un Admin, il va toujours au dashboard
+        if ($user->role === 'admin') {
+            return to_route('dashboard');
+        }
+
+        // Pour les clients : redirection selon la provenance
+        if ($origin === 'token') {
+            return to_route('avatar');
+        }
+
+        return to_route('shop');
+        // return to_route('dashboard');
     }
 }
