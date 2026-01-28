@@ -41,3 +41,9 @@ class Product extends Model
     //     return $this->hasMany(Variant::class);
     // }
 }
+
+class Product extends Model
+{
+    //
+    protected $fillable = ['name', 'price', 'color', 'imageSrc', 'imageAlt'];
+    }
