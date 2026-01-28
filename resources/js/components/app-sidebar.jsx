@@ -3,9 +3,10 @@ import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid, UserCircle, ShoppingBag, Coins } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 import AppLogo from './app-logo';
-
+// Ajoute Layers ici
+import { LayoutGrid, UserCircle, Coins, ShoppingBag, Package, Layers } from 'lucide-react';
 export function AppSidebar() {
     const { auth } = usePage().props;
     const user = auth.user;
@@ -18,16 +19,26 @@ export function AppSidebar() {
                 url: route('dashboard'),
                 icon: LayoutGrid,
             },
+            {
+                title: 'Inventory', // Ton nouvel onglet
+                url: route('admin.products.index'), // Doit correspondre au ->name() dans web.php
+                icon: Package,
+            },
+            {
+                title: 'Categories',
+                url: route('admin.categories.index'),
+                icon: Layers, // Utilise Layers pour les catégories
+            },
         ]
         : [
             {
-                title: 'Mon Avatar',
-                url: route('avatar'),
+                title: 'Vip Area',
+                url: route('wevavip'),
                 icon: UserCircle,
             },
             {
-                title: 'Mes Tokens',
-                url: route('token'),
+                title: 'My Tokens',
+                url: route('tokens.index'), // Vérifie si c'est 'token' ou 'tokens.index' selon tes modifs
                 icon: Coins,
             },
             {

@@ -23,7 +23,7 @@ export default function Navbar() {
 
     const navigation = [
         { name: 'Home', href: '/' },
-        { name: 'Weva X Token', href: route('token') },
+        { name: 'Weva X Token', href: route('token.public') },
         { name: 'Collection', href: '#' },
     ];
 
@@ -82,11 +82,11 @@ export default function Navbar() {
                                     <div className="p-1">
                                         <Menu.Item>
                                             <Link
-                                                href={auth.user.role === 'admin' ? route('dashboard') : route('avatar')}
+                                                href={auth.user.role === 'admin' ? route('dashboard') : route('wevavip')}
                                                 className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
                                             >
                                                 <LayoutDashboard className="w-4 h-4" />
-                                                {auth.user.role === 'admin' ? 'Panel Admin' : 'Mon Avatar'}
+                                                {auth.user.role === 'admin' ? 'Panel Admin' : 'Vip Area'}
                                             </Link>
                                         </Menu.Item>
 

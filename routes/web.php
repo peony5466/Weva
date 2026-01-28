@@ -21,7 +21,8 @@ Route::get('/shop', function () {
 // Ta page Token reste publique ici
 Route::get('/token', function () {
     return Inertia::render('client/token');
-})->name('token');
+})->name('token.public');
+
 
 
 /*
@@ -37,26 +38,38 @@ Route::middleware(['auth', 'verified'])->group(function () {
             return Inertia::render('dashboard');
         }
         // Pour le client, on affiche ton dashboard personnalisé
-        return Inertia::render('client/index');
+        return Inertia::render('client/wevavip');
     })->name('dashboard');
 
     // --- ZONE ADMIN ---
-    Route::middleware(['role:admin'])->prefix('admin')->group(function () {
+    Route::middleware(['role:admin'])->prefix('dashboard')->group(function () {
         // Tes futures routes admin...
+        Route::get('/inventory', function () {
+            return Inertia::render('admin/products/index');
+        })->name('admin.products.index');
+
+        Route::get('/categories', function () {
+            return Inertia::render('admin/categories/index');
+        })->name('admin.categories.index');
     });
 
     // --- ZONE CLIENT ---
     Route::middleware(['role:client'])->group(function () {
 
         // L'avatar est bien "sous" le dashboard logiquement
-        Route::get('/dashboard/avatar', function () {
-            return Inertia::render('client/avatar');
-        })->name('avatar');
+        Route::get('/dashboard/wevavip', function () {
+            return Inertia::render('client/wevavip');
+        })->name('wevavip');
+
+        //page es token
+        Route::get('/dashboard/tokens', function () {
+            return Inertia::render('client/mytoken');
+        })->name('token');
     });
 
-    Route::get('/tokens', function () {
-        return Inertia::render('client/mytoken');
-    })->name('token');
+    Route::get('/dashboard/personalize', function () {
+        return Inertia::render('client/customizer');
+    })->name('avatar.customize');
 });
 
 /*
