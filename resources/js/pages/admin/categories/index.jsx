@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head } from '@inertiajs/react';
-import { Plus, Hash, Layers } from 'lucide-react';
+import { Plus, Layers } from 'lucide-react';
 
 const breadcrumbs = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -10,7 +10,7 @@ const breadcrumbs = [
 
 export default function CategoryIndex() {
     const categories = [
-        { id: 1, name: 'Skins', count: 24, slug: 'SKN' },
+
         { id: 2, name: 'Accessories', count: 12, slug: 'ACC' },
         { id: 3, name: 'Limited Edition', count: 5, slug: 'LTD' },
     ];
@@ -19,55 +19,89 @@ export default function CategoryIndex() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="CATEGORIES — WEVA" />
 
-            <div className="flex flex-col gap-12 p-8 lg:p-12 min-h-screen bg-[#0A0A0A] text-white">
+            <div className="flex flex-col gap-12 p-8 lg:p-12 min-h-screen bg-[#050505] text-white overflow-hidden">
 
-                {/* HEADER */}
-                <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-white/10 pb-10">
+                {/* 1. HEADER CHROME - Style Dashboard */}
+                <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-white/10 pb-10 relative group">
                     <div className="space-y-2">
-                        <span className="text-[10px] tracking-[0.5em] text-white/40 uppercase font-light underline underline-offset-8 decoration-white/20">Classification System</span>
-                        <h1 className="text-4xl font-extralight tracking-[0.1em] uppercase text-white">Categories</h1>
+                        <span className="text-[11px] tracking-[0.6em] text-white/30 uppercase font-black italic">Classification_Protocol</span>
+
+                        {/* TITRE CHROME LIQUIDE */}
+                        <div className="relative inline-block">
+                            <h1 className="text-7xl font-[1000] tracking-tighter leading-none uppercase bg-gradient-to-br from-[#fff] via-[#888] to-[#eee] bg-clip-text text-transparent italic skew-x-[-10deg]">
+                                System<br />Categories
+                            </h1>
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                        </div>
                     </div>
 
-                    <button className="flex items-center gap-4 border border-white/20 px-8 py-4 hover:bg-white hover:text-black transition-all duration-700">
-                        <Plus className="w-3 h-3" />
-                        <span className="text-[10px] tracking-[0.3em] uppercase">Create Category</span>
+                    {/* BADGE SYSTEM ONLINE STYLE (Create Button) */}
+                    <button className="relative overflow-hidden bg-gradient-to-br from-[#fff] via-[#888] to-[#eee] px-10 py-4 shadow-[0_0_40px_rgba(255,255,255,0.15)] skew-x-[-15deg] border-r-4 border-white transition-transform hover:scale-105 active:scale-95 duration-300">
+                        <div className="flex items-center gap-4 skew-x-[15deg]">
+                            <Plus className="w-5 h-5 text-black stroke-[3px]" />
+                            <p className="text-[12px] font-[1000] text-black uppercase tracking-[0.4em] italic">
+                                Create_New
+                            </p>
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/80 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
                     </button>
                 </header>
 
-                {/* GRID DE CATEGORIES */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-white/10 border border-white/10">
-                    {categories.map((cat) => (
-                        <div key={cat.id} className="bg-[#0A0A0A] p-10 space-y-8 group hover:bg-[#0F0F0F] transition-all duration-500 relative overflow-hidden">
-                            <div className="flex justify-between items-start relative z-10">
-                                <span className="text-[9px] font-mono text-white/20 tracking-tighter">REF_{cat.slug}</span>
-                                <Layers className="w-4 h-4 text-white/10 group-hover:text-white/40 transition-colors" />
+                {/* 2. CATEGORY CARDS - Style Stat Cards du Dashboard */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    {categories.map((cat, i) => (
+                        <div key={i} className="relative group bg-[#0D0D0D] border border-white/5 p-12 overflow-hidden skew-x-[-5deg] hover:border-white transition-all duration-700">
+                            {/* Reflet permanent en coin style Dashboard */}
+                            <div className="absolute top-0 right-0 w-32 h-1 bg-gradient-to-r from-transparent to-white opacity-50 shadow-[0_0_15px_#fff]"></div>
+
+                            <div className="relative z-10 skew-x-[5deg] space-y-8">
+                                <div className="flex justify-between items-start">
+                                    <p className="text-[10px] tracking-[0.5em] text-white/30 uppercase font-bold italic">// REF_{cat.slug}</p>
+                                    <Layers className="w-4 h-4 text-white/10 group-hover:text-white transition-colors" />
+                                </div>
+
+                                <div>
+                                    {/* VALEUR CHROME */}
+                                    <h2 className="text-5xl font-[1000] tracking-tighter uppercase italic bg-gradient-to-b from-white via-[#999] to-[#444] bg-clip-text text-transparent leading-none mb-4">
+                                        {cat.name}
+                                    </h2>
+                                    <p className="text-[10px] tracking-[0.3em] text-white/40 uppercase font-bold italic">
+                                        {cat.count} Units_Registered
+                                    </p>
+                                </div>
+
+                                <div className="mt-6 h-[1px] w-full bg-white/10 relative overflow-hidden group-hover:bg-white/20 transition-colors">
+                                    <div className="absolute inset-0 bg-white w-1/4 shadow-[0_0_10px_#fff] group-hover:w-full transition-all duration-1000"></div>
+                                </div>
+
+                                <div className="flex gap-6 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                                    <button className="text-[10px] font-black uppercase tracking-widest text-white/60 hover:text-white transition-colors italic border-b border-white/20">Edit</button>
+                                    <button className="text-[10px] font-black uppercase tracking-widest text-white/20 hover:text-red-500 transition-colors italic">Delete</button>
+                                </div>
                             </div>
 
-                            <div className="space-y-2 relative z-10">
-                                <h2 className="text-2xl font-light tracking-[0.1em] uppercase group-hover:translate-x-2 transition-transform duration-500">{cat.name}</h2>
-                                <p className="text-[10px] tracking-[0.2em] text-white/40 uppercase font-bold italic">{cat.count} Items registered</p>
-                            </div>
-
-                            <div className="pt-4 flex gap-4 relative z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                                <button className="text-[9px] tracking-widest uppercase border-b border-white/40 hover:border-white pb-1">Edit</button>
-                                <button className="text-[9px] tracking-widest uppercase border-b border-white/40 hover:border-red-500 hover:text-red-500 pb-1">Delete</button>
-                            </div>
-
-                            {/* Filigrane d'arrière-plan discret */}
-                            <span className="absolute -bottom-4 -right-2 text-6xl font-black text-white/[0.02] pointer-events-none uppercase">
-                                {cat.slug}
-                            </span>
+                            {/* Shimmer au survol sur toute la carte */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.05] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                         </div>
                     ))}
                 </div>
 
-                {/* FOOTER LOG */}
-                <footer className="pt-20 border-t border-white/5">
-                    <p className="text-[9px] tracking-[0.5em] text-white/20 uppercase text-center font-mono">
-                        Secure Database Access — 2026 Weva Corp
-                    </p>
+                {/* 3. LOG FOOTER - Style Logs du Dashboard */}
+                <footer className="mt-auto pt-10 border-t border-white/5 flex justify-between items-center opacity-40">
+                    <div className="flex items-center gap-4">
+                        <div className="h-[1px] w-8 bg-white shadow-[0_0_8px_#fff]"></div>
+                        <p className="text-[9px] tracking-[0.5em] uppercase font-mono italic">Database_Stable_Node_Alpha</p>
+                    </div>
+                    <p className="text-[9px] font-mono">© WEVA_CORP_2026</p>
                 </footer>
             </div>
+
+            <style jsx>{`
+                @keyframes shimmer {
+                    0% { transform: translateX(-100%) skewX(-15deg); }
+                    100% { transform: translateX(200%) skewX(-15deg); }
+                }
+            `}</style>
         </AppLayout>
     );
 }

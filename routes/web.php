@@ -51,6 +51,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/categories', function () {
             return Inertia::render('admin/categories/index');
         })->name('admin.categories.index');
+
+        Route::get('/users', function () {
+            return Inertia::render('admin/users/index');
+        })->name('admin.users.index');
+
+        Route::get('/orders', function () {
+            return Inertia::render('admin/orders/index');
+        })->name('admin.orders.index');
     });
 
     // --- ZONE CLIENT ---
@@ -64,7 +72,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         //page es token
         Route::get('/dashboard/tokens', function () {
             return Inertia::render('client/mytoken');
-        })->name('token');
+        })->name('tokens.my-wallet');
     });
 
     Route::get('/dashboard/personalize', function () {

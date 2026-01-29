@@ -6,7 +6,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { BookOpen } from 'lucide-react';
 import AppLogo from './app-logo';
 // Ajoute Layers ici
-import { LayoutGrid, UserCircle, Coins, ShoppingBag, Package, Layers } from 'lucide-react';
+import { LayoutGrid, UserCircle, Coins, ShoppingBag, Package, Layers, UserCheck, } from 'lucide-react';
 export function AppSidebar() {
     const { auth } = usePage().props;
     const user = auth.user;
@@ -29,6 +29,16 @@ export function AppSidebar() {
                 url: route('admin.categories.index'),
                 icon: Layers, // Utilise Layers pour les catégories
             },
+            {
+                title: 'User Management',
+                url: route('admin.users.index'),
+                icon: UserCheck, // Pense à bien l'importer de lucide-react
+            },
+            {
+                title: 'Orders',
+                url: route('admin.orders.index'),
+                icon: ShoppingBag,
+            },
         ]
         : [
             {
@@ -38,7 +48,7 @@ export function AppSidebar() {
             },
             {
                 title: 'My Tokens',
-                url: route('tokens.index'), // Vérifie si c'est 'token' ou 'tokens.index' selon tes modifs
+                url: route('tokens.my-wallet'), // Vérifie si c'est 'token' ou 'tokens.index' selon tes modifs
                 icon: Coins,
             },
             {
@@ -70,7 +80,7 @@ export function AppSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
 
-            <SidebarContent>
+            <SidebarContent >
                 <NavMain items={mainNavItems} />
             </SidebarContent>
 
