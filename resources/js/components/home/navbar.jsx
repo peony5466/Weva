@@ -24,7 +24,7 @@ export default function Navbar() {
     const navigation = [
         { name: 'Home', href: '/' },
         { name: 'Weva X Token', href: route('token.public') },
-        { name: 'Collection', href: '#' },
+        { name: 'Collection', href: route('shop.index') },
     ];
 
     return (
