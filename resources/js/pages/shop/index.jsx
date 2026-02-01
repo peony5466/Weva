@@ -1,32 +1,34 @@
-import React, { useState } from 'react'; // N'oublie pas l'import de useState !
-import { PRODUCTS } from '@/data/products';
-import Navbar from '@/components/home/navbar';
-import ProductCard from '@/components/ui/productcard';
-import Filters from '@/components/ui/filter';
+import React from 'react';
+import { Head, Link } from '@inertiajs/react'; // Helpers indispensables
 
-export default function ShopIndex() {
-    // 1. Toute la logique doit être ICI, au début de la fonction
-    const [activeFilter, setActiveFilter] = useState('Best sellers');
-
-    const filteredProducts = PRODUCTS.filter(product =>
-        activeFilter === 'All' ? true : product.category === activeFilter
-    );
-
-    // 2. Le return doit être ICI, à la fin de la fonction
+export default function Index({ products }) { // 'products' arrive de Laravel
     return (
-        <div className="min-h-screen bg-white">
-            <Navbar />
+        <>
+            <Head title="Boutique de Vêtements" />
 
-            {/* Conteneur pour espacer du haut à cause de la navbar */}
-            <div className="pt-24">
-                <Filters activeFilter={activeFilter} setActiveFilter={setActiveFilter} />
+            <div className="container mx-auto py-8">
+                <h1 className="text-3xl font-bold mb-6">Notre Collection</h1>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-8 py-10">
-                    {filteredProducts.map(product => (
-                        <ProductCard key={product.id} product={product} />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {products.map((product) => (
+                        <div key={product.id} className="bg-white p-4 shadow rounded-lg">
+                            {/* Affichage de l'image */}
+                            <img src={product.image_path} alt={product.name} className="w-full h-64 object-cover" />
+
+                            <h2 className="mt-4 text-xl">{product.name}</h2>
+                            <p className="text-gray-600">{product.price} €</p>
+
+                            {/* Lien vers la page produit avec le helper Link d'Inertia */}
+                            <Link
+                                href={route('shop.show', product.slug)}
+                                className="mt-4 block bg-black text-white text-center py-2 rounded"
+                            >
+                                Voir le produit
+                            </Link>
+                        </div>
                     ))}
                 </div>
             </div>
-        </div>
+        </>
     );
 }

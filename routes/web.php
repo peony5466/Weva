@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
-
+use App\Http\Controllers\ProductController;
 /*
 |--------------------------------------------------------------------------
 | 1. ROUTES PUBLIQUES (Accessibles à tous)
@@ -18,10 +18,13 @@ Route::get('/shop', function () {
     return Inertia::render('shop/index');
 })->name('shop');
 
-// Ta page Token reste publique ici
+// page Token publique ici
 Route::get('/token', function () {
     return Inertia::render('client/token');
 })->name('token.public');
+
+Route::get('/boutique', [ProductController::class, 'index'])->name('shop.index');
+
 
 
 
@@ -44,9 +47,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // --- ZONE ADMIN ---
     Route::middleware(['role:admin'])->prefix('dashboard')->group(function () {
         // Tes futures routes admin...
-        Route::get('/inventory', function () {
-            return Inertia::render('admin/products/index');
-        })->name('admin.products.index');
+        Route::get('/inventory', [ProductController::class, 'index'])->name('admin.products.index');
 
         Route::get('/categories', function () {
             return Inertia::render('admin/categories/index');
@@ -59,6 +60,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/orders', function () {
             return Inertia::render('admin/orders/index');
         })->name('admin.orders.index');
+
+        Route::post('/admin/products', [ProductController::class, 'store'])->name('products.store');
+        Route::get('/admin/products/create', [ProductController::class, 'create'])->name('products.create');
     });
 
     // --- ZONE CLIENT ---
