@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ShopController;
 /*
 |--------------------------------------------------------------------------
 | 1. ROUTES PUBLIQUES (Accessibles à tous)
@@ -23,8 +24,8 @@ Route::get('/token', function () {
     return Inertia::render('client/token');
 })->name('token.public');
 
-Route::get('/boutique', [ProductController::class, 'index'])->name('shop.index');
-
+Route::get('/product', [ShopController::class, 'index'])->name('shop.index');
+Route::get('/product/{slug}', [ShopController::class, 'show'])->name('shop.show');
 
 
 
