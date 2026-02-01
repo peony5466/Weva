@@ -52,4 +52,13 @@ class ProductController extends Controller
     {
         return Inertia::render('admin/CreateProduct');
     }
+
+    public function destroy(Product $product)
+    {
+
+        $product->delete();
+
+
+        return redirect()->route('admin.products.index')->with('success', 'ASSET_DELETED');
+    }
 }

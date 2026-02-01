@@ -1,7 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link } from '@inertiajs/react';
 import { Plus, Search, Edit2, Trash2 } from 'lucide-react';
-
+import { router } from '@inertiajs/react';
 const breadcrumbs = [
     { title: 'System', href: '/dashboard' },
     { title: 'Product Inventory', href: '/admin/products' },
@@ -14,8 +14,14 @@ export default function ProductIndex({ products = [] }) {
     const getStockTotal = (variants) => {
         return variants ? variants.reduce((sum, v) => sum + v.stock, 0) : 0;
     };
+    const handleDelete = (id) => {
+        if (confirm('CONFIRM_DELETION : Voulez-vous supprimer cet asset ?')) {
+            router.delete(route('products.destroy', id));
+        }
+    };
 
     return (
+
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Inventory — WEVA" />
 
@@ -97,7 +103,12 @@ export default function ProductIndex({ products = [] }) {
 
                                     <div className="flex justify-end gap-6">
                                         <button className="text-white/10 hover:text-white transition-colors"><Edit2 className="w-4 h-4" /></button>
-                                        <button className="text-white/10 hover:text-red-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                                        <button
+                                            onClick={() => handleDelete(product.id)}
+                                            className="text-white/10 hover:text-red-500 transition-colors"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
                                     </div>
                                 </div>
                                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.05] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
