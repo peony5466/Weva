@@ -1,36 +1,81 @@
 import React from 'react';
-import { Head, Link } from '@inertiajs/react'; // Helpers indispensables
+import { Head, Link } from '@inertiajs/react';
 import ClientLayout from '@/layouts/client-layout';
-export default function Index({ products }) { // 'products' arrive de Laravel
+
+export default function Index({ products }) {
+    // Si products est paginé côté Laravel, on utilise products.data
+    const productList = products.data || products;
+
     return (
-        <>
-            <ClientLayout>
-                <Head title="Boutique de Vêtements" />
+        <ClientLayout>
+            <Head title="Collection — WEVA" />
 
-                <div className="container mx-auto py-8">
-                    <h1 className="text-3xl font-bold mb-6">Notre Collection</h1>
+            <div className="min-h-screen bg-[#050505] text-white p-6 lg:p-12">
+                {/* HEADER DE LA COLLECTION */}
+                <header className="mb-16 border-b border-white/10 pb-10">
+                    <span className="text-[11px] tracking-[0.6em] text-white/30 uppercase font-black italic">Season_2026_Assets</span>
+                    <h1 className="text-6xl md:text-8xl font-[1000] tracking-tighter uppercase italic skew-x-[-10deg]">
+                        The_Collection
+                    </h1>
+                </header>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {products.map((product) => (
-                            <div key={product.id} className="bg-white p-4 shadow rounded-lg">
-                                {/* Affichage de l'image */}
-                                <img src={product.image_path} alt={product.name} className="w-full h-64 object-cover" />
+                {/* GRILLE DE PRODUITS */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-16">
+                    {productList.map((product) => (
+                        <div key={product.id} className="group relative flex flex-col">
+                            {/* CONTENEUR IMAGE */}
+                            <div className=" cursor-pointer relative aspect-[3/4] overflow-hidden bg-[#111] border border-white/5 transition-all duration-700 group-hover:border-white/30">
+                                {product.image_path ? (
+                                    <img
+                                        src={`/storage/${product.image_path}`}
+                                        alt={product.name}
+                                        className="w-full h-full object-cover grayscale-[50%] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-white/10 font-black italic uppercase">
+                                        Img_Not_Found
+                                    </div>
+                                )}
 
-                                <h2 className="mt-4 text-xl">{product.name}</h2>
-                                <p className="text-gray-600">{product.price} €</p>
+                                {/* BADGE PRIX AU SURVOL */}
+                                <div className="absolute bottom-4 left-0 bg-white text-black px-4 py-2 translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-500 skew-x-[-15deg]">
+                                    <p className="font-[1000] text-sm skew-x-[15deg]">{product.price}€</p>
+                                </div>
+                            </div>
 
-                                {/* Lien vers la page produit avec le helper Link d'Inertia */}
+                            {/* INFOS PRODUIT */}
+                            <div className="mt-6 space-y-2">
+                                <div className="flex justify-between items-start">
+                                    <h2 className="text-lg font-[1000] uppercase tracking-tighter italic leading-none group-hover:text-white/100 text-white/70 transition-colors">
+                                        {product.name}
+                                    </h2>
+                                    <span className="font-mono text-[10px] text-white/20">
+                                        REF_{product.id.toString().padStart(4, '0')}
+                                    </span>
+                                </div>
+
+                                <p className="text-[10px] text-white/30 uppercase tracking-[0.2em] font-bold line-clamp-1 italic">
+                                    {product.description || 'No_Description_Available'}
+                                </p>
+
                                 <Link
-                                    href={route('shop.show', product.slug)}
-                                    className="mt-4 block bg-black text-white text-center py-2 rounded"
+                                    href={route('shop.show', product.id)} // Utilise ID si tu n'as pas encore de slug
+                                    className="mt-4 block w-full py-4 border border-white/10 text-center text-[10px] font-black uppercase tracking-[0.4em] hover:bg-white hover:text-black transition-all skew-x-[-10deg]"
                                 >
-                                    Voir le produit
+                                    <span className="skew-x-[10deg] block">View_Details</span>
                                 </Link>
                             </div>
-                        ))}
-                    </div>
+                        </div>
+                    ))}
                 </div>
-            </ClientLayout>
-        </>
+
+                {/* MESSAGE SI VIDE */}
+                {productList.length === 0 && (
+                    <div className="py-40 text-center border border-dashed border-white/10">
+                        <p className="text-[11px] tracking-[0.6em] text-white/20 uppercase font-black italic">No_Assets_Detected_In_Store</p>
+                    </div>
+                )}
+            </div>
+        </ClientLayout>
     );
 }
