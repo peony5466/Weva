@@ -9,31 +9,22 @@ const breadcrumbs = [
 ];
 
 export default function ProductIndex({ products, filters }) {
-    // 1. ÉTAT DE RECHERCHE (Initialisé avec les filtres existants)
     const [search, setSearch] = useState(filters.search || '');
     const productList = products.data;
 
-    // 2. LOGIQUE DE RECHERCHE DYNAMIQUE (Debounced)
     useEffect(() => {
-        // On ne déclenche la recherche que si la saisie change par rapport à l'URL
         if (search !== (filters.search || '')) {
             const delayDebounceFn = setTimeout(() => {
                 router.get(
                     route('admin.products.index'),
                     { search: search },
-                    {
-                        preserveState: true,
-                        replace: true,
-                        preserveScroll: true
-                    }
+                    { preserveState: true, replace: true, preserveScroll: true }
                 );
             }, 300);
-
             return () => clearTimeout(delayDebounceFn);
         }
     }, [search]);
 
-    // 3. LOGIQUE MÉTIER
     const getStockTotal = (variants) => {
         return variants ? variants.reduce((sum, v) => sum + v.stock, 0) : 0;
     };
@@ -91,13 +82,13 @@ export default function ProductIndex({ products, filters }) {
 
                 {/* --- LISTE DES PRODUITS --- */}
                 <div className="space-y-4">
-                    {/* Header du tableau */}
+                    {/* Header du tableau : Grid cols 5 */}
                     <div className="grid grid-cols-5 bg-[#0D0D0D] p-6 skew-x-[-5deg] border-l-2 border-white/30 items-center">
-                        {['Ref.', 'Designation', 'Value (EUR)', 'Stock', 'Actions'].map((h, i) => (
-                            <span key={h} className={`text-[10px] font-black tracking-[0.4em] uppercase text-white/20 italic skew-x-[5deg] ${i === 4 ? 'text-right' : ''}`}>
-                                {h}
-                            </span>
-                        ))}
+                        <span className="text-[10px] font-black tracking-[0.4em] uppercase text-white/20 italic skew-x-[5deg]">Asset</span>
+                        <span className="text-[10px] font-black tracking-[0.4em] uppercase text-white/20 italic skew-x-[5deg]">Designation</span>
+                        <span className="text-[10px] font-black tracking-[0.4em] uppercase text-white/20 italic skew-x-[5deg]">Value</span>
+                        <span className="text-[10px] font-black tracking-[0.4em] uppercase text-white/20 italic skew-x-[5deg]">Stock</span>
+                        <span className="text-[10px] font-black tracking-[0.4em] uppercase text-white/20 italic skew-x-[5deg] text-right">Actions</span>
                     </div>
 
                     <div className="space-y-2">
@@ -105,20 +96,45 @@ export default function ProductIndex({ products, filters }) {
                             productList.map((product) => (
                                 <div key={product.id} className="relative group bg-[#080808] border border-white/5 p-8 overflow-hidden skew-x-[-5deg] hover:border-white/40 transition-all duration-500">
                                     <div className="grid grid-cols-5 w-full items-center relative z-10 skew-x-[5deg]">
-                                        <span className="font-mono text-[10px] text-white/10 group-hover:text-white transition-colors">
-                                            #{product.id.toString().padStart(4, '0')}
-                                        </span>
+
+                                        {/* COL 1: IMAGE + ID */}
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-14 bg-[#111] border border-white/10 overflow-hidden relative group-hover:border-white/40 transition-colors skew-x-[-10deg]">
+                                                {product.image_path ? (
+                                                    <img
+                                                        src={`/storage/${product.image_path}`}
+                                                        alt={product.name}
+                                                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500 skew-x-[10deg] scale-125"
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-[8px] text-white/10 uppercase font-black italic skew-x-[10deg]">
+                                                        N_A
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <span className="font-mono text-[10px] text-white/10 group-hover:text-white transition-colors">
+                                                #{product.id.toString().padStart(4, '0')}
+                                            </span>
+                                        </div>
+
+                                        {/* COL 2: DESIGNATION */}
                                         <span className="text-sm font-[1000] tracking-[0.1em] uppercase bg-gradient-to-r from-white to-[#555] bg-clip-text text-transparent italic">
                                             {product.name}
                                         </span>
+
+                                        {/* COL 3: VALUE */}
                                         <span className="text-lg font-[1000] tracking-tighter text-white italic">
                                             {product.price}€
                                         </span>
+
+                                        {/* COL 4: STOCK */}
                                         <div>
                                             <span className={`text-[9px] font-black px-4 py-1 border skew-x-[-10deg] inline-block ${getStockTotal(product.variants) < 5 ? 'border-red-500 text-red-500' : 'border-white/10 text-white/40 group-hover:border-white group-hover:text-white'}`}>
                                                 <span className="skew-x-[10deg] block uppercase">{getStockTotal(product.variants)} PCS</span>
                                             </span>
                                         </div>
+
+                                        {/* COL 5: ACTIONS */}
                                         <div className="flex justify-end gap-6">
                                             <Link href={route('products.edit', product.id)} className="text-white/10 hover:text-white transition-colors">
                                                 <Edit2 className="w-4 h-4" />
@@ -128,7 +144,6 @@ export default function ProductIndex({ products, filters }) {
                                             </button>
                                         </div>
                                     </div>
-                                    {/* Effet au survol */}
                                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                                 </div>
                             ))
@@ -140,7 +155,7 @@ export default function ProductIndex({ products, filters }) {
                     </div>
                 </div>
 
-                {/* --- SYSTÈME DE PAGINATION --- */}
+                {/* --- PAGINATION --- */}
                 <div className="flex justify-center items-center gap-2 mt-8">
                     {products.links.map((link, index) => (
                         <Link

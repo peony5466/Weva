@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Product;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -82,11 +83,21 @@ class ProductController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'price' => 'required|numeric',
-            'description' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048', // Max 2Mo
         ]);
+
+        if ($request->hasFile('image')) {
+            // Supprimer l'ancienne image si elle existe
+            if ($product->image_path) {
+                Storage::disk('public')->delete($product->image_path);
+            }
+            // Stocker la nouvelle
+            $path = $request->file('image')->store('products', 'public');
+            $validated['image_path'] = $path;
+        }
 
         $product->update($validated);
 
-        return redirect()->route('admin.products.index')->with('message', 'Asset updated successfully');
+        return redirect()->route('admin.products.index');
     }
 }

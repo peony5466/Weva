@@ -1,13 +1,14 @@
 import React from 'react'
-import Navbar from '@/components/home/navbar'
+import ClientLayout from '@/layouts/client-layout'
 import TokenCTA from '@/components/client/TokenPage/TokenCTA'
 import TokenCard from '@/components/client/TokenPage/TokenCard'
 const token = () => {
     return (
         <>
-            <Navbar />
-            <TokenCTA />
-            <TokenCard />
+            <ClientLayout >
+                <TokenCTA />
+                <TokenCard />
+            </ClientLayout>
         </>
 
     )

@@ -1,7 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
-import { Head, useForm } from '@inertiajs/react';
-import { Save, ArrowLeft } from 'lucide-react';
-import { Link } from '@inertiajs/react';
+import { Head, useForm, Link } from '@inertiajs/react';
+import { Save, ArrowLeft, Upload, Image as ImageIcon, X } from 'lucide-react';
+import { useState } from 'react';
 
 const breadcrumbs = [
     { title: 'Product Inventory', href: '/admin/products' },
@@ -9,18 +9,28 @@ const breadcrumbs = [
 ];
 
 export default function Edit({ product }) {
-    // Initialisation du formulaire avec les données existantes du produit
-    const { data, setData, put, processing, errors } = useForm({
+    // État local pour la preview de l'image sélectionnée
+    const [preview, setPreview] = useState(product.image_path ? `/storage/${product.image_path}` : null);
+
+    const { data, setData, post, processing, errors } = useForm({
         name: product.name || '',
         price: product.price || '',
         description: product.description || '',
-        // On peut imaginer une gestion simplifiée du stock ici ou par variantes
+        image: null,
+        _method: 'PUT',
     });
+
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setData('image', file);
+            setPreview(URL.createObjectURL(file)); // Génère un lien temporaire pour la preview
+        }
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // On utilise PUT pour la mise à jour dans Laravel Resource
-        put(route('products.update', product.id));
+        post(route('products.update', product.id));
     };
 
     return (
@@ -28,7 +38,6 @@ export default function Edit({ product }) {
             <Head title={`Edit ${product.name} — WEVA`} />
 
             <div className="flex flex-col gap-12 p-8 lg:p-12 min-h-screen bg-[#050505] text-white">
-
                 {/* HEADER */}
                 <header className="flex justify-between items-end border-b border-white/10 pb-10">
                     <div className="space-y-2">
@@ -37,70 +46,101 @@ export default function Edit({ product }) {
                             Edit_Asset
                         </h1>
                     </div>
-
                     <Link href={route('admin.products.index')} className="text-white/40 hover:text-white flex items-center gap-2 uppercase text-[10px] font-black tracking-widest transition-colors">
                         <ArrowLeft className="w-4 h-4" /> Back_To_Registry
                     </Link>
                 </header>
 
-                <form onSubmit={handleSubmit} className="max-w-4xl space-y-10">
+                <form onSubmit={handleSubmit} className="max-w-5xl space-y-12">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
 
-                    {/* CHAMP : NOM DU PRODUIT */}
-                    <div className="space-y-4 group">
-                        <label className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20 group-focus-within:text-white transition-colors italic">
-                            Designation_Label
-                        </label>
-                        <div className="relative skew-x-[-5deg]">
-                            <input
-                                type="text"
-                                value={data.name}
-                                onChange={e => setData('name', e.target.value)}
-                                className="w-full bg-[#0D0D0D] border border-white/10 p-5 text-xl font-bold uppercase tracking-tight focus:border-white focus:ring-0 transition-all outline-none"
-                            />
-                            {errors.name && <div className="text-red-500 text-[10px] mt-2 uppercase font-black italic">{errors.name}</div>}
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                        {/* CHAMP : PRIX */}
+                        {/* COLONNE GAUCHE : VISUAL ASSET (IMAGE UPLOAD) */}
                         <div className="space-y-4">
-                            <label className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20 italic">Value_Currency_EUR</label>
-                            <div className="relative skew-x-[-5deg]">
+                            <label className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20 italic">Visual_Asset_Capture</label>
+
+                            <div className="relative group aspect-[3/4] bg-[#0D0D0D] border-2 border-dashed border-white/10 hover:border-white/40 transition-all flex flex-col items-center justify-center overflow-hidden skew-x-[-2deg]">
+                                {preview ? (
+                                    <>
+                                        <img src={preview} className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" alt="Preview" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60"></div>
+                                        <button
+                                            type="button"
+                                            onClick={() => { setPreview(null); setData('image', null); }}
+                                            className="absolute top-4 right-4 bg-red-600 p-2 hover:bg-red-500 transition-colors"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </>
+                                ) : (
+                                    <div className="flex flex-col items-center gap-4 text-white/20 group-hover:text-white transition-colors">
+                                        <Upload className="w-8 h-8" />
+                                        <span className="text-[9px] font-black tracking-[0.3em] uppercase">Upload_Required</span>
+                                    </div>
+                                )}
+
                                 <input
-                                    type="number"
-                                    step="0.01"
-                                    value={data.price}
-                                    onChange={e => setData('price', e.target.value)}
-                                    className="w-full bg-[#0D0D0D] border border-white/10 p-5 text-xl font-mono focus:border-white focus:ring-0 transition-all outline-none"
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                    className="absolute inset-0 opacity-0 cursor-pointer"
                                 />
-                                {errors.price && <div className="text-red-500 text-[10px] mt-2 uppercase font-black italic">{errors.price}</div>}
                             </div>
+                            {errors.image && <p className="text-red-500 text-[9px] uppercase font-black">{errors.image}</p>}
                         </div>
 
-                        {/* CHAMP : DESCRIPTION (Optionnel pour l'instant) */}
-                        <div className="space-y-4">
-                            <label className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20 italic">Status_Log</label>
-                            <div className="relative skew-x-[-5deg]">
-                                <textarea
-                                    value={data.description}
-                                    onChange={e => setData('description', e.target.value)}
-                                    className="w-full bg-[#0D0D0D] border border-white/10 p-5 min-h-[100px] focus:border-white focus:ring-0 transition-all outline-none"
-                                />
+                        {/* COLONNE DROITE : FORMULAIRE DATA */}
+                        <div className="lg:col-span-2 space-y-8">
+                            <div className="space-y-4 group">
+                                <label className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20 italic">Designation_Label</label>
+                                <div className="relative skew-x-[-5deg]">
+                                    <input
+                                        type="text"
+                                        value={data.name}
+                                        onChange={e => setData('name', e.target.value)}
+                                        className="w-full bg-[#0D0D0D] border border-white/10 p-5 text-xl font-bold uppercase tracking-tight focus:border-white focus:ring-0 transition-all outline-none"
+                                    />
+                                </div>
                             </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                <div className="space-y-4">
+                                    <label className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20 italic">Value_Currency_EUR</label>
+                                    <div className="relative skew-x-[-5deg]">
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            value={data.price}
+                                            onChange={e => setData('price', e.target.value)}
+                                            className="w-full bg-[#0D0D0D] border border-white/10 p-5 text-xl font-mono focus:border-white focus:ring-0 transition-all outline-none"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <label className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20 italic">Status_Log</label>
+                                    <div className="relative skew-x-[-5deg]">
+                                        <textarea
+                                            value={data.description}
+                                            onChange={e => setData('description', e.target.value)}
+                                            className="w-full bg-[#0D0D0D] border border-white/10 p-5 min-h-[100px] focus:border-white focus:ring-0 transition-all outline-none text-[12px] leading-relaxed"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* BOUTON DE SAUVEGARDE */}
+                            <button
+                                type="submit"
+                                disabled={processing}
+                                className="w-full relative overflow-hidden bg-white text-black py-6 skew-x-[-15deg] font-[1000] uppercase tracking-[0.5em] italic hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+                            >
+                                <div className="flex items-center justify-center gap-3 skew-x-[15deg]">
+                                    <Save className="w-5 h-5" />
+                                    <span>Sync_Database_v.1</span>
+                                </div>
+                            </button>
                         </div>
                     </div>
-
-                    {/* BOUTON DE SAUVEGARDE */}
-                    <button
-                        type="submit"
-                        disabled={processing}
-                        className="relative overflow-hidden bg-white text-black px-12 py-5 skew-x-[-15deg] font-[1000] uppercase tracking-[0.3em] italic hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
-                    >
-                        <div className="flex items-center gap-3 skew-x-[15deg]">
-                            <Save className="w-5 h-5" />
-                            <span>Push_Changes</span>
-                        </div>
-                    </button>
                 </form>
             </div>
         </AppLayout>
