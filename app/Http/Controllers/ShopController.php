@@ -9,7 +9,7 @@ class ShopController extends Controller
 {
     public function index()
     {
-        return Inertia::render('Shop/Index', [
+        return Inertia::render('Shop/index', [
             'products' => Product::with('variants')->where('is_active', true)->get()
         ]);
     }
