@@ -61,4 +61,25 @@ class ProductController extends Controller
 
         return redirect()->route('admin.products.index')->with('success', 'ASSET_DELETED');
     }
+
+    public function edit(Product $product)
+    {
+
+        return Inertia::render('admin/products/edit', [
+            'product' => $product->load('variants')
+        ]);
+    }
+
+    public function update(Request $request, Product $product)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'price' => 'required|numeric',
+            'description' => 'nullable|string',
+        ]);
+
+        $product->update($validated);
+
+        return redirect()->route('admin.products.index')->with('message', 'Asset updated successfully');
+    }
 }

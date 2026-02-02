@@ -69,40 +69,48 @@ export default function ProductIndex({ products = [] }) {
 
                 {/* 3. TABLEAU DYNAMIQUE */}
                 <div className="space-y-4">
-                    <div className="grid grid-cols-6 bg-[#0D0D0D] p-6 skew-x-[-5deg] border-l-2 border-white/30">
-                        {['Ref.', 'Designation', 'Category', 'Value (EUR)', 'Stock', 'Actions'].map((h) => (
-                            <span key={h} className="text-[10px] font-black tracking-[0.4em] uppercase text-white/20 italic skew-x-[5deg]">{h}</span>
-                        ))}
+                    {/* EN-TÊTE DU TABLEAU */}
+                    <div className="grid grid-cols-5 bg-[#0D0D0D] p-6 skew-x-[-5deg] border-l-2 border-white/30 items-center">
+                        <span className="text-[10px] font-black tracking-[0.4em] uppercase text-white/20 italic skew-x-[5deg]">Ref.</span>
+                        <span className="text-[10px] font-black tracking-[0.4em] uppercase text-white/20 italic skew-x-[5deg]">Designation</span>
+                        <span className="text-[10px] font-black tracking-[0.4em] uppercase text-white/20 italic skew-x-[5deg]">Value (EUR)</span>
+                        <span className="text-[10px] font-black tracking-[0.4em] uppercase text-white/20 italic skew-x-[5deg]">Stock</span>
+                        {/* Alignement à droite pour le titre Actions */}
+                        <span className="text-[10px] font-black tracking-[0.4em] uppercase text-white/20 italic skew-x-[5deg] text-right">Actions</span>
                     </div>
 
                     <div className="space-y-2">
-                        {/* On boucle sur les VRAIS produits reçus de Laravel */}
                         {products.map((product) => (
-                            <div key={product.id} className="relative group bg-[#080808] border border-white/5 p-8 flex justify-between items-center overflow-hidden skew-x-[-5deg] hover:border-white/40 transition-all duration-500">
-                                <div className="grid grid-cols-6 w-full items-center relative z-10 skew-x-[5deg]">
-                                    <span className="font-mono text-[10px] text-white/10 group-hover:text-white transition-colors">#{product.id.toString().padStart(4, '0')}</span>
+                            <div key={product.id} className="relative group bg-[#080808] border border-white/5 p-8 overflow-hidden skew-x-[-5deg] hover:border-white/40 transition-all duration-500">
+                                {/* LIGNE DU PRODUIT : On utilise la même grille grid-cols-5 */}
+                                <div className="grid grid-cols-5 w-full items-center relative z-10 skew-x-[5deg]">
+
+                                    <span className="font-mono text-[10px] text-white/10 group-hover:text-white transition-colors">
+                                        #{product.id.toString().padStart(4, '0')}
+                                    </span>
 
                                     <span className="text-sm font-[1000] tracking-[0.1em] uppercase bg-gradient-to-r from-white to-[#555] bg-clip-text text-transparent italic">
                                         {product.name}
                                     </span>
 
-                                    <span className="text-[10px] font-black text-white/20 uppercase tracking-widest italic">
-                                        {product.category || 'CLOTHING'}
-                                    </span>
-
                                     <span className="text-lg font-[1000] tracking-tighter text-white italic">
-                                        {product.price}
+                                        {product.price}€
                                     </span>
 
                                     <div>
-                                        {/* Calcul dynamique du stock total via les variantes */}
                                         <span className={`text-[9px] font-black px-4 py-1 border skew-x-[-10deg] inline-block ${getStockTotal(product.variants) < 5 ? 'border-red-500 text-red-500' : 'border-white/10 text-white/40 group-hover:border-white group-hover:text-white'}`}>
                                             <span className="skew-x-[10deg] block uppercase">{getStockTotal(product.variants)} PCS</span>
                                         </span>
                                     </div>
 
+                                    {/* ACTIONS : Alignées à droite pour correspondre au header */}
                                     <div className="flex justify-end gap-6">
-                                        <button className="text-white/10 hover:text-white transition-colors"><Edit2 className="w-4 h-4" /></button>
+                                        <Link
+                                            href={route('products.edit', product.id)}
+                                            className="text-white/10 hover:text-white transition-colors"
+                                        >
+                                            <Edit2 className="w-4 h-4" />
+                                        </Link>
                                         <button
                                             onClick={() => handleDelete(product.id)}
                                             className="text-white/10 hover:text-red-500 transition-colors"
@@ -111,17 +119,12 @@ export default function ProductIndex({ products = [] }) {
                                         </button>
                                     </div>
                                 </div>
+
+                                {/* EFFETS VISUELS (Shimmer & Border) */}
                                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.05] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                                 <div className="absolute left-0 top-0 h-full w-[2px] bg-white opacity-0 group-hover:opacity-100 shadow-[0_0_15px_#fff] transition-opacity"></div>
                             </div>
                         ))}
-
-                        {/* Message si aucun produit n'existe */}
-                        {products.length === 0 && (
-                            <div className="text-center py-20 border border-dashed border-white/10 skew-x-[-5deg]">
-                                <p className="text-[10px] tracking-[0.5em] text-white/20 uppercase italic skew-x-[5deg]">No_Assets_Detected_In_Registry</p>
-                            </div>
-                        )}
                     </div>
                 </div>
             </div>
