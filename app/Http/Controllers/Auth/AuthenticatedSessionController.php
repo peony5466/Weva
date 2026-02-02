@@ -40,7 +40,7 @@ class AuthenticatedSessionController extends Controller
         }
 
         // 2. Si c'est un Client -> Shop (ou Avatar selon ton choix)
-        return redirect()->intended(route('shop'));
+        return redirect()->intended(route('shop.index'));
     }
     /**
      * Destroy an authenticated session.

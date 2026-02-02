@@ -1,6 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router } from '@inertiajs/react';
-import { Plus, Search, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Layers } from 'lucide-react'; // Ajout de Layers pour l'icône
 import { useState, useEffect } from 'react';
 
 const breadcrumbs = [
@@ -31,7 +31,7 @@ export default function ProductIndex({ products, filters }) {
 
     const handleDelete = (id) => {
         if (confirm('CONFIRM_DELETION : Voulez-vous supprimer cet asset ?')) {
-            router.delete(route('products.destroy', id));
+            router.delete(route('admin.products.destroy', id));
         }
     };
 
@@ -53,7 +53,7 @@ export default function ProductIndex({ products, filters }) {
                     </div>
 
                     <Link
-                        href={route('products.create')}
+                        href={route('admin.products.create')}
                         className="relative overflow-hidden bg-gradient-to-br from-[#fff] via-[#888] to-[#eee] px-10 py-4 shadow-[0_0_40px_rgba(255,255,255,0.15)] skew-x-[-15deg] border-r-4 border-white group transition-transform hover:scale-105 active:scale-95 block"
                     >
                         <div className="flex items-center gap-4 skew-x-[15deg]">
@@ -82,10 +82,11 @@ export default function ProductIndex({ products, filters }) {
 
                 {/* --- LISTE DES PRODUITS --- */}
                 <div className="space-y-4">
-                    {/* Header du tableau : Grid cols 5 */}
-                    <div className="grid grid-cols-5 bg-[#0D0D0D] p-6 skew-x-[-5deg] border-l-2 border-white/30 items-center">
+                    {/* Header : Changé à grid-cols-6 */}
+                    <div className="grid grid-cols-6 bg-[#0D0D0D] p-6 skew-x-[-5deg] border-l-2 border-white/30 items-center">
                         <span className="text-[10px] font-black tracking-[0.4em] uppercase text-white/20 italic skew-x-[5deg]">Asset</span>
                         <span className="text-[10px] font-black tracking-[0.4em] uppercase text-white/20 italic skew-x-[5deg]">Designation</span>
+                        <span className="text-[10px] font-black tracking-[0.4em] uppercase text-white/20 italic skew-x-[5deg]">Category</span>
                         <span className="text-[10px] font-black tracking-[0.4em] uppercase text-white/20 italic skew-x-[5deg]">Value</span>
                         <span className="text-[10px] font-black tracking-[0.4em] uppercase text-white/20 italic skew-x-[5deg]">Stock</span>
                         <span className="text-[10px] font-black tracking-[0.4em] uppercase text-white/20 italic skew-x-[5deg] text-right">Actions</span>
@@ -95,7 +96,7 @@ export default function ProductIndex({ products, filters }) {
                         {productList.length > 0 ? (
                             productList.map((product) => (
                                 <div key={product.id} className="relative group bg-[#080808] border border-white/5 p-8 overflow-hidden skew-x-[-5deg] hover:border-white/40 transition-all duration-500">
-                                    <div className="grid grid-cols-5 w-full items-center relative z-10 skew-x-[5deg]">
+                                    <div className="grid grid-cols-6 w-full items-center relative z-10 skew-x-[5deg]">
 
                                         {/* COL 1: IMAGE + ID */}
                                         <div className="flex items-center gap-4">
@@ -122,21 +123,28 @@ export default function ProductIndex({ products, filters }) {
                                             {product.name}
                                         </span>
 
-                                        {/* COL 3: VALUE */}
+                                        {/* COL 3: CATEGORY (NOUVEAU) */}
+                                        <div className="flex items-center">
+                                            <span className="text-[10px] font-black tracking-widest uppercase italic px-3 py-1 bg-white/5 border border-white/10 text-white/40 group-hover:text-white group-hover:border-white/30 transition-all">
+                                                {product.category ? product.category.name : 'UNCLASSIFIED'}
+                                            </span>
+                                        </div>
+
+                                        {/* COL 4: VALUE */}
                                         <span className="text-lg font-[1000] tracking-tighter text-white italic">
                                             {product.price}€
                                         </span>
 
-                                        {/* COL 4: STOCK */}
+                                        {/* COL 5: STOCK */}
                                         <div>
                                             <span className={`text-[9px] font-black px-4 py-1 border skew-x-[-10deg] inline-block ${getStockTotal(product.variants) < 5 ? 'border-red-500 text-red-500' : 'border-white/10 text-white/40 group-hover:border-white group-hover:text-white'}`}>
                                                 <span className="skew-x-[10deg] block uppercase">{getStockTotal(product.variants)} PCS</span>
                                             </span>
                                         </div>
 
-                                        {/* COL 5: ACTIONS */}
+                                        {/* COL 6: ACTIONS */}
                                         <div className="flex justify-end gap-6">
-                                            <Link href={route('products.edit', product.id)} className="text-white/10 hover:text-white transition-colors">
+                                            <Link href={route('admin.products.edit', product.id)} className="text-white/10 hover:text-white transition-colors">
                                                 <Edit2 className="w-4 h-4" />
                                             </Link>
                                             <button onClick={() => handleDelete(product.id)} className="text-white/10 hover:text-red-500 transition-colors">

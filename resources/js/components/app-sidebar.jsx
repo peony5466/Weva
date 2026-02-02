@@ -53,7 +53,7 @@ export function AppSidebar() {
             },
             {
                 title: 'Boutique',
-                url: route('shop'),
+                url: route('shop.index'),
                 icon: ShoppingBag,
             },
         ];

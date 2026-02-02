@@ -2,8 +2,9 @@ import React from 'react';
 import { Head, Link } from '@inertiajs/react';
 import ClientLayout from '@/layouts/client-layout';
 
+
+
 export default function Index({ products }) {
-    // Si products est paginé côté Laravel, on utilise products.data
     const productList = products.data || products;
 
     return (
@@ -24,7 +25,16 @@ export default function Index({ products }) {
                     {productList.map((product) => (
                         <div key={product.id} className="group relative flex flex-col">
                             {/* CONTENEUR IMAGE */}
-                            <div className=" cursor-pointer relative aspect-[3/4] overflow-hidden bg-[#111] border border-white/5 transition-all duration-700 group-hover:border-white/30">
+                            <div className="cursor-pointer relative aspect-[3/4] overflow-hidden bg-[#111] border border-white/5 transition-all duration-700 group-hover:border-white/30">
+
+                                {/* --- ÉTIQUETTE LIMITED EDITION --- */}
+                                {/* On force la comparaison pour avoir un vrai true/false */}
+                                {product.is_limited === 1 && (
+                                    <div className="absolute top-4 left-[-35px] ...">
+                                        Limited
+                                    </div>
+                                )}
+
                                 {product.image_path ? (
                                     <img
                                         src={`/storage/${product.image_path}`}
@@ -59,7 +69,7 @@ export default function Index({ products }) {
                                 </p>
 
                                 <Link
-                                    href={route('shop.show', product.id)} // Utilise ID si tu n'as pas encore de slug
+                                    href={route('shop.show', product.id)}
                                     className="mt-4 block w-full py-4 border border-white/10 text-center text-[10px] font-black uppercase tracking-[0.4em] hover:bg-white hover:text-black transition-all skew-x-[-10deg]"
                                 >
                                     <span className="skew-x-[10deg] block">View_Details</span>
@@ -68,13 +78,7 @@ export default function Index({ products }) {
                         </div>
                     ))}
                 </div>
-
-                {/* MESSAGE SI VIDE */}
-                {productList.length === 0 && (
-                    <div className="py-40 text-center border border-dashed border-white/10">
-                        <p className="text-[11px] tracking-[0.6em] text-white/20 uppercase font-black italic">No_Assets_Detected_In_Store</p>
-                    </div>
-                )}
+                {/* ... reste du code ... */}
             </div>
         </ClientLayout>
     );

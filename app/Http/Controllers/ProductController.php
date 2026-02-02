@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Product;
+use App\Models\Category;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
@@ -14,67 +15,50 @@ class ProductController extends Controller
     {
         return Inertia::render('admin/products/index', [
             'products' => Product::query()
-                ->with('variants')
+                ->with(['category']) // On garde uniquement la catégorie
                 ->when($request->input('search'), function ($query, $search) {
                     $query->where('name', 'like', "%{$search}%");
                 })
-                ->paginate(5)
-                ->withQueryString(), // Indispensable pour garder la recherche en page 2
-            'filters' => $request->only(['search']), // Indispensable pour la comparaison React
+                ->paginate(10)
+                ->withQueryString(),
+            'filters' => $request->only(['search']),
+        ]);
+    }
+
+    public function create()
+    {
+        return Inertia::render('admin/CreateProduct', [
+            'categories' => Category::all()
         ]);
     }
 
     public function store(Request $request)
     {
-        // 1. Validation des données
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
-            'variants' => 'required|array|min:1',
-            'variants.*.size' => 'required|string',
-            'variants.*.stock' => 'required|integer|min:0',
+            'category_id' => 'nullable|exists:categories,id',
+            'is_limited' => 'boolean',
         ]);
 
-        // 2. Création du produit
-        $product = Product::create([
+        Product::create([
             'name' => $validated['name'],
             'slug' => Str::slug($validated['name']),
             'description' => $validated['description'],
             'price' => $validated['price'],
+            'category_id' => $validated['category_id'],
+            'is_limited' => $request->boolean('is_limited'),
         ]);
-
-
-        foreach ($validated['variants'] as $variant) {
-            $product->variants()->create([
-                'size' => $variant['size'],
-                'stock' => $variant['stock'],
-                'sku' => strtoupper(Str::random(8)),
-            ]);
-        }
 
         return redirect()->route('admin.products.index');
     }
 
-    public function create()
-    {
-        return Inertia::render('admin/CreateProduct');
-    }
-
-    public function destroy(Product $product)
-    {
-
-        $product->delete();
-
-
-        return redirect()->route('admin.products.index')->with('success', 'ASSET_DELETED');
-    }
-
     public function edit(Product $product)
     {
-
         return Inertia::render('admin/products/edit', [
-            'product' => $product->load('variants')
+            'product' => $product, // Plus de .load('variants')
+            'categories' => Category::all()
         ]);
     }
 
@@ -83,21 +67,29 @@ class ProductController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'price' => 'required|numeric',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048', // Max 2Mo
+            'category_id' => 'nullable|exists:categories,id',
+            'is_limited' => 'boolean',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
         if ($request->hasFile('image')) {
-            // Supprimer l'ancienne image si elle existe
             if ($product->image_path) {
                 Storage::disk('public')->delete($product->image_path);
             }
-            // Stocker la nouvelle
             $path = $request->file('image')->store('products', 'public');
             $validated['image_path'] = $path;
         }
 
+        $validated['is_limited'] = $request->boolean('is_limited');
+
         $product->update($validated);
 
         return redirect()->route('admin.products.index');
+    }
+
+    public function destroy(Product $product)
+    {
+        $product->delete();
+        return redirect()->route('admin.products.index')->with('success', 'ASSET_DELETED');
     }
 }

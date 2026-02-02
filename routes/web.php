@@ -5,9 +5,11 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ShopController;
+use App\Http\Controllers\CategoryController;
+
 /*
 |--------------------------------------------------------------------------
-| 1. ROUTES PUBLIQUES (Accessibles à tous)
+| 1. ROUTES PUBLIQUES
 |--------------------------------------------------------------------------
 */
 
@@ -15,74 +17,71 @@ Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
 
-Route::get('/shop', function () {
-    return Inertia::render('shop/index');
-})->name('shop');
+// Boutique
+Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
+// ici page detail des produits
+Route::get('/shop/{product}', [ShopController::class, 'show'])->name('shop.show');
 
-// page Token publique ici
+// Page Token publique
 Route::get('/token', function () {
     return Inertia::render('client/token');
 })->name('token.public');
 
-Route::get('/product', [ShopController::class, 'index'])->name('shop.index');
-Route::get('/product/{slug}', [ShopController::class, 'show'])->name('shop.show');
-
-
 
 /*
 |--------------------------------------------------------------------------
-| 2. ROUTES PROTÉGÉES (Connexion requise)
+| 2. ROUTES PROTÉGÉES 
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    // Redirection automatique selon le rôle
+    // Dispatcher de Dashboard
     Route::get('/dashboard', function () {
         if (Auth::user()->role === 'admin') {
             return Inertia::render('dashboard');
         }
-        // Pour le client, on affiche ton dashboard personnalisé
-        return Inertia::render('client/wevavip');
+        return redirect()->route('wevavip');
     })->name('dashboard');
 
-    // --- ZONE ADMIN ---
-    Route::middleware(['role:admin'])->prefix('dashboard')->group(function () {
-        // Tes futures routes admin...
-        Route::get('/inventory', [ProductController::class, 'index'])->name('admin.products.index');
+    /* --- ZONE ADMIN --- */
+    Route::middleware(['role:admin'])->prefix('dashboard/admin')->name('admin.')->group(function () {
 
-        Route::get('/categories', function () {
-            return Inertia::render('admin/categories/index');
-        })->name('admin.categories.index');
+        // Gestion des Produits 
+        Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+        Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
+        Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+        Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
+        Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
+        Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
 
+        // Gestion des Catégories 
+        Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+        Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
+        Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
+        Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+
+        // Autres pages Admin
         Route::get('/users', function () {
             return Inertia::render('admin/users/index');
-        })->name('admin.users.index');
+        })->name('users.index');
 
         Route::get('/orders', function () {
             return Inertia::render('admin/orders/index');
-        })->name('admin.orders.index');
-
-        Route::post('/admin/products', [ProductController::class, 'store'])->name('products.store');
-        Route::get('/admin/products/create', [ProductController::class, 'create'])->name('products.create');
-        Route::delete('/admin/products/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
-        Route::get('/admin/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
-        Route::put('/admin/products/{product}', [ProductController::class, 'update'])->name('products.update');
+        })->name('orders.index');
     });
 
-    // --- ZONE CLIENT ---
+    /* --- ZONE CLIENT --- */
     Route::middleware(['role:client'])->group(function () {
-
-        // L'avatar est bien "sous" le dashboard logiquement
         Route::get('/dashboard/wevavip', function () {
             return Inertia::render('client/wevavip');
         })->name('wevavip');
 
-        //page es token
         Route::get('/dashboard/tokens', function () {
             return Inertia::render('client/mytoken');
         })->name('tokens.my-wallet');
     });
 
+    // Customizer (Commun ou spécifique)
     Route::get('/dashboard/personalize', function () {
         return Inertia::render('client/customizer');
     })->name('avatar.customize');
@@ -90,7 +89,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| 3. AUTHENTIFICATION & PARAMÈTRES
+| 3. AUTHENTIFICATION
 |--------------------------------------------------------------------------
 */
 require __DIR__ . '/settings.php';

@@ -28,7 +28,7 @@ export default function CreateProduct() {
 
     const submit = (e) => {
         e.preventDefault();
-        post(route('products.store'));
+        post(route('admin.products.store'));
     };
     const AVAILABLE_SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
 

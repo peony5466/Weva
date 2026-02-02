@@ -3,14 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class ShopController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         return Inertia::render('Shop/index', [
-            'products' => Product::with('variants')->where('is_active', true)->get()
+            'products' => Product::query()
+                ->when($request->input('category'), function ($query, $category) {
+                    $query->where('category', $category);
+                })
+                ->latest()
+                ->get(),
+            'filters' => $request->only(['category']),
         ]);
     }
 
