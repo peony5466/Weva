@@ -14,14 +14,12 @@ class ProductController extends Controller
         return Inertia::render('admin/products/index', [
             'products' => Product::query()
                 ->with('variants')
-                //chercher nom ou desc
                 ->when($request->input('search'), function ($query, $search) {
-                    $query->where('name', 'like', "%{$search}%")
-                        ->orWhere('id', 'like', "%{$search}%");
+                    $query->where('name', 'like', "%{$search}%");
                 })
                 ->paginate(5)
-                ->withQueryString(),
-            'filters' => $request->only(['search']),
+                ->withQueryString(), // Indispensable pour garder la recherche en page 2
+            'filters' => $request->only(['search']), // Indispensable pour la comparaison React
         ]);
     }
 
