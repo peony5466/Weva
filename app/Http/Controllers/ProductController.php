@@ -36,24 +36,29 @@ class ProductController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'price' => 'required|numeric',
             'description' => 'required|string',
-            'price' => 'required|numeric|min:0',
             'category_id' => 'nullable|exists:categories,id',
-            'is_limited' => 'boolean',
+            'image' => 'nullable|image|max:2048', // Validation image
         ]);
+
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('products', 'public');
+        }
 
         Product::create([
             'name' => $validated['name'],
-            'slug' => Str::slug($validated['name']),
-            'description' => $validated['description'],
             'price' => $validated['price'],
+            'description' => $validated['description'],
             'category_id' => $validated['category_id'],
+            'image_path' => $imagePath, // On stocke le chemin
+            'slug' => Str::slug($request->name),
             'is_limited' => $request->boolean('is_limited'),
         ]);
 
         return redirect()->route('admin.products.index');
     }
-
     public function edit(Product $product)
     {
         return Inertia::render('admin/products/edit', [
@@ -64,25 +69,32 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
-        $validated = $request->validate([
+        // 1. On valide
+        $request->validate([
             'name' => 'required|string|max:255',
             'price' => 'required|numeric',
             'category_id' => 'nullable|exists:categories,id',
-            'is_limited' => 'boolean',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
+        // 2. On prépare les données manuellement pour éviter le "Undefined array key"
+        $data = [
+            'name'        => $request->input('name'),
+            'price'       => $request->input('price'),
+            'description' => $request->input('description'),
+            'category_id' => $request->input('category_id'), // Laravel gère le null ici
+            'is_limited'  => $request->boolean('is_limited'),
+        ];
+
+        // 3. Gestion de l'image
         if ($request->hasFile('image')) {
             if ($product->image_path) {
                 Storage::disk('public')->delete($product->image_path);
             }
-            $path = $request->file('image')->store('products', 'public');
-            $validated['image_path'] = $path;
+            $data['image_path'] = $request->file('image')->store('products', 'public');
         }
 
-        $validated['is_limited'] = $request->boolean('is_limited');
-
-        $product->update($validated);
+        // 4. Update direct
+        $product->update($data);
 
         return redirect()->route('admin.products.index');
     }

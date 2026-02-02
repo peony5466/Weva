@@ -12,12 +12,14 @@ export default function Edit({ product, categories = [] }) {
     // État local pour la preview de l'image sélectionnée
     const [preview, setPreview] = useState(product.image_path ? `/storage/${product.image_path}` : null);
 
+
     const { data, setData, post, processing, errors } = useForm({
         name: product.name || '',
         price: product.price || '',
         description: product.description || '',
+        // Utilise || '' pour forcer une chaîne vide au lieu de null/undefined
         category_id: product.category_id || '',
-        is_limited: product.is_limited === 1 || product.is_limited === true,
+        is_limited: product.is_limited == 1,
         image: null,
         _method: 'PUT',
     });
@@ -37,7 +39,7 @@ export default function Edit({ product, categories = [] }) {
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AppLayout breadcrumbs={breadcrumbs} >
             <Head title={`Edit ${product.name} — WEVA`} />
 
             <div className="flex flex-col gap-12 p-8 lg:p-12 min-h-screen bg-[#050505] text-white">
@@ -162,8 +164,8 @@ export default function Edit({ product, categories = [] }) {
                                     type="button"
                                     onClick={() => setData('is_limited', !data.is_limited)}
                                     className={`w-full p-5 border transition-all skew-x-[-5deg] flex justify-between items-center group ${data.is_limited
-                                            ? 'bg-red-600 border-red-600 shadow-[0_0_30px_rgba(220,38,38,0.2)]'
-                                            : 'bg-transparent border-white/10'
+                                        ? 'bg-red-600 border-red-600 shadow-[0_0_30px_rgba(220,38,38,0.2)]'
+                                        : 'bg-transparent border-white/10'
                                         }`}
                                 >
                                     <div className="flex items-center gap-3 italic font-black uppercase tracking-widest text-[10px]">
@@ -191,6 +193,6 @@ export default function Edit({ product, categories = [] }) {
                     </div>
                 </form>
             </div>
-        </AppLayout>
+        </AppLayout >
     );
 }

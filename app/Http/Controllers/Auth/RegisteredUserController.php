@@ -57,7 +57,7 @@ class RegisteredUserController extends Controller
             return to_route('avatar');
         }
 
-        return to_route('shop');
+        return to_route('shop.index');
         // return to_route('dashboard');
     }
 }
