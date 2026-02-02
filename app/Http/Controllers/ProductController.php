@@ -9,10 +9,19 @@ use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         return Inertia::render('admin/products/index', [
-            'products' => Product::with('variants')->latest()->get()
+            'products' => Product::query()
+                ->with('variants')
+                //chercher nom ou desc
+                ->when($request->input('search'), function ($query, $search) {
+                    $query->where('name', 'like', "%{$search}%")
+                        ->orWhere('id', 'like', "%{$search}%");
+                })
+                ->paginate(5)
+                ->withQueryString(),
+            'filters' => $request->only(['search']),
         ]);
     }
 
