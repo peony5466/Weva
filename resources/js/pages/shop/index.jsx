@@ -1,103 +1,110 @@
 import React from 'react';
 import { Head, Link } from '@inertiajs/react';
 import ClientLayout from '@/layouts/client-layout';
+import Filters from '@/components/ui/filter';
 
-export default function Index({ products }) {
+export default function Index({ products, categories, currentCategory }) {
     const productList = products.data || products;
 
     return (
         <ClientLayout>
             <Head title="Collection — WEVA" />
 
-            <div className="min-h-screen bg-[#050505] text-white p-6 lg:p-12">
-                {/* HEADER DE LA COLLECTION */}
-                <header className="mb-16 border-b border-white/10 pb-10">
-                    <span className="text-[11px] tracking-[0.6em] text-white/30 uppercase font-black italic">Season_2026_Assets</span>
-                    <h1 className="text-6xl md:text-8xl font-[1000] tracking-tighter uppercase italic skew-x-[-10deg]">
-                        The_Collection
+            <div className="min-h-screen bg-white text-black p-4 lg:p-8">
+
+                <Filters
+                    categories={categories}
+                    currentCategory={currentCategory}
+                />
+                {/* HEADER STYLE GENTLE MONSTER */}
+                <header className="mt-20 mb-24 text-center">
+                    <h1 className="text-2xl font-medium uppercase tracking-[0.3em] mb-4">
+                        All Collection
                     </h1>
+                    <p className="text-sm text-gray-500 max-w-2xl mx-auto leading-relaxed">
+                        Explore our  collection that conveys a modern aesthetic feel.
+                    </p>
                 </header>
 
+
+
                 {/* GRILLE DE PRODUITS */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-16">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-12">
                     {productList.map((product) => (
-                        <div key={product.id} className="group relative flex flex-col">
+                        <div key={product.id} className="group flex flex-col relative">
 
-                            {/* CONTENEUR IMAGE */}
-                            <div className="cursor-pointer relative aspect-[3/4] overflow-hidden bg-[#111] border border-white/5 transition-all duration-700 group-hover:border-white/30">
+                            {/* CONTENEUR IMAGE - Fond gris clair comme sur le screen */}
+                            {/* CONTENEUR IMAGE - Blanc Pur */}
+                            <div className="relative aspect-[4/3] bg-white overflow-hidden flex items-center justify-center p-8 transition-colors duration-500 group-hover:bg-[#fafafa]">
 
+                                {/* BADGE LIMITED ASSET - Version Chrome Contrastée */}
+                                {product.is_limited === 1 && (
+                                    <div className="absolute top-4 left-4 z-20">
+                                        <div className="relative overflow-hidden backdrop-blur-md bg-gradient-to-br from-[#222] via-[#444] to-[#111] px-4 py-1.5 shadow-[0_10px_20px_rgba(0,0,0,0.2)] skew-x-[-15deg] border border-white/10 border-r-4 border-r-gray-400">
 
-                                {/* --- ÉTIQUETTE LIMITED EDITION (Style Chrome Liquid Glass) --- */}
-                                {(product.is_limited == 1) && (
-                                    <div className="absolute top-4 right-4 z-20">
-                                        <div className="relative overflow-hidden backdrop-blur-md bg-white/10 px-4 py-1.5 shadow-[0_8px_32px_0_rgba(255,255,255,0.1)] skew-x-[-15deg] border border-white/20 border-r-4 border-r-white">
-
-                                            {/* Effet de reflet brillant (Liquid Glass) */}
-                                            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                                            {/* Reflet de lumière "Chrome" qui balaye au survol */}
+                                            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
 
                                             <div className="flex items-center gap-2 skew-x-[15deg] relative z-10">
-                                                {/* Petit voyant argenté */}
-                                                <div className="w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_rgba(255,255,255,0.8)]" />
+                                                {/* Voyant style LED Bleue ou Argentée pour le contraste */}
+                                                <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
 
-                                                <p className="text-[9px] font-[1000] text-white uppercase tracking-[0.2em] italic drop-shadow-md">
+                                                <p className="text-[9px] font-black text-white uppercase tracking-[0.2em] italic drop-shadow-md">
                                                     Limited_Asset
                                                 </p>
                                             </div>
 
-                                            {/* Overlay de texture métal brossé léger */}
-                                            <div className="absolute inset-0 opacity-10 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/brushed-alum.png')]" />
+                                            {/* Texture métal brossé discrète */}
+                                            <div className="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/brushed-alum.png')]" />
                                         </div>
                                     </div>
                                 )}
 
-                                {product.image_path ? (
-                                    <img
-                                        src={`/storage/${product.image_path}`}
-                                        alt={product.name}
-                                        className="w-full h-full object-cover grayscale-[50%] group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-white/10 font-black italic uppercase">
-                                        Img_Not_Found
-                                    </div>
-                                )}
+                                <Link href={route('shop.show', product.id)} className="w-full h-full flex items-center justify-center">
+                                    {product.image_path ? (
+                                        <img
+                                            src={`/storage/${product.image_path}`}
+                                            alt={product.name}
+                                            // Mix-blend-multiply est crucial pour que le fond de ton image (si blanc) disparaisse sur le fond blanc du site
+                                            className="w-full h-full object-contain mix-blend-multiply transition-transform duration-700 group-hover:scale-105"
+                                        />
+                                    ) : (
+                                        <div className="text-gray-300 text-[10px] uppercase tracking-widest font-bold">Img_Empty</div>
+                                    )}
+                                </Link>
 
-                                {/* BADGE PRIX AU SURVOL */}
-                                <div className="absolute bottom-4 left-0 bg-white text-black px-4 py-2 translate-x-[-101%] group-hover:translate-x-0 transition-transform duration-500 skew-x-[-15deg] z-10">
-                                    <p className="font-[1000] text-sm skew-x-[15deg]">{product.price}€</p>
-                                </div>
+                                {/* Icône Favoris */}
+                                <button className="absolute bottom-4 right-4 text-black opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-5 h-5">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" />
+                                    </svg>
+                                </button>
                             </div>
 
-                            {/* INFOS PRODUIT */}
-                            <div className="mt-6 space-y-2">
+                            {/* INFOS PRODUIT - Minimaliste */}
+                            <div className="mt-4 flex flex-col gap-1">
                                 <div className="flex justify-between items-start">
-                                    <div className="flex flex-col">
-                                        {/* AFFICHAGE DE LA CATÉGORIE ASSIGNÉE */}
-
-                                        <h2 className="text-lg font-[1000] uppercase tracking-tighter italic leading-none group-hover:text-white/100 text-white/70 transition-colors">
-                                            {product.name}
-                                        </h2>
-                                    </div>
-                                    <span className="font-mono text-[10px] text-white/20">
-                                        REF_{product.id.toString().padStart(4, '0')}
-                                    </span>
+                                    <h2 className="text-[13px] font-medium tracking-wide uppercase text-gray-900">
+                                        {product.name}
+                                    </h2>
                                 </div>
-
-                                <p className="text-[10px] text-white/30 uppercase tracking-[0.2em] font-bold line-clamp-1 italic">
-                                    {product.description || 'No_Description_Available'}
-                                </p>
-
-                                <Link
-                                    href={route('shop.show', product.id)}
-                                    className="mt-4 block w-full py-4 border border-white/10 text-center text-[10px] font-black uppercase tracking-[0.4em] hover:bg-white hover:text-black transition-all skew-x-[-10deg]"
-                                >
-                                    <span className="skew-x-[10deg] block">View_Details</span>
-                                </Link>
+                                <div className="flex flex-col">
+                                    <span className="text-[12px] text-gray-900 font-semibold">
+                                        € {product.price}
+                                    </span>
+                                    {/* Indication de stock optionnelle comme sur le screen (Sold Out) */}
+                                    {product.stock <= 0 && (
+                                        <span className="text-[10px] text-red-500 uppercase font-bold mt-1">Sold out</span>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     ))}
                 </div>
             </div>
+            {/* </CardLayout> */}
+
         </ClientLayout>
     );
+
 }
