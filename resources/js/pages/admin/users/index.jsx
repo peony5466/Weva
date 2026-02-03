@@ -1,135 +1,172 @@
 import AppLayout from '@/layouts/app-layout';
-import { Head } from '@inertiajs/react';
-import { Search, ShoppingCart, MoreHorizontal, ShieldCheck } from 'lucide-react';
+import { Head, router, Link } from '@inertiajs/react';
+import { Search, ShoppingCart, ShieldCheck, Ban, Trash2, UserCheck, UserPlus, Mail } from 'lucide-react';
 
-const breadcrumbs = [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Users Control', href: '/dashboard/users' },
-];
-
-export default function UserIndex() {
-    const citizens = [
-        { id: 1, name: 'Alex Rivera', email: 'alex@weva.io', status: 'Active', total_orders: 5, balance: '12,500 WT' },
-        { id: 2, name: 'Sarah Chen', email: 'sarah.c@weva.io', status: 'Pending', total_orders: 1, balance: '2,000 WT' },
-        { id: 3, name: 'Marc Vador', email: 'marc@weva.io', status: 'Banned', total_orders: 12, balance: '0 WT' },
+export default function UserIndex({ users }) {
+    const breadcrumbs = [
+        { title: 'Dashboard', href: '/dashboard' },
+        { title: 'Users', href: '#' },
     ];
+
+    const handleToggleBan = (id) => {
+        if (confirm("PROTOCOL_CHANGE: Modifier l'accès de ce citoyen ?")) {
+            router.patch(route('admin.users.ban', id));
+        }
+    };
+
+    const handleDelete = (id) => {
+        if (confirm("TERMINATE_IDENTITY: Cette action est irréversible. Confirmer ?")) {
+            router.delete(route('admin.users.destroy', id));
+        }
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Users — WEVA" />
+            <Head title="Users Registry — WEVA" />
 
-            <div className="flex flex-col gap-12 p-8 lg:p-12 min-h-screen bg-[#050505] text-white overflow-hidden">
+            <div className="min-h-screen bg-[#0A0A0A] text-[#E5E7EB] font-sans p-6 lg:p-10">
+                <div className="max-w-7xl mx-auto space-y-8">
 
-                {/* 1. HEADER CHROME - Style Dashboard */}
-                <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-white/10 pb-10 relative group">
-                    <div className="space-y-2">
-                        <span className="text-[11px] tracking-[0.6em] text-white/30 uppercase font-black italic">Population_Control</span>
-
-                        <div className="relative inline-block">
-                            <h1 className="text-7xl font-[1000] tracking-tighter leading-none uppercase bg-gradient-to-br from-[#fff] via-[#888] to-[#eee] bg-clip-text text-transparent italic skew-x-[-10deg]">
-                                Users<br />Registry
-                            </h1>
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                    {/* --- HEADER --- */}
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                        <div className="space-y-1">
+                            <nav className="text-xs text-gray-500 flex gap-2 items-center uppercase tracking-widest">
+                                <span>Administration</span>
+                                <span>/</span>
+                                <span className="text-gray-300">Population_Control</span>
+                            </nav>
+                            <h1 className="text-3xl font-bold tracking-tight text-white">Users Registry</h1>
                         </div>
+
+                        <Link
+                            href={route('admin.users.create')}
+                            className="bg-[#E67E22] hover:bg-[#D35400] text-black text-xs font-bold py-3 px-6 rounded-md transition-all uppercase tracking-wider flex items-center gap-3 shadow-lg active:scale-95"
+                        >
+                            <UserPlus className="w-4 h-4 stroke-[3px]" />
+                            Register Citizen
+                        </Link>
                     </div>
 
-                    {/* BADGE SYSTEM ONLINE STYLE (Status Indicator) */}
-                    <div className="relative overflow-hidden bg-gradient-to-br from-[#fff] via-[#888] to-[#eee] px-10 py-4 shadow-[0_0_40px_rgba(255,255,255,0.15)] skew-x-[-15deg] border-r-4 border-white">
-                        <div className="flex items-center gap-4 skew-x-[15deg]">
-                            <ShieldCheck className="w-5 h-5 text-black stroke-[3px]" />
-                            <p className="text-[12px] font-[1000] text-black uppercase tracking-[0.4em] italic">
-                                DB_Access_Live
-                            </p>
+                    {/* --- SEARCH & STATS BAR --- */}
+                    <div className="bg-[#111111] rounded-xl border border-white/5 p-4 flex flex-col md:flex-row gap-6 items-center justify-between shadow-2xl">
+                        <div className="relative w-full md:w-96 group">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within:text-[#E67E22] transition-colors" />
+                            <input
+                                type="text"
+                                placeholder="Identify citizen by ID or Name..."
+                                className="w-full bg-[#1A1A1A] border border-white/10 rounded-lg py-2.5 pl-10 pr-4 text-sm text-white focus:border-[#E67E22] outline-none transition-all"
+                            />
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/80 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
-                    </div>
-                </header>
-
-                {/* 2. SEARCH BAR - Style Lingot Creux */}
-                <div className="relative group max-w-xl skew-x-[-10deg] overflow-hidden">
-                    <div className="absolute inset-0 bg-white/5 border border-white/10 group-focus-within:border-white transition-all"></div>
-                    <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 skew-x-[10deg] group-focus-within:text-white transition-colors" />
-                    <input
-                        type="text"
-                        placeholder="IDENTIFY_CITIZEN_ID..."
-                        className="relative w-full bg-transparent border-none py-6 pl-16 pr-4 text-[11px] tracking-[0.4em] font-black uppercase text-white focus:ring-0 outline-none skew-x-[10deg] placeholder:text-white/10"
-                    />
-                </div>
-
-                {/* 3. LISTE DES CITOYENS - Style Acier Découpé */}
-                <div className="space-y-4">
-                    {/* Header de table style Dashboard Header */}
-                    <div className="grid grid-cols-5 bg-[#0D0D0D] p-6 skew-x-[-5deg] border-l-2 border-white/30 opacity-40">
-                        {['Users', 'Protocol', 'Value_Asset', 'Operations', 'Access'].map((h) => (
-                            <span key={h} className="text-[10px] font-black tracking-[0.4em] uppercase italic skew-x-[5deg]">{h}</span>
-                        ))}
-                    </div>
-
-                    {/* Lignes Citoyens */}
-                    <div className="space-y-2">
-                        {citizens.map((citizen) => (
-                            <div key={citizen.id} className="relative group bg-[#080808] border border-white/5 p-8 flex justify-between items-center overflow-hidden skew-x-[-5deg] hover:border-white transition-all duration-500">
-                                <div className="grid grid-cols-5 w-full items-center relative z-10 skew-x-[5deg]">
-
-                                    {/* Profil Chrome */}
-                                    <div className="flex flex-col">
-                                        <span className="text-lg font-[1000] tracking-[0.1em] uppercase bg-gradient-to-r from-white to-[#555] bg-clip-text text-transparent italic leading-none">
-                                            {citizen.name}
-                                        </span>
-                                        <span className="text-[10px] text-white/20 font-mono italic tracking-widest">{citizen.email}</span>
-                                    </div>
-
-                                    {/* Statut Badge Style */}
-                                    <div>
-                                        <span className={`text-[9px] font-[1000] px-4 py-1 border skew-x-[-10deg] inline-block ${citizen.status === 'Active' ? 'border-white text-white shadow-[0_0_10px_rgba(255,255,255,0.1)]' :
-                                            citizen.status === 'Banned' ? 'border-red-500 text-red-500 shadow-[0_0_10px_rgba(239,68,68,0.2)]' :
-                                                'border-white/10 text-white/20'
-                                            }`}>
-                                            <span className="skew-x-[10deg] block uppercase tracking-widest">{citizen.status}</span>
-                                        </span>
-                                    </div>
-
-                                    {/* Valeur Monétaire Style Stat Card */}
-                                    <span className="text-lg font-[1000] tracking-tighter text-white italic drop-shadow-[0_0_8px_rgba(255,255,255,0.2)] font-mono">
-                                        {citizen.balance}
-                                    </span>
-
-                                    {/* Commandes */}
-                                    <div className="flex items-center gap-3">
-                                        <ShoppingCart className="w-4 h-4 text-white/20" />
-                                        <span className="text-[11px] font-black tracking-widest text-white/60">{citizen.total_orders} PKT</span>
-                                    </div>
-
-                                    {/* Actions */}
-                                    <div className="flex justify-end">
-                                        <button className="text-white/10 hover:text-white transition-colors">
-                                            <MoreHorizontal className="w-6 h-6" />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {/* Shimmer au survol sur la ligne */}
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.05] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-
-                                {/* Bordure lumineuse gauche */}
-                                <div className="absolute left-0 top-0 h-full w-[2px] bg-white opacity-0 group-hover:opacity-100 shadow-[0_0_15px_#fff] transition-opacity"></div>
+                        <div className="flex items-center gap-8 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">
+                            <div className="flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                                Live_Database: <span className="text-white">{users.length} Citizens</span>
                             </div>
-                        ))}
+                        </div>
                     </div>
-                </div>
 
-                {/* 4. WATERMARK */}
-                <div className="mt-auto opacity-[0.03] pointer-events-none select-none">
-                    <p className="text-[12vw] font-[1000] leading-none uppercase tracking-tighter italic">Database_System</p>
+                    {/* --- USERS TABLE --- */}
+                    <div className="bg-[#111111] rounded-xl border border-white/5 overflow-hidden shadow-2xl">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="text-[11px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5 bg-white/[0.01]">
+                                    <th className="px-6 py-5">Citizen_Identity</th>
+                                    <th className="px-6 py-5 text-center">Access_Level</th>
+                                    <th className="px-6 py-5 text-center">Status</th>
+                                    <th className="px-6 py-5 text-center">Wallet</th>
+                                    <th className="px-6 py-5 text-center">Activity</th>
+                                    <th className="px-6 py-5 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/5">
+                                {users.map((citizen) => (
+                                    <tr key={citizen.id} className="hover:bg-white/[0.02] transition-all group">
+
+                                        {/* IDENTITY */}
+                                        <td className="px-6 py-4">
+                                            <div className="flex flex-col">
+                                                <span className="text-sm font-bold text-white group-hover:text-[#E67E22] transition-colors">
+                                                    {citizen.name}
+                                                </span>
+                                                <div className="flex items-center gap-1 text-[10px] text-gray-600 font-mono">
+                                                    <Mail className="w-3 h-3" />
+                                                    {citizen.email}
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        {/* ROLE */}
+                                        <td className="px-6 py-4 text-center">
+                                            {citizen.role === 'admin' ? (
+                                                <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-white text-black text-[9px] font-black uppercase tracking-tighter shadow-[0_0_10px_rgba(255,255,255,0.1)]">
+                                                    <ShieldCheck className="w-3 h-3" />
+                                                    Admin
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex px-2 py-1 rounded border border-white/10 text-gray-500 text-[9px] font-bold uppercase tracking-tighter">
+                                                    Citizen
+                                                </span>
+                                            )}
+                                        </td>
+
+                                        {/* STATUS */}
+                                        <td className="px-6 py-4 text-center">
+                                            <span className={`text-[9px] font-bold px-2 py-1 rounded uppercase tracking-widest border ${citizen.status === 'Banned'
+                                                    ? 'border-red-500/30 text-red-500 bg-red-500/5'
+                                                    : 'border-green-500/20 text-green-500 bg-green-500/5'
+                                                }`}>
+                                                {citizen.status || 'Active'}
+                                            </span>
+                                        </td>
+
+                                        {/* WALLET */}
+                                        <td className="px-6 py-4 text-center">
+                                            <span className="text-sm font-bold text-gray-300 font-mono italic">
+                                                {citizen.balance ?? 0} <span className="text-[10px] opacity-30 text-white">WT</span>
+                                            </span>
+                                        </td>
+
+                                        {/* ACTIVITY */}
+                                        <td className="px-6 py-4 text-center">
+                                            <div className="inline-flex items-center gap-2 text-gray-500">
+                                                <ShoppingCart className="w-3.5 h-3.5 opacity-20" />
+                                                <span className="text-[11px] font-bold">{citizen.orders_count ?? 0} PKT</span>
+                                            </div>
+                                        </td>
+
+                                        {/* ACTIONS */}
+                                        <td className="px-6 py-4 text-right">
+                                            <div className="flex justify-end gap-5">
+                                                <button
+                                                    onClick={() => handleToggleBan(citizen.id)}
+                                                    className={`transition-all transform hover:scale-110 ${citizen.status === 'Banned' ? 'text-red-500' : 'text-gray-600 hover:text-white'
+                                                        }`}
+                                                    title={citizen.status === 'Banned' ? 'Unban User' : 'Ban User'}
+                                                >
+                                                    {citizen.status === 'Banned' ? <Ban className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(citizen.id)}
+                                                    className="text-gray-800 hover:text-red-600 transition-colors transform hover:scale-110"
+                                                    title="Delete User"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+
+                        {/* --- FOOTER STATUS --- */}
+                        <div className="bg-[#0F0F0F] px-6 py-4 border-t border-white/5 flex justify-between items-center text-[9px] font-bold text-gray-700 uppercase tracking-[0.4em]">
+                            <span>Registry_Protocol_v2.1</span>
+                            <span className="italic">Secured_Identity_Module</span>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <style jsx>{`
-                @keyframes shimmer {
-                    0% { transform: translateX(-100%) skewX(-15deg); }
-                    100% { transform: translateX(200%) skewX(-15deg); }
-                }
-            `}</style>
         </AppLayout>
     );
 }

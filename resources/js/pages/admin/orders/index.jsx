@@ -1,129 +1,137 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head } from '@inertiajs/react';
-import { ShoppingBag, CreditCard, Filter, Terminal } from 'lucide-react';
-
-const breadcrumbs = [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Sales & Orders', href: '/dashboard/orders' },
-];
+import { ShoppingBag, CreditCard, Filter, Terminal, Search, ExternalLink } from 'lucide-react';
 
 export default function OrderIndex() {
+    const breadcrumbs = [
+        { title: 'Dashboard', href: '/dashboard' },
+        { title: 'Orders', href: '#' },
+    ];
+
     const orders = [
-        { id: 'ORD-2026-X1', customer: 'Alex Rivera', item: 'Cyber Monocle', price: '1,200 WT', type: 'Token', date: 'JAN 28' },
-        { id: 'ORD-2026-X2', customer: 'Sarah Chen', item: 'Neon Skin V.1', price: '45.00 €', type: 'Fiat', date: 'JAN 28' },
-        { id: 'ORD-2026-X3', customer: 'Marc Vador', item: 'Gravity Boots', price: '3,800 WT', type: 'Token', date: 'JAN 27' },
+        { id: 'ORD-2026-X1', customer: 'Alex Rivera', email: 'alex@weva.com', item: 'Cyber Monocle', price: '1,200 WT', type: 'Token', status: 'Completed', date: '2026-02-03' },
+        { id: 'ORD-2026-X2', customer: 'Sarah Chen', email: 'sarah.c@net.io', item: 'Neon Skin V.1', price: '45.00 €', type: 'Fiat', status: 'Pending', date: '2026-02-03' },
+        { id: 'ORD-2026-X3', customer: 'Marc Vador', email: 'lord@empire.dev', item: 'Gravity Boots', price: '3,800 WT', type: 'Token', status: 'Processing', date: '2026-02-02' },
     ];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="ORDERS — WEVA" />
+            <Head title="Orders — WEVA Admin" />
 
-            <div className="flex flex-col gap-12 p-8 lg:p-12 min-h-screen bg-[#050505] text-white overflow-hidden">
+            <div className="min-h-screen bg-[#0A0A0A] text-[#E5E7EB] font-sans p-6 lg:p-10">
+                <div className="max-w-7xl mx-auto space-y-8">
 
-                {/* 1. HEADER CHROME - Style Dashboard */}
-                <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-white/10 pb-10 relative group">
-                    <div className="space-y-2">
-                        <span className="text-[11px] tracking-[0.6em] text-white/30 uppercase font-black italic">Financial_Ledger</span>
-
-                        <div className="relative inline-block">
-                            <h1 className="text-7xl font-[1000] tracking-tighter leading-none uppercase bg-gradient-to-br from-[#fff] via-[#888] to-[#eee] bg-clip-text text-transparent italic skew-x-[-10deg]">
-                                Commercial<br />Orders
-                            </h1>
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                    {/* --- HEADER --- */}
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                        <div className="space-y-1">
+                            <nav className="text-xs text-gray-500 flex gap-2 items-center uppercase tracking-widest">
+                                <span>Sales</span>
+                                <span>/</span>
+                                <span className="text-gray-300">Financial_Ledger</span>
+                            </nav>
+                            <h1 className="text-3xl font-bold tracking-tight text-white">Commercial Orders</h1>
                         </div>
+
+                        <button className="bg-[#E67E22] hover:bg-[#D35400] text-black text-xs font-bold py-3 px-6 rounded-md transition-all uppercase tracking-wider flex items-center gap-3 shadow-lg active:scale-95">
+                            <Filter className="w-4 h-4" />
+                            Filter Logs
+                        </button>
                     </div>
 
-                    {/* BADGE FILTRE STYLE "SYSTEM ONLINE" */}
-                    <button className="relative overflow-hidden bg-gradient-to-br from-[#fff] via-[#888] to-[#eee] px-10 py-4 shadow-[0_0_40px_rgba(255,255,255,0.15)] skew-x-[-15deg] border-r-4 border-white transition-transform hover:scale-105 active:scale-95 duration-300 group">
-                        <div className="flex items-center gap-4 skew-x-[15deg]">
-                            <Filter className="w-5 h-5 text-black stroke-[3px]" />
-                            <p className="text-[12px] font-[1000] text-black uppercase tracking-[0.4em] italic">
-                                Filter_Logs
-                            </p>
-                        </div>
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/80 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
-                    </button>
-                </header>
-
-                {/* 2. TRANSACTIONS LIST - Style Dashboard Logs */}
-                <div className="space-y-4">
-                    {/* Header Table Style */}
-                    <div className="grid grid-cols-5 bg-[#0D0D0D] p-6 skew-x-[-5deg] border-l-2 border-white/30 opacity-40">
-                        {['Reference', 'Buyer_Identity', 'Asset_Designation', 'Method', 'Total_Amount'].map((h) => (
-                            <span key={h} className="text-[10px] font-black tracking-[0.4em] uppercase italic skew-x-[5deg]">{h}</span>
-                        ))}
+                    {/* --- SEARCH BAR --- */}
+                    <div className="relative max-w-md group">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600 group-focus-within:text-[#E67E22] transition-colors" />
+                        <input
+                            type="text"
+                            placeholder="Search by order ref or customer..."
+                            className="w-full bg-[#111111] border border-white/5 rounded-lg py-2.5 pl-10 pr-4 text-sm text-white focus:border-[#E67E22] outline-none transition-all"
+                        />
                     </div>
 
-                    {/* Lignes Orders */}
-                    <div className="space-y-2">
-                        {orders.map((order) => (
-                            <div key={order.id} className="relative group bg-[#080808] border border-white/5 p-8 flex justify-between items-center overflow-hidden skew-x-[-5deg] hover:border-white transition-all duration-500">
-                                <div className="grid grid-cols-5 w-full items-center relative z-10 skew-x-[5deg]">
+                    {/* --- ORDERS TABLE --- */}
+                    <div className="bg-[#111111] rounded-xl border border-white/5 overflow-hidden shadow-2xl">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="text-[11px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5 bg-white/[0.01]">
+                                    <th className="px-6 py-5">Reference</th>
+                                    <th className="px-6 py-5">Buyer_Identity</th>
+                                    <th className="px-6 py-5">Asset</th>
+                                    <th className="px-6 py-5 text-center">Method</th>
+                                    <th className="px-6 py-5 text-center">Amount</th>
+                                    <th className="px-6 py-5 text-right">Access</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-white/5">
+                                {orders.map((order) => (
+                                    <tr key={order.id} className="hover:bg-white/[0.02] transition-all group">
 
-                                    {/* Reference Style Mono */}
-                                    <div className="flex items-center gap-3">
-                                        <Terminal className="w-4 h-4 text-white/20" />
-                                        <span className="font-mono text-[11px] text-white/30 group-hover:text-white transition-colors tracking-tighter">
-                                            {order.id}
-                                        </span>
-                                    </div>
+                                        {/* REFERENCE */}
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-2">
+                                                <Terminal className="w-3.5 h-3.5 text-gray-600" />
+                                                <span className="font-mono text-[11px] text-gray-400 group-hover:text-white transition-colors">
+                                                    {order.id}
+                                                </span>
+                                            </div>
+                                        </td>
 
-                                    {/* Buyer Chrome Name */}
-                                    <span className="text-lg font-[1000] tracking-[0.1em] uppercase bg-gradient-to-r from-white to-[#555] bg-clip-text text-transparent italic leading-none group-hover:pl-4 transition-all duration-500">
-                                        {order.customer}
-                                    </span>
+                                        {/* IDENTITY */}
+                                        <td className="px-6 py-4">
+                                            <div className="flex flex-col">
+                                                <span className="text-sm font-bold text-white uppercase italic tracking-tight">
+                                                    {order.customer}
+                                                </span>
+                                                <span className="text-[10px] text-gray-600 lowercase">{order.email}</span>
+                                            </div>
+                                        </td>
 
-                                    {/* Asset Designation */}
-                                    <span className="text-[11px] font-black text-white/40 uppercase tracking-widest italic group-hover:text-white transition-colors">
-                                        {order.item}
-                                    </span>
+                                        {/* ASSET */}
+                                        <td className="px-6 py-4">
+                                            <span className="text-xs font-semibold text-gray-400 group-hover:text-[#E67E22] transition-colors">
+                                                {order.item}
+                                            </span>
+                                        </td>
 
-                                    {/* Payment Method Badge */}
-                                    <div className="flex items-center gap-3">
-                                        {order.type === 'Token' ? (
-                                            <ShoppingBag className="w-4 h-4 text-white/20 group-hover:text-white transition-colors" />
-                                        ) : (
-                                            <CreditCard className="w-4 h-4 text-white/20 group-hover:text-white transition-colors" />
-                                        )}
-                                        <span className="text-[9px] font-[1000] px-3 py-1 border border-white/10 uppercase italic tracking-widest text-white/20 group-hover:text-white group-hover:border-white transition-all">
-                                            {order.type}
-                                        </span>
-                                    </div>
+                                        {/* PAYMENT METHOD */}
+                                        <td className="px-6 py-4 text-center">
+                                            <div className="flex items-center justify-center gap-2">
+                                                {order.type === 'Token' ? (
+                                                    <ShoppingBag className="w-3.5 h-3.5 text-indigo-400" />
+                                                ) : (
+                                                    <CreditCard className="w-3.5 h-3.5 text-emerald-400" />
+                                                )}
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+                                                    {order.type}
+                                                </span>
+                                            </div>
+                                        </td>
 
-                                    {/* Amount Style Massive Stat */}
-                                    <div className="text-right">
-                                        <span className="text-2xl font-[1000] tracking-tighter text-white italic drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
-                                            {order.price}
-                                        </span>
-                                    </div>
-                                </div>
+                                        {/* AMOUNT */}
+                                        <td className="px-6 py-4 text-center">
+                                            <span className="text-base font-black tracking-tighter text-white font-mono italic">
+                                                {order.price}
+                                            </span>
+                                        </td>
 
-                                {/* Shimmer au survol */}
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.05] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                                        {/* ACTIONS */}
+                                        <td className="px-6 py-4 text-right">
+                                            <button className="text-gray-700 hover:text-white transition-all transform hover:scale-110">
+                                                <ExternalLink className="w-4 h-4" />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
 
-                                {/* Bordure lumineuse gauche */}
-                                <div className="absolute left-0 top-0 h-full w-[2px] bg-white opacity-0 group-hover:opacity-100 shadow-[0_0_15px_#fff] transition-opacity"></div>
-                            </div>
-                        ))}
+                        {/* --- TABLE FOOTER --- */}
+                        <div className="bg-[#0F0F0F] px-6 py-4 border-t border-white/5 flex justify-between items-center text-[9px] font-bold text-gray-700 uppercase tracking-[0.4em]">
+                            <span>Ledger_State: Synced</span>
+                            <span className="italic">Weva_Financial_Node_v2.1</span>
+                        </div>
                     </div>
                 </div>
-
-                {/* 3. FOOTER DECO */}
-                <footer className="mt-auto pt-10 flex justify-between items-center border-t border-white/5">
-                    <div className="flex items-center gap-4 opacity-20 hover:opacity-100 transition-opacity group">
-                        <div className="h-[1px] w-12 bg-white group-hover:shadow-[0_0_10px_#fff] transition-all"></div>
-                        <p className="text-[9px] tracking-[0.8em] uppercase font-black italic">End_of_Transmission</p>
-                    </div>
-                    <p className="text-[10px] font-[1000] italic text-white/10 tracking-widest uppercase">Weva_Secure_Ledger_v2.1</p>
-                </footer>
             </div>
-
-            <style jsx>{`
-                @keyframes shimmer {
-                    0% { transform: translateX(-100%) skewX(-15deg); }
-                    100% { transform: translateX(200%) skewX(-15deg); }
-                }
-            `}</style>
         </AppLayout>
     );
 }

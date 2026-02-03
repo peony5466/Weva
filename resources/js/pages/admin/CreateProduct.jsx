@@ -1,21 +1,15 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head, useForm, Link } from '@inertiajs/react';
-import { Save, X, Plus, Trash2, ArrowLeft, Upload, Image as ImageIcon } from 'lucide-react';
+import { Save, Plus, Trash2, ArrowLeft, Upload, Image as ImageIcon } from 'lucide-react';
 
-const breadcrumbs = [
-    { title: 'System', href: '/dashboard' },
-    { title: 'Inventory', href: '/admin/products' },
-    { title: 'New_Asset', href: '#' },
-];
-
-export default function CreateProduct({ categories }) { // <--- AJOUTE LES CATEGORIES ICI
+export default function CreateProduct({ categories }) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         description: '',
         price: '',
-        category_id: '', // <--- AJOUT
-        is_limited: false, // <--- AJOUT
-        image: null, // <--- AJOUT
+        category_id: '',
+        is_limited: false,
+        image: null,
         variants: [{ size: '', stock: 0 }]
     });
 
@@ -31,210 +25,213 @@ export default function CreateProduct({ categories }) { // <--- AJOUTE LES CATEG
 
     const submit = (e) => {
         e.preventDefault();
-        // Utilise post() même pour les updates quand il y a des fichiers (Laravel/Inertia convention)
         post(route('admin.products.store'));
     };
 
     const AVAILABLE_SIZES = ['S', 'M', 'L', 'XL', 'XXL'];
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Register — WEVA" />
+        <AppLayout>
+            <Head title="Create Product — WEVA" />
 
-            <div className="p-8 lg:p-12 min-h-screen bg-[#050505] text-white">
+            <div className="min-h-screen bg-[#0A0A0A] text-[#E5E7EB] font-sans p-6 lg:p-10">
+                <div className="max-w-4xl mx-auto space-y-8">
 
-                {/* HEADER */}
-                <header className="flex justify-between items-center border-b border-white/10 pb-10 mb-12">
-                    <div className="space-y-2">
-                        <span className="text-[11px] tracking-[0.6em] text-white/30 uppercase font-black italic">Protocol_04_Creation</span>
-                        <h1 className="text-6xl font-[1000] tracking-tighter uppercase bg-gradient-to-r from-white via-gray-400 to-gray-600 bg-clip-text text-transparent italic skew-x-[-10deg]">
-                            New_Asset_Entry
-                        </h1>
+                    {/* --- HEADER --- */}
+                    <div className="flex justify-between items-center">
+                        <div className="space-y-1">
+                            <nav className="text-xs text-gray-500 flex gap-2 items-center uppercase tracking-wider">
+                                <span>Inventory</span>
+                                <span>/</span>
+                                <span className="text-gray-300">New_Asset</span>
+                            </nav>
+                            <h1 className="text-3xl font-bold tracking-tight text-white">Create New Product</h1>
+                        </div>
+                        <Link
+                            href={route('admin.products.index')}
+                            className="flex items-center gap-2 text-gray-500 hover:text-white transition-colors text-sm font-medium"
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            Back to Inventory
+                        </Link>
                     </div>
 
-                    <Link href={route('admin.products.index')} className="flex items-center gap-2 text-white/40 hover:text-white transition-colors group">
-                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                        <span className="text-[10px] font-black tracking-widest uppercase italic">Abort_Mission</span>
-                    </Link>
-                </header>
+                    {/* --- FORM CONTAINER --- */}
+                    <form onSubmit={submit} className="bg-[#111111] rounded-xl border border-white/5 overflow-hidden shadow-2xl">
 
-                <form onSubmit={submit} className="max-w-5xl space-y-12 pb-20">
+                        <div className="p-8 space-y-10">
 
-                    {/* SECTION 1: CORE DATA & CATEGORY */}
-                    <section className="grid grid-cols-1 md:grid-cols-2 gap-12">
-                        <div className="space-y-8">
-                            {/* DESIGNATION */}
-                            <div className="relative group skew-x-[-5deg]">
-                                <label className="block text-[10px] font-black tracking-[0.3em] uppercase text-white/20 mb-2 ml-2 italic">Designation_Label</label>
-                                <input
-                                    type="text"
-                                    value={data.name}
-                                    onChange={e => setData('name', e.target.value)}
-                                    className="w-full bg-[#0D0D0D] border border-white/10 p-4 text-sm font-bold tracking-widest uppercase focus:border-white focus:ring-0 outline-none transition-all placeholder:text-white/5"
-                                    placeholder="ASSET_NAME..."
-                                />
-                                {errors.name && <p className="text-red-500 text-[9px] mt-2 font-black italic">{errors.name}</p>}
-                            </div>
-
-                            {/* CLASSIFICATION (CATEGORY) */}
-                            <div className="relative group skew-x-[-5deg]">
-                                <label className="block text-[10px] font-black tracking-[0.3em] uppercase text-white/20 mb-2 ml-2 italic">Classification_Module</label>
-                                <select
-                                    value={data.category_id}
-                                    onChange={e => setData('category_id', e.target.value)}
-                                    className="w-full bg-[#0D0D0D] border border-white/10 p-4 text-sm font-black tracking-widest uppercase focus:border-white outline-none transition-all appearance-none cursor-pointer"
-                                >
-                                    <option value="" className="bg-black">UNCLASSIFIED_ASSET</option>
-                                    {categories?.map(cat => (
-                                        <option key={cat.id} value={cat.id} className="bg-black">
-                                            {cat.name.toUpperCase()}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            {/* VALUE ASSESSMENT */}
-                            <div className="relative group skew-x-[-5deg]">
-                                <label className="block text-[10px] font-black tracking-[0.3em] uppercase text-white/20 mb-2 ml-2 italic">Value_Assessment (EUR)</label>
-                                <input
-                                    type="number"
-                                    value={data.price}
-                                    onChange={e => setData('price', e.target.value)}
-                                    className="w-full bg-[#0D0D0D] border border-white/10 p-4 text-sm font-bold tracking-widest focus:border-white focus:ring-0 outline-none transition-all"
-                                    placeholder="0.00"
-                                />
-                            </div>
-                        </div>
-
-                        {/* BRIEFING & OPTIONS */}
-                        <div className="space-y-8">
-                            <div className="relative group skew-x-[-5deg]">
-                                <label className="block text-[10px] font-black tracking-[0.3em] uppercase text-white/20 mb-2 ml-2 italic">Detailed_Briefing</label>
-                                <textarea
-                                    rows="4"
-                                    value={data.description}
-                                    onChange={e => setData('description', e.target.value)}
-                                    className="w-full bg-[#0D0D0D] border border-white/10 p-4 text-sm font-medium tracking-wide focus:border-white focus:ring-0 outline-none transition-all"
-                                />
-                            </div>
-
-                            {/* LIMITED EDITION CHECK */}
-                            <div className="flex items-center gap-4 bg-white/5 p-4 border border-white/5 skew-x-[-10deg]">
-                                <input
-                                    type="checkbox"
-                                    id="limited"
-                                    checked={data.is_limited}
-                                    onChange={e => setData('is_limited', e.target.checked)}
-                                    className="w-4 h-4 bg-black border-white/20 text-white rounded-none focus:ring-0"
-                                />
-                                <label htmlFor="limited" className="text-[10px] font-[1000] uppercase tracking-[0.3em] italic cursor-pointer skew-x-[10deg]">
-                                    Limited_Edition_Protocol
-                                </label>
-                            </div>
-                        </div>
-                    </section>
-
-                    {/* SECTION 3: VISUAL DATA (IMAGE) */}
-                    <section className="space-y-6">
-                        <div className="border-l-2 border-white/30 pl-4">
-                            <h2 className="text-xl font-[1000] uppercase italic tracking-tighter">Visual_Data_Mapping</h2>
-                        </div>
-
-                        <div className="relative group border-2 border-dashed border-white/10 hover:border-white/30 transition-all p-12 text-center bg-[#080808] skew-x-[-5deg]">
-                            <input
-                                type="file"
-                                onChange={e => setData('image', e.target.files[0])}
-                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                            />
-                            <div className="flex flex-col items-center gap-4 skew-x-[5deg]">
-                                {data.image ? (
-                                    <div className="flex items-center gap-4 text-green-500">
-                                        <ImageIcon className="w-8 h-8" />
-                                        <span className="text-[10px] font-black uppercase tracking-widest italic">{data.image.name}</span>
+                            {/* SECTION 1: CORE DATA */}
+                            <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="space-y-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[11px] font-bold uppercase tracking-widest text-gray-500">Product Name</label>
+                                        <input
+                                            type="text"
+                                            value={data.name}
+                                            onChange={e => setData('name', e.target.value)}
+                                            className="w-full bg-[#1A1A1A] border border-white/10 rounded-lg p-3 text-sm text-white focus:border-[#E67E22] focus:ring-1 focus:ring-[#E67E22] outline-none transition-all"
+                                            placeholder="Ex: Cyber-Hoddie v2"
+                                        />
+                                        {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
                                     </div>
-                                ) : (
-                                    <>
-                                        <Upload className="w-8 h-8 text-white/10 group-hover:text-white transition-all" />
-                                        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/20 italic group-hover:text-white/40">Drop_Visual_Asset_Here</p>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                        {errors.image && <p className="text-red-500 text-[9px] font-black italic">{errors.image}</p>}
-                    </section>
 
-                    {/* SECTION 4: VARIANTS TABLE */}
-                    <section className="space-y-6">
-                        <div className="flex justify-between items-center border-l-2 border-white/30 pl-4">
-                            <h2 className="text-xl font-[1000] uppercase italic tracking-tighter">Variants_Matrix</h2>
-                            <button
-                                type="button"
-                                onClick={addVariant}
-                                className="px-4 py-1 border border-white/10 text-[9px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all skew-x-[-10deg]"
-                            >
-                                <span className="skew-x-[10deg] block">+ Add_Row</span>
-                            </button>
-                        </div>
-
-                        <div className="space-y-2">
-                            {data.variants.map((variant, index) => (
-                                <div key={index} className="grid grid-cols-4 gap-4 bg-[#080808] p-4 border border-white/5 skew-x-[-5deg] group hover:border-white/20 transition-all">
-                                    <div className="relative skew-x-[5deg]">
+                                    <div className="space-y-2">
+                                        <label className="text-[11px] font-bold uppercase tracking-widest text-gray-500">Classification</label>
                                         <select
-                                            value={variant.size}
-                                            className="w-full bg-transparent border-b border-white/10 p-2 text-[10px] font-black uppercase outline-none focus:border-white appearance-none cursor-pointer"
-                                            onChange={e => {
-                                                const v = [...data.variants];
-                                                v[index].size = e.target.value;
-                                                setData('variants', v);
-                                            }}
+                                            value={data.category_id}
+                                            onChange={e => setData('category_id', e.target.value)}
+                                            className="w-full bg-[#1A1A1A] border border-white/10 rounded-lg p-3 text-sm text-white focus:border-[#E67E22] outline-none transition-all appearance-none"
                                         >
-                                            <option value="" className="bg-[#050505]">SELECT_SIZE</option>
-                                            {AVAILABLE_SIZES.map(size => (
-                                                <option key={size} value={size} className="bg-[#050505] text-white">{size}</option>
+                                            <option value="">Select Category</option>
+                                            {categories?.map(cat => (
+                                                <option key={cat.id} value={cat.id}>{cat.name}</option>
                                             ))}
                                         </select>
-                                        <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-white/20 text-[8px]">▼</div>
                                     </div>
 
+                                    <div className="space-y-2">
+                                        <label className="text-[11px] font-bold uppercase tracking-widest text-gray-500">Price (EUR)</label>
+                                        <input
+                                            type="number"
+                                            value={data.price}
+                                            onChange={e => setData('price', e.target.value)}
+                                            className="w-full bg-[#1A1A1A] border border-white/10 rounded-lg p-3 text-sm text-white focus:border-[#E67E22] outline-none transition-all"
+                                            placeholder="0.00"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[11px] font-bold uppercase tracking-widest text-gray-500">Description</label>
+                                        <textarea
+                                            rows="5"
+                                            value={data.description}
+                                            onChange={e => setData('description', e.target.value)}
+                                            className="w-full bg-[#1A1A1A] border border-white/10 rounded-lg p-3 text-sm text-white focus:border-[#E67E22] outline-none transition-all resize-none"
+                                            placeholder="Describe your asset..."
+                                        />
+                                    </div>
+
+                                    <div className="flex items-center gap-3 bg-[#1A1A1A] p-4 rounded-lg border border-white/5">
+                                        <input
+                                            type="checkbox"
+                                            id="limited"
+                                            checked={data.is_limited}
+                                            onChange={e => setData('is_limited', e.target.checked)}
+                                            className="w-4 h-4 rounded border-white/10 text-[#E67E22] focus:ring-[#E67E22] bg-black"
+                                        />
+                                        <label htmlFor="limited" className="text-xs font-semibold text-gray-300 cursor-pointer">
+                                            Mark as Limited Edition Product
+                                        </label>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <hr className="border-white/5" />
+
+                            {/* SECTION 2: VISUAL ASSET */}
+                            <section className="space-y-4">
+                                <label className="text-[11px] font-bold uppercase tracking-widest text-gray-500">Product Visual</label>
+                                <div className="relative border-2 border-dashed border-white/10 rounded-xl p-8 transition-all hover:bg-white/[0.02] hover:border-white/20">
                                     <input
-                                        type="number"
-                                        placeholder="STOCK"
-                                        className="bg-transparent border-b border-white/10 p-2 text-[10px] font-black outline-none focus:border-white skew-x-[5deg]"
-                                        onChange={e => {
-                                            const v = [...data.variants];
-                                            v[index].stock = e.target.value;
-                                            setData('variants', v);
-                                        }}
+                                        type="file"
+                                        onChange={e => setData('image', e.target.files[0])}
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                     />
+                                    <div className="flex flex-col items-center gap-3">
+                                        {data.image ? (
+                                            <div className="flex items-center gap-3 text-[#E67E22]">
+                                                <ImageIcon className="w-8 h-8" />
+                                                <span className="text-sm font-medium">{data.image.name}</span>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <Upload className="w-8 h-8 text-gray-700" />
+                                                <p className="text-sm text-gray-500">Click or drag image to upload</p>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            </section>
+
+                            <hr className="border-white/5" />
+
+                            {/* SECTION 3: VARIANTS */}
+                            <section className="space-y-6">
+                                <div className="flex justify-between items-center">
+                                    <label className="text-[11px] font-bold uppercase tracking-widest text-gray-500">Size & Stock Matrix</label>
                                     <button
                                         type="button"
-                                        onClick={() => removeVariant(index)}
-                                        className="flex justify-center items-center text-white/10 hover:text-red-500 transition-colors skew-x-[5deg]"
+                                        onClick={addVariant}
+                                        className="text-[10px] font-bold uppercase tracking-widest text-[#E67E22] hover:text-white transition-colors"
                                     >
-                                        <Trash2 className="w-4 h-4" />
+                                        + Add Variant
                                     </button>
                                 </div>
-                            ))}
-                        </div>
-                    </section>
 
-                    {/* ACTION BUTTON */}
-                    <div className="flex justify-end pt-12">
-                        <button
-                            type="submit"
-                            disabled={processing}
-                            className="relative overflow-hidden bg-white px-16 py-5 shadow-[0_0_50px_rgba(255,255,255,0.2)] skew-x-[-15deg] group transition-transform hover:scale-105 active:scale-95"
-                        >
-                            <div className="flex items-center gap-4 skew-x-[15deg]">
-                                <Save className="w-5 h-5 text-black stroke-[3px]" />
-                                <span className="text-[14px] font-[1000] text-black uppercase tracking-[0.5em] italic">
-                                    {processing ? 'UPLOADING...' : 'INITIALIZE_ASSET'}
-                                </span>
-                            </div>
-                        </button>
-                    </div>
-                </form>
+                                <div className="space-y-3">
+                                    {data.variants.map((variant, index) => (
+                                        <div key={index} className="flex gap-4 items-center bg-[#1A1A1A] p-3 rounded-lg border border-white/5 group">
+                                            <select
+                                                value={variant.size}
+                                                className="flex-1 bg-transparent border-none text-sm text-white focus:ring-0 cursor-pointer"
+                                                onChange={e => {
+                                                    const v = [...data.variants];
+                                                    v[index].size = e.target.value;
+                                                    setData('variants', v);
+                                                }}
+                                            >
+                                                <option value="">Select Size</option>
+                                                {AVAILABLE_SIZES.map(size => (
+                                                    <option key={size} value={size}>{size}</option>
+                                                ))}
+                                            </select>
+
+                                            <input
+                                                type="number"
+                                                placeholder="Stock"
+                                                className="w-24 bg-black/30 border border-white/10 rounded px-3 py-1 text-sm focus:border-[#E67E22] outline-none"
+                                                value={variant.stock}
+                                                onChange={e => {
+                                                    const v = [...data.variants];
+                                                    v[index].stock = e.target.value;
+                                                    setData('variants', v);
+                                                }}
+                                            />
+
+                                            <button
+                                                type="button"
+                                                onClick={() => removeVariant(index)}
+                                                className="text-gray-700 hover:text-red-500 transition-colors"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+                        </div>
+
+                        {/* --- FORM FOOTER --- */}
+                        <div className="bg-[#0F0F0F] px-8 py-5 border-t border-white/5 flex justify-end gap-4">
+                            <Link
+                                href={route('admin.products.index')}
+                                className="px-6 py-2 text-sm font-semibold text-gray-500 hover:text-white transition-colors"
+                            >
+                                Cancel
+                            </Link>
+                            <button
+                                type="submit"
+                                disabled={processing}
+                                className="bg-[#E67E22] hover:bg-[#D35400] text-black px-8 py-2 rounded-md text-sm font-bold transition-all disabled:opacity-50"
+                            >
+                                {processing ? 'Initializing...' : 'Create Product'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </AppLayout>
     );

@@ -1,11 +1,14 @@
 <?php
 
+namespace App\Http\Controllers;
+
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\MemberController;
 
 /*
 |--------------------------------------------------------------------------
@@ -60,32 +63,36 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
         Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
 
-        // Autres pages Admin
-        Route::get('/users', function () {
-            return Inertia::render('admin/users/index');
-        })->name('users.index');
+        // Gestion des Utilisateurs
+        Route::get('/users', [MemberController::class, 'index'])->name('users.index');
+        Route::patch('/users/{user}/ban', [MemberController::class, 'toggleBan'])->name('users.ban');
+        Route::get('/users/create', [MemberController::class, 'create'])->name('users.create');
+        Route::post('/users', [MemberController::class, 'store'])->name('users.store');
+        Route::delete('/users/{user}', [MemberController::class, 'destroy'])->name('users.destroy');
+
 
         Route::get('/orders', function () {
             return Inertia::render('admin/orders/index');
         })->name('orders.index');
     });
-
-    /* --- ZONE CLIENT --- */
-    Route::middleware(['role:client'])->group(function () {
-        Route::get('/dashboard/wevavip', function () {
-            return Inertia::render('client/wevavip');
-        })->name('wevavip');
-
-        Route::get('/dashboard/tokens', function () {
-            return Inertia::render('client/mytoken');
-        })->name('tokens.my-wallet');
-    });
-
-    // Customizer (Commun ou spécifique)
-    Route::get('/dashboard/personalize', function () {
-        return Inertia::render('client/customizer');
-    })->name('avatar.customize');
 });
+
+/* --- ZONE CLIENT --- */
+Route::middleware(['role:client'])->group(function () {
+    Route::get('/dashboard/wevavip', function () {
+        return Inertia::render('client/wevavip');
+    })->name('wevavip');
+
+    Route::get('/dashboard/tokens', function () {
+        return Inertia::render('client/mytoken');
+    })->name('tokens.my-wallet');
+});
+
+// Customizer (Commun ou spécifique)
+Route::get('/dashboard/personalize', function () {
+    return Inertia::render('client/customizer');
+})->name('avatar.customize');
+
 
 /*
 |--------------------------------------------------------------------------
