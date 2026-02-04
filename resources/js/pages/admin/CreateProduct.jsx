@@ -88,6 +88,7 @@ export default function CreateProduct({ categories }) {
                                                 <option key={cat.id} value={cat.id}>{cat.name}</option>
                                             ))}
                                         </select>
+                                        {errors.category_id && <p className="text-red-500 text-xs mt-1">{errors.category_id}</p>}
                                     </div>
 
                                     <div className="space-y-2">
@@ -99,6 +100,7 @@ export default function CreateProduct({ categories }) {
                                             className="w-full bg-[#1A1A1A] border border-white/10 rounded-lg p-3 text-sm text-white focus:border-[#E67E22] outline-none transition-all"
                                             placeholder="0.00"
                                         />
+                                        {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price}</p>}
                                     </div>
                                 </div>
 
@@ -112,6 +114,7 @@ export default function CreateProduct({ categories }) {
                                             className="w-full bg-[#1A1A1A] border border-white/10 rounded-lg p-3 text-sm text-white focus:border-[#E67E22] outline-none transition-all resize-none"
                                             placeholder="Describe your asset..."
                                         />
+                                        {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
                                     </div>
 
                                     <div className="flex items-center gap-3 bg-[#1A1A1A] p-4 rounded-lg border border-white/5">
@@ -154,6 +157,7 @@ export default function CreateProduct({ categories }) {
                                         )}
                                     </div>
                                 </div>
+                                {errors.image && <p className="text-red-500 text-xs mt-1">{errors.image}</p>}
                             </section>
 
                             <hr className="border-white/5" />
@@ -173,41 +177,47 @@ export default function CreateProduct({ categories }) {
 
                                 <div className="space-y-3">
                                     {data.variants.map((variant, index) => (
-                                        <div key={index} className="flex gap-4 items-center bg-[#1A1A1A] p-3 rounded-lg border border-white/5 group">
-                                            <select
-                                                value={variant.size}
-                                                className="flex-1 bg-transparent border-none text-sm text-white focus:ring-0 cursor-pointer"
-                                                onChange={e => {
-                                                    const v = [...data.variants];
-                                                    v[index].size = e.target.value;
-                                                    setData('variants', v);
-                                                }}
-                                            >
-                                                <option value="">Select Size</option>
-                                                {AVAILABLE_SIZES.map(size => (
-                                                    <option key={size} value={size}>{size}</option>
-                                                ))}
-                                            </select>
+                                        <div key={index} className="space-y-2">
+                                            <div className="flex gap-4 items-center bg-[#1A1A1A] p-3 rounded-lg border border-white/5 group">
+                                                <select
+                                                    value={variant.size}
+                                                    className="flex-1 bg-transparent border-none text-sm text-white focus:ring-0 cursor-pointer"
+                                                    onChange={e => {
+                                                        const v = [...data.variants];
+                                                        v[index].size = e.target.value;
+                                                        setData('variants', v);
+                                                    }}
+                                                >
+                                                    <option value="">Select Size</option>
+                                                    {AVAILABLE_SIZES.map(size => (
+                                                        <option key={size} value={size}>{size}</option>
+                                                    ))}
+                                                </select>
 
-                                            <input
-                                                type="number"
-                                                placeholder="Stock"
-                                                className="w-24 bg-black/30 border border-white/10 rounded px-3 py-1 text-sm focus:border-[#E67E22] outline-none"
-                                                value={variant.stock}
-                                                onChange={e => {
-                                                    const v = [...data.variants];
-                                                    v[index].stock = e.target.value;
-                                                    setData('variants', v);
-                                                }}
-                                            />
+                                                <input
+                                                    type="number"
+                                                    placeholder="Stock"
+                                                    className="w-24 bg-black/30 border border-white/10 rounded px-3 py-1 text-sm focus:border-[#E67E22] outline-none text-white"
+                                                    value={variant.stock}
+                                                    onChange={e => {
+                                                        const v = [...data.variants];
+                                                        // LE "+" ICI EST CRUCIAL : il transforme la string de l'input en integer
+                                                        v[index].stock = e.target.value === '' ? 0 : +e.target.value;
+                                                        setData('variants', v);
+                                                    }}
+                                                />
 
-                                            <button
-                                                type="button"
-                                                onClick={() => removeVariant(index)}
-                                                className="text-gray-700 hover:text-red-500 transition-colors"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeVariant(index)}
+                                                    className="text-gray-700 hover:text-red-500 transition-colors px-2"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                            {/* Affichage des erreurs spécifiques aux variantes */}
+                                            {errors[`variants.${index}.size`] && <p className="text-red-500 text-[10px] uppercase ml-2">{errors[`variants.${index}.size`]}</p>}
+                                            {errors[`variants.${index}.stock`] && <p className="text-red-500 text-[10px] uppercase ml-2">{errors[`variants.${index}.stock`]}</p>}
                                         </div>
                                     ))}
                                 </div>
@@ -215,24 +225,37 @@ export default function CreateProduct({ categories }) {
                         </div>
 
                         {/* --- FORM FOOTER --- */}
-                        <div className="bg-[#0F0F0F] px-8 py-5 border-t border-white/5 flex justify-end gap-4">
-                            <Link
-                                href={route('admin.products.index')}
-                                className="px-6 py-2 text-sm font-semibold text-gray-500 hover:text-white transition-colors"
-                            >
-                                Cancel
-                            </Link>
-                            <button
-                                type="submit"
-                                disabled={processing}
-                                className="bg-[#E67E22] hover:bg-[#D35400] text-black px-8 py-2 rounded-md text-sm font-bold transition-all disabled:opacity-50"
-                            >
-                                {processing ? 'Initializing...' : 'Create Product'}
-                            </button>
+                        <div className="bg-[#0F0F0F] px-8 py-5 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+
+                            {/* Affichage global des erreurs (si besoin d'un rappel) */}
+                            <div className="flex-1">
+                                {Object.keys(errors).length > 0 && (
+                                    <p className="text-red-500 text-[10px] font-black uppercase tracking-widest animate-pulse">
+                                        [!] Registration_Failure: Check all required modules
+                                    </p>
+                                )}
+                            </div>
+
+                            <div className="flex gap-4">
+                                <Link
+                                    href={route('admin.products.index')}
+                                    className="px-6 py-2 text-sm font-semibold text-gray-500 hover:text-white transition-colors"
+                                >
+                                    Cancel
+                                </Link>
+
+                                <button
+                                    type="submit"
+                                    disabled={processing}
+                                    className="bg-[#E67E22] hover:bg-[#D35400] text-black px-8 py-2 rounded-md text-sm font-bold transition-all disabled:opacity-50 shadow-[0_0_20px_rgba(230,126,34,0.2)]"
+                                >
+                                    {processing ? 'Processing...' : 'Create Product'}
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>
-            </div>
-        </AppLayout>
+            </div >
+        </AppLayout >
     );
 }

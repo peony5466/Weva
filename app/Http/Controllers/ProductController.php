@@ -15,11 +15,11 @@ class ProductController extends Controller
     {
         return Inertia::render('admin/products/index', [
             'products' => Product::query()
-                ->with(['category']) // On garde uniquement la catégorie
+                ->with(['category', 'variants']) // On garde uniquement la catégorie
                 ->when($request->input('search'), function ($query, $search) {
                     $query->where('name', 'like', "%{$search}%");
                 })
-                ->paginate(10)
+                ->paginate(5)
                 ->withQueryString(),
             'filters' => $request->only(['search']),
         ]);
@@ -32,30 +32,42 @@ class ProductController extends Controller
         ]);
     }
 
+
+
     public function store(Request $request)
     {
+        // 1. Validation
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'price' => 'required|numeric',
             'description' => 'required|string',
-            'category_id' => 'nullable|exists:categories,id',
-            'image' => 'nullable|image|max:2048', // Validation image
+            'price' => 'required|numeric',
+            'category_id' => 'required|exists:categories,id',
+            'image' => 'nullable|image|max:2048',
+            'variants' => 'required|array',
+            'variants.*.size' => 'required|string',
+            'variants.*.stock' => 'required|integer',
         ]);
 
-        $imagePath = null;
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('products', 'public');
-        }
-
-        Product::create([
+        // 2. Création du produit
+        $product = Product::create([
             'name' => $validated['name'],
-            'price' => $validated['price'],
+            'slug' => Str::slug($validated['name']),
             'description' => $validated['description'],
+            'price' => $validated['price'],
             'category_id' => $validated['category_id'],
-            'image_path' => $imagePath, // On stocke le chemin
-            'slug' => Str::slug($request->name),
-            'is_limited' => $request->boolean('is_limited'),
+            'is_limited' => $request->is_limited ? 1 : 0,
+            'image_path' => $request->file('image') ? $request->file('image')->store('products', 'public') : null,
         ]);
+
+        // 3. Création des variantes avec génération de SKU
+        foreach ($validated['variants'] as $variant) {
+            $product->variants()->create([
+                'size' => $variant['size'],
+                'stock' => $variant['stock'],
+                // Génère un SKU unique (ex: PRODUCTNAME-SIZE-RANDOM)
+                'sku' => strtoupper(Str::slug($product->name)) . '-' . $variant['size'] . '-' . Str::random(4),
+            ]);
+        }
 
         return redirect()->route('admin.products.index');
     }
@@ -69,36 +81,59 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
-        // 1. On valide
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'price' => 'required|numeric',
-            'category_id' => 'nullable|exists:categories,id',
-        ]);
-
-        // 2. On prépare les données manuellement pour éviter le "Undefined array key"
-        $data = [
-            'name'        => $request->input('name'),
-            'price'       => $request->input('price'),
-            'description' => $request->input('description'),
-            'category_id' => $request->input('category_id'), // Laravel gère le null ici
-            'is_limited'  => $request->boolean('is_limited'),
-        ];
-
-        // 3. Gestion de l'image
-        if ($request->hasFile('image')) {
-            if ($product->image_path) {
-                Storage::disk('public')->delete($product->image_path);
-            }
-            $data['image_path'] = $request->file('image')->store('products', 'public');
+        // 1. Décodage du JSON venant de React
+        $allData = $request->all();
+        if (isset($allData['variants']) && is_string($allData['variants'])) {
+            $allData['variants'] = json_decode($allData['variants'], true);
         }
 
-        // 4. Update direct
-        $product->update($data);
+        // 2. Validation (On ne demande pas le SKU ici car on va le générer)
+        $validator = \Illuminate\Support\Facades\Validator::make($allData, [
+            'name' => 'required|string|max:255',
+            'price' => 'required|numeric',
+            'category_id' => 'required',
+            'variants' => 'required|array|min:1',
+            'variants.*.size' => 'required|string',
+            'variants.*.stock' => 'required|integer|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator->errors())->withInput();
+        }
+
+        $validated = $validator->validated();
+
+        // 3. Update du produit principal
+        $product->update([
+            'name' => $validated['name'],
+            'price' => $validated['price'],
+            'description' => $request->description ?? '',
+            'category_id' => $validated['category_id'],
+            'is_limited' => ($request->is_limited === 'true' || $request->is_limited == 1) ? 1 : 0,
+            'slug' => \Illuminate\Support\Str::slug($validated['name']),
+        ]);
+
+        // Image
+        if ($request->hasFile('image')) {
+            $product->update([
+                'image_path' => $request->file('image')->store('products', 'public')
+            ]);
+        }
+
+        // 4. SYNC DES VARIANTS (On vide et on recrée pour remplir le SKU obligatoire)
+        $product->variants()->delete();
+
+        foreach ($validated['variants'] as $v) {
+            $product->variants()->create([
+                'size'  => $v['size'],
+                'stock' => $v['stock'],
+                // ON GÉNÈRE LE SKU ICI POUR ÉVITER L'ERREUR SQL NOT NULL
+                'sku'   => strtoupper(\Illuminate\Support\Str::slug($product->name)) . '-' . strtoupper($v['size']) . '-' . \Illuminate\Support\Str::random(4),
+            ]);
+        }
 
         return redirect()->route('admin.products.index');
     }
-
     public function destroy(Product $product)
     {
         $product->delete();

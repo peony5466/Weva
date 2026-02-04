@@ -36,12 +36,11 @@ class ShopController extends Controller
 
     public function show($slug)
     {
-        $product = Product::with('variants')
+        $product = Product::with('variants') // Appel de la méthode définie dans Product.php
             ->where('slug', $slug)
-            ->where('is_active', true)
             ->firstOrFail();
 
-        return Inertia::render('Shop/ProductShow', [
+        return Inertia::render('Shop/show', [
             'product' => $product
         ]);
     }

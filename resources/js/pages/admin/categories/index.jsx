@@ -92,8 +92,9 @@ export default function CategoryIndex({ categories = [] }) {
                                         <h2 className="text-2xl font-bold text-white group-hover:text-[#E67E22] transition-colors">
                                             {cat.name}
                                         </h2>
+
                                         <p className="text-sm text-gray-500 mt-1">
-                                            {cat.products_count || 0} Assets Linked
+                                            {cat.count} Assets Linked
                                         </p>
                                     </div>
 
@@ -109,7 +110,7 @@ export default function CategoryIndex({ categories = [] }) {
                                             onClick={() => handleDelete(cat.id)}
                                             className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-600 hover:text-red-500 transition-colors"
                                         >
-                                            <Trash2 className="w-3.5 h-3.5" />
+                                            <Trash2 className="w-3.5h-3.5" />
                                             Delete
                                         </button>
                                     </div>

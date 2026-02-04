@@ -27,6 +27,12 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
+    public function variants(): HasMany
+    {
+        // On précise bien le nom de la classe ProductVariant
+        return $this->hasMany(ProductVariant::class);
+    }
+
     /**
      * Tes variantes existantes
      */

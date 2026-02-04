@@ -1,17 +1,33 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router } from '@inertiajs/react';
 import { Plus, Search, Edit2, Trash2, CheckCircle2, XCircle, Image as ImageIcon } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export default function ProductIndex({ products, filters }) {
     const [search, setSearch] = useState(filters.search || '');
     const productList = products.data;
 
+    // On utilise un Ref pour savoir si c'est le premier rendu
+    const isFirstRender = useRef(true);
+
     useEffect(() => {
-        const delayDebounceFn = setTimeout(() => {
-            router.get(route('admin.products.index'), { search: search }, { preserveState: true, replace: true, preserveScroll: true });
-        }, 300);
-        return () => clearTimeout(delayDebounceFn);
+        // On évite de déclencher la recherche au chargement initial
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            return;
+        }
+
+        // On ne déclenche la recherche que si la valeur de recherche est différente des filtres actuels
+        if (search !== (filters.search || '')) {
+            const delayDebounceFn = setTimeout(() => {
+                router.get(
+                    route('admin.products.index'),
+                    { search: search },
+                    { preserveState: true, replace: true, preserveScroll: true }
+                );
+            }, 300);
+            return () => clearTimeout(delayDebounceFn);
+        }
     }, [search]);
 
     const handleDelete = (id) => {
@@ -44,8 +60,6 @@ export default function ProductIndex({ products, filters }) {
                             New Product
                         </Link>
                     </div>
-
-
 
                     {/* TABLE CONTAINER */}
                     <div className="bg-[#111111] rounded-xl border border-white/5 overflow-hidden">
@@ -82,69 +96,84 @@ export default function ProductIndex({ products, filters }) {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-white/5">
-                                {productList.map((product) => (
-                                    <tr key={product.id} className="hover:bg-white/[0.02] transition-colors group">
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-4">
-                                                {/* MINIATURE IMAGE */}
-                                                <div className="w-10 h-12 bg-[#1A1A1A] rounded border border-white/10 overflow-hidden flex-shrink-0">
-                                                    {product.image_path ? (
-                                                        <img
-                                                            src={`/storage/${product.image_path}`}
-                                                            alt=""
-                                                            className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all"
-                                                        />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center">
-                                                            <ImageIcon className="w-4 h-4 text-gray-700" />
-                                                        </div>
-                                                    )}
+                                {productList.length > 0 ? (
+                                    productList.map((product) => (
+                                        <tr key={product.id} className="hover:bg-white/[0.02] transition-colors group">
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-12 bg-[#1A1A1A] rounded border border-white/10 overflow-hidden flex-shrink-0">
+                                                        {product.image_path ? (
+                                                            <img
+                                                                src={`/storage/${product.image_path}`}
+                                                                alt=""
+                                                                className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all"
+                                                            />
+                                                        ) : (
+                                                            <div className="w-full h-full flex items-center justify-center">
+                                                                <ImageIcon className="w-4 h-4 text-gray-700" />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <span className="text-sm font-medium text-white">{product.name}</span>
                                                 </div>
-                                                <span className="text-sm font-medium text-white">{product.name}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className="text-xs text-gray-400 font-mono bg-white/5 px-2 py-1 rounded">
-                                                {product.category?.name || 'Standard'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            {product.is_limited ? (
-                                                <CheckCircle2 className="w-4 h-4 text-green-500 mx-auto" />
-                                            ) : (
-                                                <XCircle className="w-4 h-4 text-gray-800 mx-auto" />
-                                            )}
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className="text-sm text-gray-300">
-                                                {product.variants?.reduce((acc, v) => acc + (parseInt(v.stock) || 0), 0) || 0}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex justify-end gap-3">
-                                                <Link href={route('admin.products.edit', product.id)} className="text-gray-500 hover:text-white transition-colors">
-                                                    <Edit2 className="w-4 h-4" />
-                                                </Link>
-                                                <button onClick={() => handleDelete(product.id)} className="text-gray-500 hover:text-red-500 transition-colors">
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <span className="text-xs text-gray-400 font-mono bg-white/5 px-2 py-1 rounded">
+                                                    {product.category?.name || 'Standard'}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                {product.is_limited ? (
+                                                    <CheckCircle2 className="w-4 h-4 text-green-500 mx-auto" />
+                                                ) : (
+                                                    <XCircle className="w-4 h-4 text-gray-800 mx-auto" />
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4 text-center">
+                                                <span className="text-sm text-gray-300">
+                                                    {product.variants?.reduce((acc, v) => acc + (parseInt(v.stock) || 0), 0) || 0}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="flex justify-end gap-3">
+                                                    <Link href={route('admin.products.edit', product.id)} className="text-gray-500 hover:text-white transition-colors">
+                                                        <Edit2 className="w-4 h-4" />
+                                                    </Link>
+                                                    <button onClick={() => handleDelete(product.id)} className="text-gray-500 hover:text-red-500 transition-colors">
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="5" className="px-6 py-10 text-center text-gray-500 italic text-sm">
+                                            No products found.
                                         </td>
                                     </tr>
-                                ))}
+                                )}
                             </tbody>
                         </table>
 
-                        {/* FOOTER PAGINATION */}
-                        <div className="p-4 bg-[#0F0F0F] border-t border-white/5 flex justify-between items-center text-xs text-gray-500">
-                            <span className="italic">Total: {productList.length} assets</span>
-                            <div className="flex gap-2">
+                        {/* FOOTER PAGINATION - CORRIGÉ */}
+                        <div className="p-4 bg-[#0F0F0F] border-t border-white/5 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500 gap-4">
+                            <span className="italic uppercase tracking-widest text-[10px]">
+                                Showing {products.from || 0}-{products.to || 0} of {products.total} assets
+                            </span>
+                            <div className="flex gap-1 flex-wrap justify-center">
                                 {products.links.map((link, index) => (
                                     <Link
                                         key={index}
                                         href={link.url}
                                         dangerouslySetInnerHTML={{ __html: link.label }}
-                                        className={`px-3 py-1 rounded border border-white/5 transition-all ${link.active ? 'bg-white text-black font-bold' : 'hover:bg-white/10 text-gray-400'} ${!link.url ? 'opacity-20 pointer-events-none' : ''}`}
+                                        // On préserve le scroll et l'état lors du clic sur la pagination
+                                        preserveScroll
+                                        preserveState
+                                        className={`px-3 py-1.5 rounded border border-white/5 transition-all text-[10px] font-bold uppercase ${link.active
+                                                ? 'bg-white text-black border-white'
+                                                : 'hover:bg-white/10 text-gray-400'
+                                            } ${!link.url ? 'opacity-20 cursor-not-allowed' : ''}`}
                                     />
                                 ))}
                             </div>

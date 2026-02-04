@@ -22,7 +22,7 @@ const TokenPage = () => {
         if (user.role === 'admin') {
             router.visit('/admin/dashboard');
         } else {
-            router.visit('/avatar');
+            router.visit('/dashboard');
         }
     };
 
