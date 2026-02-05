@@ -11,9 +11,12 @@ import {
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import Logo from '@/assets/images/Logo.svg';
 
-export default function Navbar() {
+export default function Navbar({ onOpenCart }) {
+    const { cart } = usePage().props;
+    const cartCount = Object.keys(cart || {}).length;
     const { auth } = usePage().props;
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
 
     // Fonction pour générer les initiales (ex: "John Doe" -> "JD")
     const getInitials = (name) => {
@@ -61,7 +64,11 @@ export default function Navbar() {
                                 {/* Cercle Initiales */}
                                 <div className="h-10 w-10 rounded-full bg-black flex items-center justify-center text-white border-2 border-transparent hover:border-gray-300 transition-all">
                                     <span className="text-sm font-bold">{getInitials(auth.user.name)}</span>
+
                                 </div>
+
+
+
                             </Menu.Button>
 
                             <Transition
@@ -125,6 +132,19 @@ export default function Navbar() {
                             >
                                 Sign up
                             </Link>
+                            {/* <button
+                                onClick={() => setCartOpen(true)}
+                                className="hover:text-black transition-colors flex items-center gap-1"
+                            >
+                                Bag ({cartCount})
+                            </button> */}
+                            <button
+                                onClick={onOpenCart} // Utilise la fonction passée par le Layout
+                                className="hover:text-gray-400 transition-colors flex items-center gap-1"
+                            >
+                                Bag ({cartCount})
+                            </button>
+
                         </div>
                     )}
 

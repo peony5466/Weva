@@ -39,6 +39,7 @@ class ShopController extends Controller
         $product = Product::with('variants') // Appel de la méthode définie dans Product.php
             ->where('slug', $slug)
             ->firstOrFail();
+        $product->load('category');
 
         return Inertia::render('Shop/show', [
             'product' => $product

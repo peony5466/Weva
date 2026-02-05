@@ -59,20 +59,24 @@ export default function Index({ products, categories, currentCategory }) {
                                         </div>
                                     </div>
                                 )}
-
-                                <Link href={route('shop.show', product.id)} className="w-full h-full flex items-center justify-center">
+                                <Link href={route('shop.show', product.slug)} className="w-full h-full flex items-center justify-center">
                                     {product.image_path ? (
                                         <img
-                                            src={`/storage/${product.image_path}`}
+                                            src={product.image_path.startsWith('http')
+                                                ? product.image_path
+                                                : `/storage/${product.image_path.replace('storage/', '')}`}
                                             alt={product.name}
-                                            // Mix-blend-multiply est crucial pour que le fond de ton image (si blanc) disparaisse sur le fond blanc du site
                                             className="w-full h-full object-contain mix-blend-multiply transition-transform duration-700 group-hover:scale-105"
                                         />
                                     ) : (
-                                        <div className="text-gray-300 text-[10px] uppercase tracking-widest font-bold">Img_Empty</div>
+                                        /* Image de remplacement si le fichier est absent ou nul */
+                                        <img
+                                            src="https://placehold.co/600x800/FFFFFF/000000?text=No+Asset"
+                                            alt="No Image"
+                                            className="w-full h-full object-contain opacity-20"
+                                        />
                                     )}
                                 </Link>
-
                                 {/* Icône Favoris */}
                                 <button className="absolute bottom-4 right-4 text-black opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="w-5 h-5">
