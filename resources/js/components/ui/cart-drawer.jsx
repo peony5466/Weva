@@ -68,10 +68,16 @@ export default function CartDrawer({ open, setOpen }) {
                                         <div className="border-t border-gray-100 px-6 py-8 space-y-4">
                                             <div className="flex justify-between text-sm font-bold uppercase tracking-widest">
                                                 <span>Subtotal</span>
-                                                <span>€ {cartTotal.toFixed(2)}</span>
+                                                {/* Correction ici : on utilise cartTotal qui vient de usePage().props */}
+                                                <span>{(cartTotal || 0).toFixed(2)} €</span>
                                             </div>
-                                            <p className="text-[9px] text-gray-400 uppercase tracking-wider italic">Shipping and taxes calculated at checkout.</p>
-                                            <Link href={route('checkout')} className="block w-full bg-black text-white text-center py-5 text-[11px] font-black uppercase tracking-[0.3em] hover:bg-zinc-800 transition">
+                                            <p className="text-[9px] text-gray-400 uppercase tracking-wider italic">
+                                                Shipping and taxes calculated at checkout.
+                                            </p>
+                                            <Link
+                                                href={route('checkout')}
+                                                className="block w-full bg-black text-white text-center py-5 text-[11px] font-black uppercase tracking-[0.3em] hover:bg-zinc-800 transition"
+                                            >
                                                 Checkout
                                             </Link>
                                         </div>

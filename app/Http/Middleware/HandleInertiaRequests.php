@@ -37,24 +37,35 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
-
+        // 1. On récupère le panier en premier pour pouvoir calculer le total
         $cart = session()->get('cart', []);
 
-        return [
-            ...parent::share($request),
-            'name' => config('app.name'),
-            'quote' => ['message' => trim($message), 'author' => trim($author)],
+        // 2. On calcule le total
+        $cartTotal = collect($cart)->reduce(function ($total, $item) {
+            return $total + ($item['price'] * $item['quantity']);
+        }, 0);
+
+        // 3. On retourne tout en une seule fois
+        return array_merge(parent::share($request), [
             'auth' => [
-                'user' => $request->user(),
-            ],
-            'ziggy' => fn(): array => [
-                ...(new Ziggy)->toArray(),
-                'location' => $request->url(),
+                'user' => $request->user() ? [
+                    'id' => $request->user()->id,
+                    'name' => $request->user()->name,
+                    'email' => $request->user()->email,
+                    'points' => $request->user()->points,
+                ] : null,
             ],
             'cart' => $cart,
             'cartCount' => count($cart),
-            'cartTotal' => collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']),
-        ];
+            'cartTotal' => $cartTotal,
+            'flash' => [
+                'success' => session('success'),
+                'error' => session('error'),
+            ],
+            'ziggy' => fn() => [
+                ...(new Ziggy)->toArray(),
+                'location' => $request->url(),
+            ],
+        ]);
     }
 }

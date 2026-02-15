@@ -1,22 +1,19 @@
 import { useState, Fragment } from 'react';
 import { Link, usePage } from '@inertiajs/react';
-import { Menu, Transition, Dialog } from '@headlessui/react';
+import { Menu, Transition } from '@headlessui/react';
 import {
     LayoutDashboard,
     Settings,
     LogOut,
-    Menu as MenuIcon,
-    X as XIcon
+    ShoppingBag
 } from 'lucide-react'
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import { Bars3Icon } from '@heroicons/react/24/outline';
 import Logo from '@/assets/images/Logo.svg';
 
 export default function Navbar({ onOpenCart }) {
-    const { cart } = usePage().props;
-    const cartCount = Object.keys(cart || {}).length;
-    const { auth } = usePage().props;
+    // On récupère tout ce dont on a besoin depuis les props globales d'Inertia
+    const { auth, cartCount } = usePage().props;
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
 
     // Fonction pour générer les initiales (ex: "John Doe" -> "JD")
     const getInitials = (name) => {
@@ -37,7 +34,7 @@ export default function Navbar({ onOpenCart }) {
                 {/* 1. GAUCHE : Navigation Desktop */}
                 <div className="hidden lg:flex lg:gap-x-8 flex-1">
                     {navigation.map((item) => (
-                        <Link key={item.name} href={item.href} className="text-sm font-semibold leading-6 text-gray-900 hover:text-indigo-600 transition">
+                        <Link key={item.name} href={item.href} className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-900 hover:text-gray-500 transition">
                             {item.name}
                         </Link>
                     ))}
@@ -50,25 +47,41 @@ export default function Navbar({ onOpenCart }) {
                     </Link>
                 </div>
 
-                {/* 3. DROITE : Auth / User Menu */}
-                <div className="flex flex-1 justify-end items-center gap-4">
+                {/* 3. DROITE : Actions */}
+                <div className="flex flex-1 justify-end items-center gap-6">
+
+                    {/* BOUTON PANIER (Visible par tous) */}
+                    <button
+                        onClick={onOpenCart}
+                        className="relative group flex items-center gap-1 focus:outline-none"
+                    >
+                        <span className="text-[11px] font-[1000] uppercase italic tracking-tighter group-hover:text-gray-400 transition">
+                            Your_Bag
+                        </span>
+                        <div className="relative">
+                            <ShoppingBag className="w-5 h-5 text-gray-900 group-hover:text-gray-400 transition" strokeWidth={2.5} />
+                            {cartCount > 0 && (
+                                <span className="absolute -top-2 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-black text-[9px] font-bold text-white ring-2 ring-white">
+                                    {cartCount}
+                                </span>
+                            )}
+                        </div>
+                    </button>
+
+                    {/* AUTHENTIFICATION */}
                     {auth.user ? (
                         <Menu as="div" className="relative ml-3">
-                            <Menu.Button className="flex items-center gap-3 focus:outline-none">
-                                {/* Badge Admin discret */}
-                                {auth.user.role === 'admin' && (
-                                    <span className="hidden sm:block text-[10px] font-bold uppercase tracking-wider bg-red-100 text-red-700 px-2 py-0.5 rounded">
-                                        Admin
+                            <Menu.Button className="flex items-center gap-3 focus:outline-none group">
+                                {/* Affichage des points si disponible */}
+                                <div className="hidden sm:flex flex-col items-end mr-2">
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-600">
+                                        {auth.user.points || 0} PTS
                                     </span>
-                                )}
-                                {/* Cercle Initiales */}
-                                <div className="h-10 w-10 rounded-full bg-black flex items-center justify-center text-white border-2 border-transparent hover:border-gray-300 transition-all">
-                                    <span className="text-sm font-bold">{getInitials(auth.user.name)}</span>
-
                                 </div>
 
-
-
+                                <div className="h-10 w-10 rounded-full bg-black flex items-center justify-center text-white border-2 border-transparent group-hover:border-gray-300 transition-all">
+                                    <span className="text-sm font-bold">{getInitials(auth.user.name)}</span>
+                                </div>
                             </Menu.Button>
 
                             <Transition
@@ -123,28 +136,15 @@ export default function Navbar({ onOpenCart }) {
                         </Menu>
                     ) : (
                         <div className="flex items-center gap-x-4">
-                            <Link href={route('login')} className="text-sm font-semibold leading-6 text-gray-900">
+                            <Link href={route('login')} className="text-xs font-black uppercase tracking-widest text-gray-900 hover:text-gray-500 transition">
                                 Log in
                             </Link>
                             <Link
                                 href={route('register')}
-                                className="rounded-full bg-black px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 transition"
+                                className="rounded-none bg-black px-6 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-sm hover:bg-zinc-800 transition"
                             >
-                                Sign up
+                                JOIN_US
                             </Link>
-                            {/* <button
-                                onClick={() => setCartOpen(true)}
-                                className="hover:text-black transition-colors flex items-center gap-1"
-                            >
-                                Bag ({cartCount})
-                            </button> */}
-                            <button
-                                onClick={onOpenCart} // Utilise la fonction passée par le Layout
-                                className="hover:text-gray-400 transition-colors flex items-center gap-1"
-                            >
-                                Bag ({cartCount})
-                            </button>
-
                         </div>
                     )}
 

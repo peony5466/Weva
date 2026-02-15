@@ -10,7 +10,7 @@ use App\Http\Controllers\ShopController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\CartController;
-
+use App\Http\Controllers\OrderController;
 /*
 |--------------------------------------------------------------------------
 | 1. ROUTES PUBLIQUES
@@ -32,13 +32,18 @@ Route::get('/token', function () {
 })->name('token.public');
 
 Route::get('/checkout', function () {
-    return inertia('Checkout/Index'); // On créera cette page plus tard
+    return inertia('checkout/index'); // On créera cette page plus tard
 })->name('checkout');
 
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
 Route::delete('/cart/{id}', [CartController::class, 'destroy'])->name('cart.destroy');
 Route::patch('/cart/{key}', [CartController::class, 'update'])->name('cart.update');
+
+
+
+// Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
+
 
 /*
 |--------------------------------------------------------------------------
