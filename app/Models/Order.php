@@ -17,7 +17,9 @@ class Order extends Model
         'points_used',
         'points_earned',
         'status',
-        'stripe_payment_intent_id'
+        'stripe_payment_intent_id',
+        'shipping_address',
+        'email',
     ];
 
     // Relation : Une commande appartient à un utilisateur

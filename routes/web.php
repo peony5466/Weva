@@ -32,8 +32,9 @@ Route::get('/token', function () {
 })->name('token.public');
 
 Route::get('/checkout', function () {
-    return inertia('checkout/index'); // On créera cette page plus tard
+    return inertia('checkout/index');
 })->name('checkout');
+Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
 
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
@@ -42,7 +43,7 @@ Route::patch('/cart/{key}', [CartController::class, 'update'])->name('cart.updat
 
 
 
-// Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
+Route::get('/checkout/success/{order_number}', [OrderController::class, 'success'])->name('checkout.success');
 
 
 /*
