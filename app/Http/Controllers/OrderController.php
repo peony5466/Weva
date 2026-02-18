@@ -18,40 +18,31 @@ class OrderController extends Controller
         $user = $request->user();
         $cart = session()->get('cart', []);
 
-        if (empty($cart)) return back()->withErrors(['error' => 'Panier vide']);
+        if (empty($cart)) return back()->withErrors(['error' => 'Votre panier est vide.']);
 
-        // 1. CALCULS DES POINTS ET MONTANTS
+        // 1. Calculs des points et montants
         $subtotal = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
-
-        // On vérifie si l'utilisateur veut utiliser ses points
         $pointsUsed = ($user && $request->boolean('use_points')) ? $user->points : 0;
         $discount = $pointsUsed / 100; // 100 points = 1€
-
         $total = max(0, $subtotal - $discount);
-
-        // On gagne 1 point par euro dépensé (sur le total final)
         $pointsToEarn = floor($total);
 
-        Stripe::setApiKey(config('services.stripe.secret'));
-
         try {
+            // 2. Création de la commande en Database
             $order = DB::transaction(function () use ($request, $user, $cart, $subtotal, $total, $discount, $pointsUsed, $pointsToEarn) {
-
-                // 2. CRÉATION DE LA COMMANDE
                 $newOrder = Order::create([
                     'user_id'          => $user?->id,
                     'order_number'     => 'CMD-' . strtoupper(str()->random(8)),
                     'subtotal'         => $subtotal,
                     'discount'         => $discount,
                     'total'            => $total,
-                    'points_used'      => $pointsUsed,   // Enregistrement des points consommés
-                    'points_earned'    => $pointsToEarn, // Enregistrement des points à gagner
+                    'points_used'      => $pointsUsed,
+                    'points_earned'    => $pointsToEarn,
                     'status'           => 'pending_payment',
                     'shipping_address' => $request->address,
                     'email'            => $user ? $user->email : $request->email,
                 ]);
 
-                // 3. DÉBIT DES POINTS (On les retire du compte User immédiatement)
                 if ($user && $pointsUsed > 0) {
                     $user->decrement('points', $pointsUsed);
                 }
@@ -66,11 +57,18 @@ class OrderController extends Controller
                         'attributes' => ['size' => $item['size'] ?? 'Unique'],
                     ]);
                 }
-
                 return $newOrder;
             });
 
-            // 4. SESSION STRIPE
+            // 3. LOGIQUE DE PAIEMENT
+            // Cas A : La commande est devenue gratuite (100% points)
+            if ($total <= 0) {
+                $order->update(['status' => 'paid']);
+                return redirect()->route('checkout.success', $order->order_number);
+            }
+
+            // Cas B : Il reste un montant à payer via Stripe
+            Stripe::setApiKey(config('services.stripe.secret'));
             $checkoutSession = Session::create([
                 'payment_method_types' => ['card'],
                 'line_items' => [[
@@ -88,7 +86,6 @@ class OrderController extends Controller
             ]);
 
             $order->update(['stripe_payment_intent_id' => $checkoutSession->id]);
-
             return Inertia::location($checkoutSession->url);
         } catch (\Exception $e) {
             return back()->withErrors(['error' => $e->getMessage()]);
@@ -99,18 +96,12 @@ class OrderController extends Controller
     {
         $order = Order::where('order_number', $order_number)->firstOrFail();
 
-        // 5. CRÉDIT DES POINTS AU RETOUR DE STRIPE
-        if ($order->status === 'pending_payment') {
-
-            // On valide le paiement
+        if ($order->status === 'pending_payment' || $order->total == 0) {
             $order->update(['status' => 'paid']);
 
-            // On ajoute les points gagnés au compte de l'utilisateur
             if ($order->user_id && $order->points_earned > 0) {
-                $user = User::find($order->user_id);
-                $user->increment('points', $order->points_earned);
+                User::find($order->user_id)->increment('points', $order->points_earned);
             }
-
             session()->forget('cart');
         }
 
