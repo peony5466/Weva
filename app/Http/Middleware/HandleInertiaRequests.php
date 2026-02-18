@@ -52,6 +52,8 @@ class HandleInertiaRequests extends Middleware
                     'id' => $request->user()->id,
                     'name' => $request->user()->name,
                     'email' => $request->user()->email,
+                    'role' => $request->user()->role, // <--- CETTE LIGNE EST OBLIGATOIRE
+                    'points' => $request->user()->points,
                     'points' => $request->user()->points,
                 ] : null,
             ],

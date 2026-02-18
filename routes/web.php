@@ -54,15 +54,42 @@ Route::get('/checkout/success/{order_number}', [OrderController::class, 'success
 | 2. ROUTES PROTÉGÉES 
 |--------------------------------------------------------------------------
 */
+
+Route::get('/dashboard', function () {
+    // 1. Si pas connecté -> vers le login
+    if (!Auth::check()) {
+        return redirect()->route('login');
+    }
+
+    // 2. Si Admin -> vers le dashboard admin
+    if (Auth::user()->role === 'admin') {
+        return Inertia::render('dashboard');
+    }
+
+    // 3. Si Client -> redirection directe vers la VIP Area
+    return redirect()->route('wevavip');
+})->name('dashboard');
+
+
 Route::middleware(['auth', 'verified'])->group(function () {
 
     // Dispatcher de Dashboard
-    Route::get('/dashboard', function () {
-        if (Auth::user()->role === 'admin') {
-            return Inertia::render('dashboard');
-        }
-        return redirect()->route('wevavip');
-    })->name('dashboard');
+    Route::middleware(['role:client'])->group(function () {
+        Route::get('/dashboard/wevavip', function () {
+            $user = Auth::user();
+
+            // On récupère les 5 dernières commandes du client
+            $orders = \App\Models\Order::where('user_id', $user->id)
+                ->latest()
+                ->take(5)
+                ->get();
+
+            return Inertia::render('client/wevavip', [
+                'orders' => $orders,
+                'userPoints' => $user->points
+            ]);
+        })->name('wevavip');
+    });
 
     /* --- ZONE ADMIN --- */
     Route::middleware(['role:admin'])->prefix('dashboard/admin')->name('admin.')->group(function () {
@@ -89,28 +116,92 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/users/{user}', [MemberController::class, 'destroy'])->name('users.destroy');
 
 
+        // Dans ton groupe de routes Admin
         Route::get('/orders', function () {
-            return Inertia::render('admin/orders/index');
+            return Inertia::render('admin/orders/index', [
+                'orders' => \App\Models\Order::with('user')
+                    ->latest()
+                    ->get()
+                    ->map(function ($order) {
+                        return [
+                            'id' => $order->order_number,
+                            'customer' => $order->user ? $order->user->name : 'Guest',
+                            'email' => $order->email,
+                            'item' => 'Order Batch', // Ou une logique pour lister les items
+                            'price' => $order->total . ' €',
+                            'type' => $order->points_used > 0 ? 'Hybrid' : 'Fiat',
+                            'status' => ucfirst($order->status),
+                            'date' => $order->created_at->format('Y-m-d'),
+                            'real_id' => $order->id // Pour le lien détail
+                        ];
+                    })
+            ]);
         })->name('orders.index');
     });
 });
 
 /* --- ZONE CLIENT --- */
-Route::middleware(['role:client'])->group(function () {
+Route::middleware(['auth', 'verified', 'role:client'])->group(function () {
+
+    // 1. LA SEULE ET UNIQUE ROUTE WEVAVIP (AVEC LES DONNÉES)
     Route::get('/dashboard/wevavip', function () {
-        return Inertia::render('client/wevavip');
+        $user = Auth::user();
+
+        $orders = \App\Models\Order::where('user_id', $user->id)
+            ->where('status', 'paid') // Optionnel: ne montrer que les payées
+            ->latest()
+            ->take(5)
+            ->get();
+
+        return Inertia::render('client/wevavip', [
+            'orders' => $orders,
+            'userPoints' => $user->points
+        ]);
     })->name('wevavip');
 
+    // 2. TES AUTRES ROUTES CLIENT
     Route::get('/dashboard/tokens', function () {
-        return Inertia::render('client/mytoken');
+        return Inertia::render('client/mytoken', [
+            'userPoints' => Auth::user()->points,
+            'orders' => \App\Models\Order::where('user_id', Auth::id())->latest()->take(10)->get()
+        ]);
     })->name('tokens.my-wallet');
+
+    Route::get('/dashboard/personalize', function () {
+        return Inertia::render('client/customizer');
+    })->name('avatar.customize');
+
+    Route::get('/dashboard/orders', function () {
+        return Inertia::render('client/orders/index', [
+            'orders' => \App\Models\Order::where('user_id', Auth::id())
+                ->with('items.product') // Pour voir le nom des produits
+                ->latest()
+                ->get()
+        ]);
+    })->name('client.orders');
+
+    // Route::get('/dashboard/orders/{order}', function (\App\Models\Order $order) {
+    //     // Sécurité : Vérifier que la commande appartient bien à l'utilisateur
+    //     if ($order->user_id !== Auth::id()) {
+    //         abort(403);
+    //     }
+
+
 });
+Route::middleware(['auth', 'verified'])->group(function () {
 
-// Customizer (Commun ou spécifique)
-Route::get('/dashboard/personalize', function () {
-    return Inertia::render('client/customizer');
-})->name('avatar.customize');
+    Route::get('/dashboard/orders/{order}', function (\App\Models\Order $order) {
+        // LOGIQUE DE SÉCURITÉ :
+        // Si l'utilisateur n'est PAS admin ET que la commande ne lui appartient pas -> 403
+        if (Auth::user()->role !== 'admin' && $order->user_id !== Auth::id()) {
+            abort(403);
+        }
 
+        return Inertia::render('client/orders/show', [
+            'order' => $order->load(['items.product', 'user']) // 'user' pour voir qui a acheté
+        ]);
+    })->name('client.orders.show');
+});
 
 /*
 |--------------------------------------------------------------------------

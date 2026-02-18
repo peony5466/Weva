@@ -2,7 +2,7 @@ import { AppSidebar } from '@/components/app-sidebar';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { Head } from '@inertiajs/react';
 
-export default function MyTokens({ auth }) {
+export default function MyTokens({ auth, userPoints = 0, orders = [] }) {
     return (
         <SidebarProvider>
             <AppSidebar />
@@ -32,12 +32,11 @@ export default function MyTokens({ auth }) {
                             </div>
                         </header>
 
-                        {/* BALANCE DISPLAY - STYLE GALERIE */}
+                        {/* BALANCE DISPLAY - DONNÉES RÉELLES */}
                         <div className="relative group">
                             <div className="bg-[#0F0F0F] border border-white/5 p-12 lg:p-20 flex flex-col md:flex-row justify-between items-center gap-12 overflow-hidden">
-                                {/* Label flottant style industriel */}
                                 <span className="absolute top-6 left-6 text-[8px] text-neutral-600 tracking-[0.4em] uppercase font-mono">
-                                    Vault_id: WEVA-00912
+                                    Vault_id: WEVA-{auth.user.id.toString().padStart(5, '0')}
                                 </span>
 
                                 <div className="space-y-4 text-center md:text-left">
@@ -45,7 +44,7 @@ export default function MyTokens({ auth }) {
                                         Total Balance
                                     </p>
                                     <h2 className="text-6xl md:text-8xl font-extralight tracking-tighter text-white">
-                                        10,000 <span className="text-xl md:text-2xl font-thin text-neutral-600 tracking-[0.3em] ml-2">WT</span>
+                                        {userPoints.toLocaleString()} <span className="text-xl md:text-2xl font-thin text-neutral-600 tracking-[0.3em] ml-2">WT</span>
                                     </h2>
                                 </div>
 
@@ -58,40 +57,46 @@ export default function MyTokens({ auth }) {
                             </div>
                         </div>
 
-                        {/* SECONDARY DATA GRID */}
+                        {/* SECONDARY DATA GRID - CASHBACK & TOTAL SPENT */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-white/5 border border-white/5">
                             <div className="bg-[#0A0A0A] p-10 space-y-2">
-                                <p className="text-[9px] text-neutral-600 uppercase tracking-[0.3em]">Monthly Flow</p>
-                                <p className="text-2xl font-light tracking-widest text-white uppercase">1,250.00</p>
+                                <p className="text-[9px] text-neutral-600 uppercase tracking-[0.3em]">Euro Equivalent</p>
+                                <p className="text-2xl font-light tracking-widest text-[#E67E22] uppercase">{(userPoints / 100).toFixed(2)} €</p>
                             </div>
                             <div className="bg-[#0A0A0A] p-10 space-y-2">
-                                <p className="text-[9px] text-neutral-600 uppercase tracking-[0.3em]">Accumulated</p>
-                                <p className="text-2xl font-light tracking-widest text-white uppercase">45,000.00</p>
+                                <p className="text-[9px] text-neutral-600 uppercase tracking-[0.3em]">System Standing</p>
+                                <p className="text-2xl font-light tracking-widest text-white uppercase">{auth.user.rank || 'LEVEL 01'}</p>
                             </div>
                         </div>
 
-                        {/* LOGS / HISTORY */}
+                        {/* LOGS / HISTORY - DYNAMIQUE VIA ORDERS */}
                         <section className="space-y-10">
                             <h3 className="text-[10px] tracking-[0.5em] text-neutral-500 uppercase font-light text-center">
                                 — Activity Log —
                             </h3>
 
                             <div className="space-y-px bg-white/5">
-                                {[
-                                    { label: 'Reward Pack', date: 'JAN 24', value: '+500', type: 'pos' },
-                                    { label: 'Avatar Module', date: 'JAN 22', value: '-1,200', type: 'neg' },
-                                    { label: 'System Grant', date: 'JAN 18', value: '+2,000', type: 'pos' },
-                                ].map((item, i) => (
-                                    <div key={i} className="bg-[#0A0A0A] group hover:bg-[#0F0F0F] transition-colors duration-300 p-6 flex justify-between items-center">
-                                        <div className="flex flex-col gap-1">
-                                            <span className="text-[10px] text-neutral-600 tracking-widest uppercase">{item.date}</span>
-                                            <span className="text-xs tracking-[0.2em] text-white uppercase font-light">{item.label}</span>
+                                {orders.length > 0 ? (
+                                    orders.map((order, i) => (
+                                        <div key={i} className="bg-[#0A0A0A] group hover:bg-[#0F0F0F] transition-colors duration-300 p-6 flex justify-between items-center">
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-[10px] text-neutral-600 tracking-widest uppercase">
+                                                    {new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                                </span>
+                                                <span className="text-xs tracking-[0.2em] text-white uppercase font-light">
+                                                    Order {order.order_number}
+                                                </span>
+                                            </div>
+                                            <div className="text-sm tracking-widest font-mono text-white">
+                                                +{order.points_earned} WT
+                                            </div>
                                         </div>
-                                        <div className={`text-sm tracking-widest font-mono ${item.type === 'pos' ? 'text-white' : 'text-neutral-500'}`}>
-                                            {item.value} WT
-                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="bg-[#0A0A0A] p-10 text-center text-[10px] text-neutral-600 tracking-[0.5em] uppercase">
+                                        No transaction history found
                                     </div>
-                                ))}
+                                )}
                             </div>
                         </section>
 
