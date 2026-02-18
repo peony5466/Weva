@@ -14,6 +14,8 @@ class Product extends Model
         'slug',
         'description',
         'price',
+        'wt_price',      // Ajout
+        'is_exclusive',
         'category_id', // <--- IMPORTANT
         'is_limited',
         'image_path'

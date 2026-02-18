@@ -8,6 +8,7 @@ use App\Models\Category;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
 {
@@ -15,11 +16,12 @@ class ProductController extends Controller
     {
         return Inertia::render('admin/products/index', [
             'products' => Product::query()
-                ->with(['category', 'variants']) // On garde uniquement la catégorie
+                ->with(['category', 'variants'])
                 ->when($request->input('search'), function ($query, $search) {
                     $query->where('name', 'like', "%{$search}%");
                 })
-                ->paginate(5)
+                ->latest()
+                ->paginate(10)
                 ->withQueryString(),
             'filters' => $request->only(['search']),
         ]);
@@ -32,15 +34,16 @@ class ProductController extends Controller
         ]);
     }
 
-
-
     public function store(Request $request)
     {
-        // 1. Validation
+        // 1. Validation étendue
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'required|string',
-            'price' => 'required|numeric',
+            'price' => 'nullable|numeric',
+            'wt_price' => 'nullable|integer',
+            'is_exclusive' => 'boolean',
+            'is_limited' => 'boolean',
             'category_id' => 'required|exists:categories,id',
             'image' => 'nullable|image|max:2048',
             'variants' => 'required|array',
@@ -48,95 +51,99 @@ class ProductController extends Controller
             'variants.*.stock' => 'required|integer',
         ]);
 
-        // 2. Création du produit
-        $product = Product::create([
+        // 2. Logique métier : Exclusif WT vs Standard Fiat
+        $isExclusive = $request->is_exclusive;
+
+        $productData = [
             'name' => $validated['name'],
             'slug' => Str::slug($validated['name']),
             'description' => $validated['description'],
-            'price' => $validated['price'],
             'category_id' => $validated['category_id'],
             'is_limited' => $request->is_limited ? 1 : 0,
+            'is_exclusive' => $isExclusive ? 1 : 0,
+            // Si exclusif, prix cash = 0. Sinon, prix WT = 0.
+            'price' => $isExclusive ? 0 : ($validated['price'] ?? 0),
+            'wt_price' => $isExclusive ? ($validated['wt_price'] ?? 0) : 0,
             'image_path' => $request->file('image') ? $request->file('image')->store('products', 'public') : null,
-        ]);
+        ];
 
-        // 3. Création des variantes avec génération de SKU
+        $product = Product::create($productData);
+
+        // 3. Variantes
         foreach ($validated['variants'] as $variant) {
             $product->variants()->create([
                 'size' => $variant['size'],
                 'stock' => $variant['stock'],
-                // Génère un SKU unique (ex: PRODUCTNAME-SIZE-RANDOM)
                 'sku' => strtoupper(Str::slug($product->name)) . '-' . $variant['size'] . '-' . Str::random(4),
             ]);
         }
 
         return redirect()->route('admin.products.index');
     }
+
     public function edit(Product $product)
     {
         return Inertia::render('admin/products/edit', [
-            'product' => $product, // Plus de .load('variants')
+            'product' => $product->load('variants'),
             'categories' => Category::all()
         ]);
     }
 
     public function update(Request $request, Product $product)
     {
-        // 1. Décodage du JSON venant de React
         $allData = $request->all();
+
+        // Fix pour les variants envoyés en JSON string via FormData
         if (isset($allData['variants']) && is_string($allData['variants'])) {
             $allData['variants'] = json_decode($allData['variants'], true);
         }
 
-        // 2. Validation (On ne demande pas le SKU ici car on va le générer)
-        $validator = \Illuminate\Support\Facades\Validator::make($allData, [
+        $validated = Validator::make($allData, [
             'name' => 'required|string|max:255',
-            'price' => 'required|numeric',
+            'price' => 'nullable|numeric',
+            'wt_price' => 'nullable|integer',
+            'is_exclusive' => 'boolean',
             'category_id' => 'required',
             'variants' => 'required|array|min:1',
             'variants.*.size' => 'required|string',
             'variants.*.stock' => 'required|integer|min:0',
-        ]);
+        ])->validate();
 
-        if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator->errors())->withInput();
-        }
+        $isExclusive = $request->is_exclusive == true || $request->is_exclusive == 1;
 
-        $validated = $validator->validated();
-
-        // 3. Update du produit principal
         $product->update([
             'name' => $validated['name'],
-            'price' => $validated['price'],
-            'description' => $request->description ?? '',
+            'slug' => Str::slug($validated['name']),
+            'description' => $request->description,
             'category_id' => $validated['category_id'],
-            'is_limited' => ($request->is_limited === 'true' || $request->is_limited == 1) ? 1 : 0,
-            'slug' => \Illuminate\Support\Str::slug($validated['name']),
+            'is_limited' => ($request->is_limited == true || $request->is_limited == 1) ? 1 : 0,
+            'is_exclusive' => $isExclusive ? 1 : 0,
+            'price' => $isExclusive ? 0 : ($validated['price'] ?? 0),
+            'wt_price' => $isExclusive ? ($validated['wt_price'] ?? 0) : 0,
         ]);
 
-        // Image
         if ($request->hasFile('image')) {
-            $product->update([
-                'image_path' => $request->file('image')->store('products', 'public')
-            ]);
+            if ($product->image_path) Storage::disk('public')->delete($product->image_path);
+            $product->update(['image_path' => $request->file('image')->store('products', 'public')]);
         }
 
-        // 4. SYNC DES VARIANTS (On vide et on recrée pour remplir le SKU obligatoire)
+        // Sync variants
         $product->variants()->delete();
-
         foreach ($validated['variants'] as $v) {
             $product->variants()->create([
                 'size'  => $v['size'],
                 'stock' => $v['stock'],
-                // ON GÉNÈRE LE SKU ICI POUR ÉVITER L'ERREUR SQL NOT NULL
-                'sku'   => strtoupper(\Illuminate\Support\Str::slug($product->name)) . '-' . strtoupper($v['size']) . '-' . \Illuminate\Support\Str::random(4),
+                'sku'   => strtoupper(Str::slug($product->name)) . '-' . strtoupper($v['size']) . '-' . Str::random(4),
             ]);
         }
 
         return redirect()->route('admin.products.index');
     }
+
     public function destroy(Product $product)
     {
+        if ($product->image_path) Storage::disk('public')->delete($product->image_path);
         $product->delete();
-        return redirect()->route('admin.products.index')->with('success', 'ASSET_DELETED');
+        return redirect()->route('admin.products.index');
     }
 }
