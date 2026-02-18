@@ -34,7 +34,10 @@ Route::get('/token', function () {
 Route::get('/checkout', function () {
     return inertia('checkout/index');
 })->name('checkout');
+
 Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
+// La route ci-dessous accepte le GET et résout ton erreur
+Route::get('/checkout/payment/{order}', [OrderController::class, 'showPayment'])->name('checkout.payment');
 
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart', [CartController::class, 'store'])->name('cart.store');

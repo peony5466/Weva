@@ -3,60 +3,38 @@ import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, LayoutGrid, UserCircle, Coins, ShoppingBag, Package, Layers, UserCheck } from 'lucide-react';
 import AppLogo from './app-logo';
-// Ajoute Layers ici
-import { LayoutGrid, UserCircle, Coins, ShoppingBag, Package, Layers, UserCheck, } from 'lucide-react';
+
 export function AppSidebar() {
     const { auth } = usePage().props;
-    const user = auth.user;
 
-    // Utilisation des noms de routes Laravel via Ziggy
-    const mainNavItems = user.role === 'admin'
-        ? [
-            {
-                title: 'Dashboard Admin',
-                url: route('dashboard'),
-                icon: LayoutGrid,
-            },
-            {
-                title: 'Inventory', // Ton nouvel onglet
-                url: route('admin.products.index'), // Doit correspondre au ->name() dans web.php
-                icon: Package,
-            },
-            {
-                title: 'Categories',
-                url: route('admin.categories.index'),
-                icon: Layers, // Utilise Layers pour les catégories
-            },
-            {
-                title: 'User Management',
-                url: route('admin.users.index'),
-                icon: UserCheck, // Pense à bien l'importer de lucide-react
-            },
-            {
-                title: 'Orders',
-                url: route('admin.orders.index'),
-                icon: ShoppingBag,
-            },
-        ]
-        : [
-            {
-                title: 'Vip Area',
-                url: route('wevavip'),
-                icon: UserCircle,
-            },
-            {
-                title: 'My Tokens',
-                url: route('tokens.my-wallet'), // Vérifie si c'est 'token' ou 'tokens.index' selon tes modifs
-                icon: Coins,
-            },
-            {
-                title: 'Boutique',
-                url: route('shop.index'),
-                icon: ShoppingBag,
-            },
+    // SÉCURITÉ : On utilise ?. pour éviter le crash si auth.user est null
+    const user = auth?.user;
+
+    // Définition des items de navigation selon le rôle (ou guest)
+    let mainNavItems = [];
+
+    if (user?.role === 'admin') {
+        mainNavItems = [
+            { title: 'Dashboard Admin', url: route('dashboard'), icon: LayoutGrid },
+            { title: 'Inventory', url: route('admin.products.index'), icon: Package },
+            { title: 'Categories', url: route('admin.categories.index'), icon: Layers },
+            { title: 'User Management', url: route('admin.users.index'), icon: UserCheck },
+            { title: 'Orders', url: route('admin.orders.index'), icon: ShoppingBag },
         ];
+    } else if (user?.role === 'client') {
+        mainNavItems = [
+            { title: 'Vip Area', url: route('wevavip'), icon: UserCircle },
+            { title: 'My Tokens', url: route('tokens.my-wallet'), icon: Coins },
+            { title: 'Boutique', url: route('shop.index'), icon: ShoppingBag },
+        ];
+    } else {
+        // Menu pour les invités (Non connectés)
+        mainNavItems = [
+            { title: 'Boutique', url: route('shop.index'), icon: ShoppingBag },
+        ];
+    }
 
     const footerNavItems = [
         {
@@ -72,7 +50,8 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={route('dashboard')} prefetch>
+                            {/* On redirige vers l'accueil si pas de dashboard accessible */}
+                            <Link href={user ? route('dashboard') : route('home')} prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
@@ -80,13 +59,14 @@ export function AppSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
 
-            <SidebarContent >
+            <SidebarContent>
                 <NavMain items={mainNavItems} />
             </SidebarContent>
 
             <SidebarFooter>
                 <NavFooter items={footerNavItems} className="mt-auto" />
-                <NavUser />
+                {/* On n'affiche NavUser que si l'utilisateur est connecté */}
+                {user && <NavUser />}
             </SidebarFooter>
         </Sidebar>
     );
