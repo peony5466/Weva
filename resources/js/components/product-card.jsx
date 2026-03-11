@@ -2,7 +2,6 @@ import { Link } from '@inertiajs/react';
 
 export default function ProductCard({ product }) {
     const isOutOfStock = product.stock <= 0;
-    const isExclusive = product.is_exclusive === 1;
 
     const getImageUrl = (imagePath) => {
         if (!imagePath) return null;
@@ -11,52 +10,55 @@ export default function ProductCard({ product }) {
     };
 
     return (
-        <div className="group flex flex-col relative">
-            <div className={`relative aspect-[4/3] overflow-hidden flex items-center justify-center p-8 transition-all duration-500 
-                ${isOutOfStock ? 'bg-gray-50 grayscale' : 'bg-white group-hover:bg-[#fafafa]'}
-                ${isExclusive && !isOutOfStock ? 'border-b border-amber-500/10' : ''}`}>
-
-                {isExclusive && !isOutOfStock && (
-                    <div className="absolute top-4 left-4 z-20">
-                        <div className="bg-black text-amber-500 px-3 py-1 border border-amber-500/50 shadow-lg skew-x-[-10deg]">
-                            <p className="text-[8px] font-black uppercase tracking-widest skew-x-[10deg]">Vault_Asset</p>
-                        </div>
-                    </div>
-                )}
-
-                <Link href={route('shop.show', product.slug)} className="w-full h-full flex items-center justify-center">
+        <div className="group flex flex-col w-full bg-white">
+            {/* Conteneur Image - Aspect ratio vertical type Gentle Monster */}
+            <div className="relative aspect-[3/4] overflow-hidden bg-white]">
+                <Link
+                    href={route('shop.show', product.slug)}
+                    className="w-full h-full flex items-center justify-center p-6"
+                >
                     {product.image_path ? (
                         <img
                             src={getImageUrl(product.image_path)}
                             alt={product.name}
-                            className={`w-full h-full object-contain mix-blend-multiply transition-transform duration-700 
-                                ${isOutOfStock ? 'opacity-20 scale-90' : 'group-hover:scale-105'}`}
+                            className={`w-full h-full object-contain transition-transform duration-1000 ease-out
+                                ${isOutOfStock ? 'opacity-40' : 'group-hover:scale-105'}`}
                         />
                     ) : (
-                        <div className="text-[10px] font-bold text-gray-200 uppercase tracking-widest italic">
-                            No_Image_Data
+                        <div className="text-[10px] tracking-[0.2em] text-gray-400 uppercase">
+                            No Image
                         </div>
                     )}
                 </Link>
+
+                {/* Badge minimaliste si nécessaire (ex: Exclusive) */}
+                {product.is_exclusive === 1 && !isOutOfStock && (
+                    <div className="absolute top-4 left-4">
+                        <span className="text-[9px] tracking-[0.3em] uppercase font-medium text-black bg-white/80 px-2 py-1 backdrop-blur-sm">
+                            Limited
+                        </span>
+                    </div>
+                )}
             </div>
 
-            <div className="mt-4 flex flex-col gap-1">
-                <div className="flex justify-between items-start">
-                    <h2 className={`text-[13px] font-black tracking-widest uppercase 
-                        ${isOutOfStock ? 'text-gray-300' : (isExclusive ? 'text-amber-600' : 'text-gray-900')}`}>
+            {/* Infos Produit - Style épuré sous l'image */}
+            <div className="mt-4 mb-8 flex flex-col items-start px-1">
+                <Link href={route('shop.show', product.slug)} className="hover:opacity-70 transition-opacity">
+                    <h2 className={`text-[12px] md:text-[13px] tracking-[0.15em] uppercase font-normal leading-relaxed
+                        ${isOutOfStock ? 'text-gray-400' : 'text-black'}`}>
                         {product.name}
                     </h2>
-                </div>
+                </Link>
 
-                <div className="flex flex-col">
-                    <span className={`text-[12px] font-bold italic 
-                        ${isOutOfStock ? 'text-gray-300 line-through' : (isExclusive ? 'text-amber-600 font-mono' : 'text-gray-900')}`}>
-                        {isExclusive ? `${product.wt_price} WT` : `€ ${product.price}`}
+                <div className="mt-1 flex flex-col">
+                    <span className={`text-[11px] md:text-[12px] tracking-[0.1em] font-light
+                        ${isOutOfStock ? 'text-gray-300' : 'text-gray-600'}`}>
+                        {product.is_exclusive === 1 ? `${product.wt_price} WT` : `€ ${product.price}`}
                     </span>
 
                     {isOutOfStock && (
-                        <span className="text-[9px] text-red-500 uppercase font-black mt-1 tracking-tighter italic">
-                            Sold_Out_Status
+                        <span className="text-[10px] tracking-[0.2em] uppercase text-red-800 mt-2 font-light">
+                            Sold Out
                         </span>
                     )}
                 </div>
