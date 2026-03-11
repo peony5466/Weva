@@ -94,10 +94,17 @@ export default function CartDrawer({ open, setOpen }) {
                                                                 <div key={key} className="flex gap-4 group">
                                                                     <div className={`h-24 w-24 flex-shrink-0 overflow-hidden p-2 relative ${item.image ? (item.is_exclusive ? 'bg-amber-50' : 'bg-gray-50') : 'bg-zinc-100'}`}>
                                                                         {item.image ? (
-                                                                            <img src={`/storage/${item.image}`} className={`h-full w-full object-contain mix-blend-multiply ${item.stock === 0 ? 'grayscale opacity-50' : ''}`} alt={item.name} />
+                                                                            <img
+                                                                                src={item.image.startsWith('http')
+                                                                                    ? item.image
+                                                                                    : `/images/${item.image}`}
+                                                                                className={`h-full w-full object-contain mix-blend-multiply ${item.stock === 0 ? 'grayscale opacity-50' : ''}`}
+                                                                                alt={item.name}
+                                                                            />
                                                                         ) : (
                                                                             <div className="flex items-center justify-center h-full text-[8px] text-zinc-400 font-black italic">NO_IMG</div>
                                                                         )}
+
                                                                         {item.stock === 0 && (
                                                                             <div className="absolute inset-0 flex items-center justify-center bg-white/60">
                                                                                 <span className="text-[8px] font-black bg-red-600 text-white px-1 py-0.5 uppercase tracking-tighter">Sold_Out</span>
