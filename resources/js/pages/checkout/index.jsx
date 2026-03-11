@@ -1,6 +1,6 @@
 import ClientLayout from '@/layouts/client-layout';
 import { Head, useForm, usePage } from '@inertiajs/react';
-import { CreditCard, Coins, ShieldCheck, MapPin } from 'lucide-react';
+import { CreditCard, Coins, ShieldCheck, MapPin, AlertCircle } from 'lucide-react';
 
 export default function Checkout() {
     const { auth, cart, cartTotal = 0 } = usePage().props;
@@ -8,15 +8,14 @@ export default function Checkout() {
     const items = Object.values(cart || {});
 
     // --- CALCULS HYBRIDES ---
-    // On calcule combien de WT Credits sont nécessaires pour les objets exclusifs
     const creditsNeeded = items.reduce((acc, item) => {
         return item.is_exclusive ? acc + (item.wt_price * item.quantity) : acc;
     }, 0);
 
-    // Le cartTotal envoyé par le backend doit correspondre uniquement aux produits Fiat
     const fiatTotal = cartTotal;
     const pointsToEarn = Math.floor(fiatTotal);
 
+    // Initialisation du formulaire avec useForm d'Inertia
     const { data, setData, post, processing, errors } = useForm({
         email: user?.email || '',
         address: '',
@@ -25,14 +24,17 @@ export default function Checkout() {
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        // On passe l'adresse manuellement si useForm ne l'a pas captée
         post(route('orders.store'), {
             preserveScroll: true,
             onSuccess: () => {
-                console.log("Success: Redirection en cours...");
+                console.log("Transmission réussie.");
             },
-            onError: (errors) => {
-                console.error("Erreur détectée:", errors);
+            onError: (err) => {
+                // Ici on capture l'objet d'erreur et on affiche le message texte
+                // Si Laravel renvoie 'error', on l'affiche, sinon message générique
+                const errorMessage = err.error || "Erreur lors de la synchronisation des données.";
+                alert(`ALERTE SYSTÈME : ${errorMessage}`);
+                console.error("Détails techniques du rejet :", err);
             }
         });
     };
@@ -40,6 +42,7 @@ export default function Checkout() {
     return (
         <ClientLayout>
             <Head title="Checkout — WEVA" />
+
             <div className="max-w-5xl mx-auto p-8 pt-24 text-white">
                 <div className="flex items-center gap-4 mb-12">
                     <div className="h-1 w-12 bg-[#E67E22]"></div>
@@ -50,6 +53,14 @@ export default function Checkout() {
 
                     {/* --- COLONNE GAUCHE : INFOS --- */}
                     <div className="lg:col-span-7 space-y-10">
+
+                        {/* Affichage d'une bannière d'erreur si une erreur globale existe */}
+                        {errors.error && (
+                            <div className="bg-red-500/10 border border-red-500/50 p-4 rounded flex items-center gap-3 text-red-500 animate-pulse">
+                                <AlertCircle className="w-5 h-5" />
+                                <span className="text-[10px] font-black uppercase tracking-widest">{errors.error}</span>
+                            </div>
+                        )}
 
                         {/* Section Expédition */}
                         <section className="space-y-6">
@@ -63,12 +74,17 @@ export default function Checkout() {
                                     <label className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 mb-2 block">Delivery_Address</label>
                                     <input
                                         type="text"
+                                        value={data.address}
                                         placeholder="STREET, CITY, POSTCODE, COUNTRY"
-                                        className="w-full bg-[#0F0F0F] border border-zinc-800 rounded px-4 py-4 text-xs font-bold uppercase tracking-wider focus:border-[#E67E22] transition-all outline-none"
+                                        className={`w-full bg-[#0F0F0F] border ${errors.address ? 'border-red-500' : 'border-zinc-800'} rounded px-4 py-4 text-xs font-bold uppercase tracking-wider focus:border-[#E67E22] transition-all outline-none`}
                                         onChange={e => setData('address', e.target.value)}
                                         required
                                     />
-                                    {errors.address && <p className="text-red-500 text-[9px] mt-2 uppercase tracking-tighter">{errors.address}</p>}
+                                    {errors.address && (
+                                        <p className="text-red-500 text-[9px] mt-2 uppercase font-black tracking-tighter italic">
+                                            Error: {errors.address}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </section>
@@ -82,17 +98,14 @@ export default function Checkout() {
                                 </div>
                                 <p className="text-xs text-zinc-400 leading-relaxed uppercase tracking-tighter">
                                     Your bag contains <span className="text-white font-bold">Vault-Restricted Assets</span>.
-                                    A total of <span className="text-amber-500 font-bold">{creditsNeeded} WT</span> will be deducted from your account.
+                                    A total of <span className="text-amber-500 font-bold">{creditsNeeded} WT</span> will be deducted.
                                 </p>
                                 <div className="flex justify-between items-center bg-black/40 p-4 rounded border border-white/5">
                                     <span className="text-[9px] uppercase font-bold text-zinc-500">Current Balance</span>
-                                    <span className="text-sm font-mono font-black">{user?.points || 0} WT</span>
+                                    <span className={`text-sm font-mono font-black ${user?.points < creditsNeeded ? 'text-red-500' : 'text-white'}`}>
+                                        {user?.points || 0} WT
+                                    </span>
                                 </div>
-                                {user?.points < creditsNeeded && (
-                                    <div className="text-red-500 text-[9px] font-black uppercase animate-pulse">
-                                        Warning: Insufficient credits for this sync.
-                                    </div>
-                                )}
                             </section>
                         )}
                     </div>
@@ -103,7 +116,6 @@ export default function Checkout() {
                             <h2 className="text-xs font-[1000] uppercase tracking-[0.4em] text-zinc-400 border-b border-white/5 pb-4">Sync_Summary</h2>
 
                             <div className="space-y-4">
-                                {/* Ligne Cash */}
                                 <div className="flex justify-between items-center text-[11px] font-bold uppercase tracking-widest">
                                     <div className="flex items-center gap-2 text-zinc-400">
                                         <CreditCard className="w-3 h-3" />
@@ -112,7 +124,6 @@ export default function Checkout() {
                                     <span>{fiatTotal.toFixed(2)}€</span>
                                 </div>
 
-                                {/* Ligne WT Credits */}
                                 {creditsNeeded > 0 && (
                                     <div className="flex justify-between items-center text-[11px] font-bold uppercase tracking-widest">
                                         <div className="flex items-center gap-2 text-amber-500">
@@ -122,16 +133,9 @@ export default function Checkout() {
                                         <span className="font-mono">{creditsNeeded} WT</span>
                                     </div>
                                 )}
-
-                                <div className="pt-4 border-t border-white/5 space-y-2">
-                                    <div className="flex justify-between text-emerald-500 text-[9px] font-black uppercase tracking-widest">
-                                        <span>Data_Mining_Rewards</span>
-                                        <span>+{pointsToEarn} WT</span>
-                                    </div>
-                                </div>
                             </div>
 
-                            <div className="pt-4">
+                            <div className="pt-4 border-t border-white/5">
                                 <p className="text-[9px] uppercase text-zinc-600 mb-1 font-bold tracking-[0.2em]">Final_Transfer_Value</p>
                                 <div className="flex flex-col gap-2">
                                     <p className="text-4xl font-[1000] uppercase italic tracking-tighter text-white">
@@ -148,12 +152,12 @@ export default function Checkout() {
                             <button
                                 type="submit"
                                 disabled={processing || (creditsNeeded > user?.points)}
-                                className={`w-full py-6 text-[11px] font-[1000] uppercase tracking-[0.5em] transition-all shadow-2xl active:scale-95 ${(creditsNeeded > user?.points)
-                                    ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-red-500/20'
+                                className={`w-full py-6 text-[11px] font-[1000] uppercase tracking-[0.5em] transition-all shadow-2xl active:scale-95 ${(creditsNeeded > user?.points) || processing
+                                    ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
                                     : 'bg-white text-black hover:bg-[#E67E22] hover:text-white'
                                     }`}
                             >
-                                {processing ? 'Syncing...' : (creditsNeeded > user?.points ? 'Insufficient_Credits' : 'Authorize_Transfer')}
+                                {processing ? 'Initializing...' : (creditsNeeded > user?.points ? 'Insufficient_Credits' : 'Authorize_Transfer')}
                             </button>
 
                             <div className="flex items-center gap-3 justify-center opacity-30">

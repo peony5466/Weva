@@ -11,6 +11,7 @@ class ShopController extends Controller
 {
     public function index(Request $request)
     {
+        $categories = Category::select('id', 'name', 'slug')->get();
         return Inertia::render('Shop/index', [
             // 1. On récupère les produits avec leur catégorie
             'products' => Product::query()

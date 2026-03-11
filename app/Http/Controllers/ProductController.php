@@ -142,8 +142,16 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        if ($product->image_path) Storage::disk('public')->delete($product->image_path);
+        \DB::statement('PRAGMA foreign_keys = OFF');
+
+        if ($product->image_path) {
+            Storage::disk('public')->delete($product->image_path);
+        }
+
         $product->delete();
+
+        \DB::statement('PRAGMA foreign_keys = ON');
+
         return redirect()->route('admin.products.index');
     }
 }

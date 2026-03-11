@@ -9,7 +9,8 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
-
+use App\Models\Category;
+use App\Models\Product;
 /*
 |--------------------------------------------------------------------------
 | 1. ROUTES PUBLIQUES
@@ -17,8 +18,21 @@ use App\Http\Controllers\OrderController;
 */
 
 Route::get('/', function () {
-    return Inertia::render('welcome');
-})->name('home');
+    return Inertia::render('welcome', [
+        'products'   => \App\Models\Product::with('category')
+            ->when(
+                request('category'),
+                fn($q) =>
+                $q->whereHas(
+                    'category',
+                    fn($q) =>
+                    $q->where('slug', request('category'))
+                )
+            )
+            ->latest()->get(),
+        'categories' => \App\Models\Category::all(),
+    ]);
+})->name('welcome');
 
 // Boutique & Détails Produits
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
