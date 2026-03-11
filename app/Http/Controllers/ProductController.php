@@ -123,8 +123,12 @@ class ProductController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            if ($product->image_path) Storage::disk('public')->delete($product->image_path);
-            $product->update(['image_path' => $request->file('image')->store('products', 'public')]);
+            // Optionnel : Supprimer l'ancienne image
+            if ($product->image_path) {
+                Storage::disk('public')->delete($product->image_path);
+            }
+            $path = $request->file('image')->store('products', 'public');
+            $product->update(['image_path' => $path]);
         }
 
         // Sync variants

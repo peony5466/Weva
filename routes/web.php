@@ -10,7 +10,10 @@ use App\Http\Controllers\MemberController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 use App\Models\Category;
-use App\Models\Product;
+
+use App\Http\Controllers\DashboardController;
+use App\Models\Order;
+use App\Models\User;
 /*
 |--------------------------------------------------------------------------
 | 1. ROUTES PUBLIQUES
@@ -60,11 +63,21 @@ Route::get('/dashboard', function () {
     if (!Auth::check()) return redirect()->route('login');
 
     if (Auth::user()->role === 'admin') {
-        return Inertia::render('dashboard');
+        // Calculs des données réelles
+        $stats = [
+            'citizens' => User::count(),
+            // Somme des ventes en Euros (si tu as une colonne price dans Order)
+            'fiat_sales' => Order::where('currency', 'fiat')->sum('total_price'),
+            // Somme des ventes en WT (Vault Credits)
+            'wt_sales' => Order::where('currency', 'wt')->sum('total_price'),
+        ];
+
+        return Inertia::render('dashboard', [
+            'stats' => $stats
+        ]);
     }
     return redirect()->route('wevavip');
 })->name('dashboard');
-
 /*
 |--------------------------------------------------------------------------
 | 3. ROUTES PROTÉGÉES (AUTH REQUIS)

@@ -1,11 +1,22 @@
 import { Link } from '@inertiajs/react';
 
 export default function ProductCard({ product }) {
+    console.log("Données du produit :", product);
     const isOutOfStock = product.stock <= 0;
 
     const getImageUrl = (imagePath) => {
         if (!imagePath) return null;
+
+        // 1. Si c'est déjà une URL externe (http...), on renvoie tel quel
         if (imagePath.startsWith('http')) return imagePath;
+
+        // 2. Si le chemin contient "products/" (créé par le storage Laravel), 
+        // on utilise /storage/
+        if (imagePath.startsWith('products/')) {
+            return `/storage/${imagePath}`;
+        }
+
+        // 3. Sinon, on considère que c'est une image héritée du dossier /public/images/
         return `/images/${imagePath}`;
     };
 

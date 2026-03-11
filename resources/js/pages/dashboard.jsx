@@ -3,101 +3,359 @@ import { Head } from '@inertiajs/react';
 
 const breadcrumbs = [{ title: 'System Dashboard', href: '/dashboard' }];
 
-export default function Dashboard() {
+export default function Dashboard({ stats, logs }) {
+
+    const statCards = [
+        {
+            label: 'Citizens',
+            value: stats.citizens.toLocaleString(),
+            sub: 'Active_Nodes',
+        },
+        {
+            label: 'Fiat Sales',
+            value: `€${Number(stats.fiat_sales).toLocaleString()}`,
+            sub: 'Euro_Revenue',
+        },
+        {
+            label: 'WT Sales',
+            value: `${Number(stats.wt_sales).toLocaleString()} WT`,
+            sub: 'Vault_Credits',
+        },
+    ];
+
+    const statusColor = (status) => {
+        switch (status) {
+            case 'completed': return '#00ff88';
+            case 'pending': return '#ffaa00';
+            case 'failed': return '#ff4444';
+            default: return '#ffffff';
+        }
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="System Dashboard" />
 
-            <div className="flex flex-col gap-12 p-8 lg:p-12 min-h-screen bg-[#050505] text-white overflow-hidden">
+            <style>{`
+                @keyframes shimmer {
+                    0%   { transform: translateX(-100%); }
+                    100% { transform: translateX(200%);  }
+                }
+                .shimmer {
+                    animation: shimmer 2s infinite;
+                }
+            `}</style>
 
-                {/* 1. HEADER CHROME - Comme le bouton System Online */}
-                <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-white/10 pb-10 relative group">
-                    <div className="space-y-2">
-                        <span className="text-[11px] tracking-[0.6em] text-white/30 uppercase font-black italic">Unit_Protocol</span>
+            <div
+                style={{ backgroundColor: '#050505', color: '#ffffff' }}
+                className="flex flex-col gap-12 p-8 min-h-screen overflow-hidden"
+            >
 
-                        {/* TITRE CHROME LIQUIDE */}
-                        <div className="relative inline-block">
-                            <h1 className="text-7xl font-[1000] tracking-tighter leading-none uppercase bg-gradient-to-br from-[#fff] via-[#888] to-[#eee] bg-clip-text text-transparent italic skew-x-[-10deg]">
-                                System<br />Control
-                            </h1>
-                            {/* Éclair de lumière sur le titre au hover */}
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                        </div>
+                {/* ── HEADER ── */}
+                <header
+                    style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}
+                    className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-10"
+                >
+                    <div>
+                        <span
+                            style={{ color: 'rgba(255,255,255,0.3)', letterSpacing: '0.6em' }}
+                            className="text-xs uppercase font-black italic block mb-2"
+                        >
+                            Unit_Protocol
+                        </span>
+
+                        <h1
+                            style={{
+                                fontSize: '5rem',
+                                fontWeight: 900,
+                                lineHeight: 1,
+                                letterSpacing: '-0.05em',
+                                background: 'linear-gradient(135deg, #ffffff, #888888, #eeeeee)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                backgroundClip: 'text',
+                                fontStyle: 'italic',
+                                transform: 'skewX(-10deg)',
+                                display: 'inline-block',
+                            }}
+                        >
+                            System<br />Control
+                        </h1>
                     </div>
 
-                    {/* BADGE SYSTEM ONLINE (Ton favori) */}
-                    <div className="relative overflow-hidden bg-gradient-to-br from-[#fff] via-[#888] to-[#eee] px-10 py-4 shadow-[0_0_40px_rgba(255,255,255,0.15)] skew-x-[-15deg] border-r-4 border-white">
-                        <p className="text-[12px] font-[1000] text-black uppercase tracking-[0.4em] relative z-10 skew-x-[15deg] italic">
+                    {/* Badge */}
+                    <div
+                        style={{
+                            background: 'linear-gradient(135deg, #ffffff, #888888, #eeeeee)',
+                            transform: 'skewX(-15deg)',
+                            borderRight: '4px solid white',
+                            boxShadow: '0 0 40px rgba(255,255,255,0.15)',
+                            overflow: 'hidden',
+                            position: 'relative',
+                        }}
+                        className="px-10 py-4"
+                    >
+                        <p
+                            style={{
+                                color: '#000000',
+                                letterSpacing: '0.4em',
+                                transform: 'skewX(15deg)',
+                                fontStyle: 'italic',
+                            }}
+                            className="text-xs font-black uppercase relative z-10"
+                        >
                             System_Online
                         </p>
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/80 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" />
+                        <div
+                            className="shimmer"
+                            style={{
+                                position: 'absolute',
+                                inset: 0,
+                                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent)',
+                            }}
+                        />
                     </div>
                 </header>
 
-                {/* 2. STATS CARDS - Comme des lingots d'argent */}
+                {/* ── STAT CARDS ── */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-                    {[
-                        { label: 'Citizens', value: '1.240', sub: 'Active_Node' },
-                        { label: 'Tokens', value: '850.230', sub: 'Minted_Supply' },
-                        { label: 'Load', value: '24%', sub: 'Safe_Status' }
-                    ].map((stat, i) => (
-                        <div key={i} className="relative group bg-[#0D0D0D] border border-white/5 p-12 overflow-hidden skew-x-[-5deg] hover:border-white transition-all duration-700">
-                            {/* Reflet permanent en coin */}
-                            <div className="absolute top-0 right-0 w-32 h-1 bg-gradient-to-r from-transparent to-white opacity-50 shadow-[0_0_15px_#fff]"></div>
+                    {statCards.map((stat, i) => (
+                        <div
+                            key={i}
+                            style={{
+                                backgroundColor: '#0D0D0D',
+                                border: '1px solid rgba(255,255,255,0.05)',
+                                transform: 'skewX(-5deg)',
+                                position: 'relative',
+                                overflow: 'hidden',
+                                transition: 'border-color 0.3s',
+                            }}
+                            className="p-12"
+                            onMouseEnter={e => {
+                                e.currentTarget.style.borderColor = 'white';
+                            }}
+                            onMouseLeave={e => {
+                                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)';
+                            }}
+                        >
+                            {/* Corner line */}
+                            <div style={{
+                                position: 'absolute',
+                                top: 0,
+                                right: 0,
+                                width: '8rem',
+                                height: '1px',
+                                background: 'linear-gradient(to right, transparent, white)',
+                                opacity: 0.5,
+                            }} />
 
-                            <div className="relative z-10 skew-x-[5deg]">
-                                <p className="text-[10px] tracking-[0.5em] text-white/30 uppercase font-bold mb-8 italic">// {stat.label}</p>
+                            <div style={{ transform: 'skewX(5deg)' }}>
+                                <p
+                                    style={{
+                                        color: 'rgba(255,255,255,0.3)',
+                                        letterSpacing: '0.5em',
+                                        fontSize: '10px',
+                                        fontStyle: 'italic',
+                                        marginBottom: '2rem',
+                                    }}
+                                    className="uppercase font-bold"
+                                >
+                                    // {stat.label}
+                                </p>
 
-                                {/* VALEUR CHROME */}
-                                <p className="text-6xl font-[1000] tracking-tighter uppercase italic bg-gradient-to-b from-white via-[#999] to-[#444] bg-clip-text text-transparent">
+                                <p
+                                    style={{
+                                        fontSize: '3.5rem',
+                                        fontWeight: 900,
+                                        letterSpacing: '-0.05em',
+                                        fontStyle: 'italic',
+                                        background: 'linear-gradient(180deg, #ffffff, #999999, #444444)',
+                                        WebkitBackgroundClip: 'text',
+                                        WebkitTextFillColor: 'transparent',
+                                        backgroundClip: 'text',
+                                    }}
+                                >
                                     {stat.value}
                                 </p>
 
-                                <div className="mt-6 h-[1px] w-full bg-white/10 relative overflow-hidden">
-                                    <div className="absolute inset-0 bg-white w-1/3 shadow-[0_0_10px_#fff]"></div>
+                                <p style={{
+                                    color: 'rgba(255,255,255,0.2)',
+                                    fontSize: '10px',
+                                    letterSpacing: '0.4em',
+                                    marginTop: '0.5rem',
+                                    fontStyle: 'italic',
+                                }}>
+                                    {stat.sub}
+                                </p>
+
+                                <div style={{
+                                    marginTop: '1.5rem',
+                                    height: '1px',
+                                    width: '100%',
+                                    backgroundColor: 'rgba(255,255,255,0.1)',
+                                    position: 'relative',
+                                    overflow: 'hidden',
+                                }}>
+                                    <div style={{
+                                        position: 'absolute',
+                                        inset: 0,
+                                        width: '33%',
+                                        backgroundColor: 'white',
+                                        boxShadow: '0 0 10px #fff',
+                                    }} />
                                 </div>
                             </div>
-
-                            {/* Shimmer au survol sur toute la carte */}
-                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.05] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                         </div>
                     ))}
                 </div>
 
-                {/* 3. LOGS - Style "Acier Découpé" */}
-                <section className="space-y-4">
+                {/* ── LIVE FEED ── */}
+                <section className="flex flex-col gap-4">
                     <div className="flex items-center gap-6">
-                        <div className="h-[2px] w-12 bg-white shadow-[0_0_10px_#fff]"></div>
-                        <h2 className="text-[11px] tracking-[0.6em] uppercase text-white font-black italic">Live_Secure_Feed</h2>
-                        <div className="h-[1px] flex-grow bg-white/10"></div>
+                        <div style={{
+                            height: '2px',
+                            width: '3rem',
+                            backgroundColor: 'white',
+                            boxShadow: '0 0 10px #fff',
+                        }} />
+                        <h2
+                            style={{ letterSpacing: '0.6em', color: 'white' }}
+                            className="text-xs uppercase font-black italic"
+                        >
+                            Live_Secure_Feed
+                        </h2>
+                        <div style={{
+                            height: '1px',
+                            flex: 1,
+                            backgroundColor: 'rgba(255,255,255,0.1)',
+                        }} />
                     </div>
 
-                    <div className="bg-[#080808] border border-white/5 divide-y divide-white/5">
-                        {[1, 2, 3].map((log) => (
-                            <div key={log} className="p-8 hover:bg-white/[0.02] transition-all group flex justify-between items-center overflow-hidden relative">
-                                <div className="flex items-center gap-10 relative z-10">
-                                    <span className="text-[10px] font-mono text-white/10 group-hover:text-white transition-colors">00{log}</span>
-                                    <p className="text-sm font-light tracking-[0.2em] uppercase text-white/40 group-hover:text-white transition-all italic">
-                                        Data_Stream_Access <span className="text-white/10 mx-4">::</span>
-                                        <span className="font-bold text-white/80 group-hover:bg-gradient-to-r from-white to-[#555] group-hover:bg-clip-text group-hover:text-transparent">
-                                            ENCRYPTED_SIGNAL_STABLE
-                                        </span>
-                                    </p>
-                                </div>
-                                {/* Reflet fugace sur la ligne au hover */}
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                    <div style={{
+                        backgroundColor: '#080808',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                    }}>
+                        {/* Table header */}
+                        <div
+                            className="flex items-center gap-6 px-8 py-4"
+                            style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}
+                        >
+                            {['#', 'User', 'Amount', 'Currency', 'Status', 'Date'].map(h => (
+                                <span
+                                    key={h}
+                                    style={{
+                                        color: 'rgba(255,255,255,0.2)',
+                                        fontSize: '10px',
+                                        letterSpacing: '0.4em',
+                                        flex: h === 'User' || h === 'Date' ? 2 : 1,
+                                    }}
+                                    className="uppercase font-black italic"
+                                >
+                                    {h}
+                                </span>
+                            ))}
+                        </div>
+
+                        {/* Rows */}
+                        {logs && logs.length > 0 ? logs.map((log) => (
+                            <div
+                                key={log.id}
+                                style={{
+                                    borderBottom: '1px solid rgba(255,255,255,0.05)',
+                                    padding: '1.5rem 2rem',
+                                    position: 'relative',
+                                    overflow: 'hidden',
+                                    transition: 'background-color 0.3s',
+                                    cursor: 'default',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '1.5rem',
+                                }}
+                                onMouseEnter={e => {
+                                    e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.02)';
+                                }}
+                                onMouseLeave={e => {
+                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                }}
+                            >
+                                {/* ID */}
+                                <span style={{
+                                    flex: 1,
+                                    fontFamily: 'monospace',
+                                    fontSize: '11px',
+                                    color: 'rgba(255,255,255,0.2)',
+                                }}>
+                                    #{log.id}
+                                </span>
+
+                                {/* User */}
+                                <span style={{
+                                    flex: 2,
+                                    fontSize: '0.8rem',
+                                    fontWeight: 600,
+                                    color: 'rgba(255,255,255,0.7)',
+                                    letterSpacing: '0.1em',
+                                }}>
+                                    {log.user}
+                                </span>
+
+                                {/* Amount */}
+                                <span style={{
+                                    flex: 1,
+                                    fontWeight: 700,
+                                    fontStyle: 'italic',
+                                    background: 'linear-gradient(90deg, #ffffff, #888888)',
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent',
+                                    backgroundClip: 'text',
+                                }}>
+                                    {Number(log.amount).toLocaleString()}
+                                </span>
+
+                                {/* Currency */}
+                                <span style={{
+                                    flex: 1,
+                                    fontSize: '10px',
+                                    letterSpacing: '0.3em',
+                                    color: 'rgba(255,255,255,0.4)',
+                                    textTransform: 'uppercase',
+                                    fontStyle: 'italic',
+                                }}>
+                                    {log.currency}
+                                </span>
+
+                                {/* Status */}
+                                <span style={{
+                                    flex: 1,
+                                    fontSize: '10px',
+                                    letterSpacing: '0.3em',
+                                    color: statusColor(log.status),
+                                    textTransform: 'uppercase',
+                                    fontStyle: 'italic',
+                                    fontWeight: 700,
+                                }}>
+                                    {log.status}
+                                </span>
+
+                                {/* Date */}
+                                <span style={{
+                                    flex: 2,
+                                    fontFamily: 'monospace',
+                                    fontSize: '11px',
+                                    color: 'rgba(255,255,255,0.2)',
+                                }}>
+                                    {log.date}
+                                </span>
                             </div>
-                        ))}
+                        )) : (
+                            <div style={{ padding: '3rem', textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontStyle: 'italic', letterSpacing: '0.3em' }}>
+                                NO_DATA_STREAM
+                            </div>
+                        )}
                     </div>
                 </section>
-            </div>
 
-            <style jsx>{`
-                @keyframes shimmer {
-                    0% { transform: translateX(-100%) skewX(-15deg); }
-                    100% { transform: translateX(200%) skewX(-15deg); }
-                }
-            `}</style>
+            </div>
         </AppLayout>
     );
 }

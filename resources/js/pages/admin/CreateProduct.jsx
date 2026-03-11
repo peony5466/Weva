@@ -152,12 +152,33 @@ export default function CreateProduct({ categories }) {
 
                             <section className="space-y-4">
                                 <label className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-500">Visual_File</label>
-                                <div className={`relative border-2 border-dashed ${errors.image ? 'border-red-500' : 'border-white/10'} rounded-xl p-10 hover:bg-white/[0.02] transition-all`}>
-                                    <input type="file" onChange={e => setData('image', e.target.files[0])} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
-                                    <div className="flex flex-col items-center gap-4 text-gray-600">
-                                        {data.image ? <span className="text-xs text-[#E67E22] font-mono uppercase tracking-widest">{data.image.name}</span> : <Upload className="w-10 h-10" />}
-                                    </div>
+                                <div className={`relative border-2 border-dashed ${errors.image ? 'border-red-500' : 'border-white/10'} rounded-xl p-10 hover:bg-white/[0.02] transition-all flex flex-col items-center justify-center min-h-[200px]`}>
+                                    <input
+                                        type="file"
+                                        onChange={e => setData('image', e.target.files[0])}
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                    />
+
+                                    {data.image ? (
+                                        <div className="flex flex-col items-center gap-4">
+                                            {/* Petit aperçu temporaire de l'image sélectionnée */}
+                                            <img
+                                                src={URL.createObjectURL(data.image)}
+                                                className="w-32 h-32 object-contain mix-blend-lighten"
+                                                alt="Preview"
+                                            />
+                                            <span className="text-[10px] text-[#E67E22] font-mono uppercase tracking-widest">
+                                                {data.image.name}
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center gap-4 text-gray-600">
+                                            <Upload className="w-10 h-10 stroke-1" />
+                                            <p className="text-[10px] uppercase tracking-widest">Drop_Asset_Here</p>
+                                        </div>
+                                    )}
                                 </div>
+                                {errors.image && <p className="text-red-500 text-[10px] uppercase mt-1">{errors.image}</p>}
                             </section>
 
                             <hr className="border-white/5" />
