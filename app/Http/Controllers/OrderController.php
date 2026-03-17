@@ -36,7 +36,9 @@ class OrderController extends Controller
 
         foreach ($cart as $cartId => $item) {
             $productId = explode('-', $cartId)[0];
-            $product   = Product::find($productId);
+
+            // ✅ Charger avec variants
+            $product = Product::with('variants')->find($productId);
 
             if (!$product) {
                 return back()->withErrors(['error' => "SYNC_ERROR: Produit introuvable."]);
@@ -44,9 +46,12 @@ class OrderController extends Controller
 
             $qty = $item['quantity'] ?? 1;
 
-            if ($product->stock < $qty) {
+            // ✅ Stock depuis les variants, pas depuis products.stock
+            $availableStock = $product->variants->sum('stock');
+
+            if ($availableStock < $qty) {
                 return back()->withErrors([
-                    'error' => "STOCK_FAILURE: Stock insuffisant pour {$product->name} (Restant: {$product->stock})."
+                    'error' => "STOCK_FAILURE: Stock insuffisant pour {$product->name} (Restant: {$availableStock})."
                 ]);
             }
 
@@ -70,7 +75,7 @@ class OrderController extends Controller
         }
 
         // ----------------------------------------------------------------
-        // ÉTAPE 3 : CALCUL CASHBACK ← CORRECTION ICI
+        // ÉTAPE 3 : CALCUL CASHBACK
         // Règle : commande fiat ≥ 250€ → floor(total × 15%) WT gagnés
         // ----------------------------------------------------------------
         $pointsToEarn = ($fiatTotal >= 250) ? (int) floor($fiatTotal * 0.15) : 0;
@@ -106,14 +111,23 @@ class OrderController extends Controller
                     'email'            => $user->email,
                 ]);
 
-                // Création des items + décrémentation stock
+                // Création des OrderItems + décrémentation stock variants
                 foreach ($cart as $cartId => $item) {
                     $realProductId = explode('-', $cartId)[0];
                     $isExclusive   = $item['is_exclusive'] ?? false;
                     $qty           = $item['quantity'] ?? 1;
 
-                    $product = Product::find($realProductId);
-                    $product->decrement('stock', $qty);
+                    $product = Product::with('variants')->find($realProductId);
+
+                    // ✅ Décrémenter sur les variants, pas sur products
+                    $remaining = $qty;
+                    foreach ($product->variants()->orderBy('stock', 'desc')->get() as $variant) {
+                        if ($remaining <= 0) break;
+
+                        $deduct = min($variant->stock, $remaining);
+                        $variant->decrement('stock', $deduct);
+                        $remaining -= $deduct;
+                    }
 
                     OrderItem::create([
                         'order_id'   => $newOrder->id,
@@ -133,10 +147,9 @@ class OrderController extends Controller
             });
 
             // ----------------------------------------------------------------
-            // ÉTAPE 5A : COMMANDE 100% WT → Succès direct + crédit cashback
+            // ÉTAPE 5A : COMMANDE 100% WT → Redirection directe succès
             // ----------------------------------------------------------------
             if ($fiatTotal <= 0) {
-                // Pas de cashback sur les achats exclusifs WT
                 session()->forget('cart');
                 return redirect()->route('checkout.success', $order->order_number);
             }
@@ -146,34 +159,31 @@ class OrderController extends Controller
             // ----------------------------------------------------------------
             Stripe::setApiKey(config('services.stripe.secret'));
 
-            $lineItems = [];
-
-            // Description enrichie avec info cashback
             $cashbackInfo = $pointsToEarn > 0
                 ? " | +{$pointsToEarn} WT Cashback"
                 : " | Commande < 250€ - Pas de cashback";
 
-            $lineItems[] = [
-                'price_data' => [
-                    'currency'     => 'eur',
-                    'product_data' => [
-                        'name'        => "Commande #" . $order->order_number,
-                        'description' => "Paiement standard Weva{$cashbackInfo}",
-                    ],
-                    'unit_amount'  => (int) round($fiatTotal * 100),
-                ],
-                'quantity' => 1,
-            ];
-
             $checkoutSession = Session::create([
                 'payment_method_types' => ['card'],
-                'line_items'           => $lineItems,
-                'mode'                 => 'payment',
-                'success_url'          => route('checkout.success', $order->order_number),
-                'cancel_url'           => route('checkout'),
-                'customer_email'       => $user->email,
-                'metadata'             => [
-                    'order_number' => $order->order_number,
+                'line_items'           => [
+                    [
+                        'price_data' => [
+                            'currency'     => 'eur',
+                            'product_data' => [
+                                'name'        => "Commande #" . $order->order_number,
+                                'description' => "Paiement standard Weva{$cashbackInfo}",
+                            ],
+                            'unit_amount'  => (int) round($fiatTotal * 100),
+                        ],
+                        'quantity' => 1,
+                    ]
+                ],
+                'mode'          => 'payment',
+                'success_url' => route('checkout.success', $order->order_number) . '?session_id={CHECKOUT_SESSION_ID}',
+                'cancel_url'    => route('checkout'),
+                'customer_email' => $user->email,
+                'metadata'      => [
+                    'order_number'   => $order->order_number,
                     'points_to_earn' => $pointsToEarn,
                 ],
             ]);
@@ -205,9 +215,9 @@ class OrderController extends Controller
         }
 
         return Inertia::render('Shop/success', [
-            'order'         => $order->load('items.product'),
-            'tokensEarned'  => $order->points_earned,  // Pour afficher "Tu as gagné X WT !"
-            'tokensUsed'    => $order->points_used,
+            'order'        => $order->load('items.product'),
+            'tokensEarned' => $order->points_earned,
+            'tokensUsed'   => $order->points_used,
         ]);
     }
 }

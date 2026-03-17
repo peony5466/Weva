@@ -51,16 +51,8 @@ export default function MyTokens({ auth, userPoints = 0, orders = [] }) {
                         </div>
 
                         {/* DATA GRID */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-white/5 border border-white/5">
-                            <div className="bg-[#0A0A0A] p-8 md:p-10 space-y-2">
-                                <p className="text-[9px] text-neutral-600 uppercase tracking-[0.3em]">Euro Equivalent</p>
-                                <p className="text-2xl font-light tracking-widest text-[#E67E22] uppercase">{(userPoints / 100).toFixed(2)} €</p>
-                            </div>
-                            <div className="bg-[#0A0A0A] p-8 md:p-10 space-y-2">
-                                <p className="text-[9px] text-neutral-600 uppercase tracking-[0.3em]">System Standing</p>
-                                <p className="text-2xl font-light tracking-widest text-white uppercase">{auth.user.rank || 'LEVEL 01'}</p>
-                            </div>
-                        </div>
+
+
 
                         {/* LOGS / HISTORY */}
                         <section className="space-y-6">

@@ -173,7 +173,7 @@ export default function CartDrawer({ open, setOpen }) {
                                 {/* INFO */}
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                        <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                        <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#111827' }}>
                                             {item.name}
                                         </span>
                                         <button onClick={() => removeItem(key)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px' }}>
@@ -181,9 +181,9 @@ export default function CartDrawer({ open, setOpen }) {
                                         </button>
                                     </div>
 
-                                    {item.size && (
+                                    {item.variant && (
                                         <span style={{ fontSize: '9px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                                            Size: {item.size}
+                                            Size: {item.variant}
                                         </span>
                                     )}
 
@@ -192,16 +192,16 @@ export default function CartDrawer({ open, setOpen }) {
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid #e5e7eb', padding: '4px 8px' }}>
                                             <button
                                                 onClick={() => updateQuantity(key, item.quantity - 1, item.stock)}
-                                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0', display: 'flex' }}
+                                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0', display: 'flex', color: '#111827' }}
                                             >
                                                 <Minus size={12} />
                                             </button>
-                                            <span style={{ fontSize: '11px', fontWeight: 700, minWidth: '16px', textAlign: 'center' }}>
+                                            <span style={{ fontSize: '11px', fontWeight: 700, minWidth: '16px', textAlign: 'center', color: '#111827' }}>
                                                 {item.quantity}
                                             </span>
                                             <button
                                                 onClick={() => updateQuantity(key, item.quantity + 1, item.stock)}
-                                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0', display: 'flex' }}
+                                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0', display: 'flex', color: '#111827' }}
                                             >
                                                 <Plus size={12} />
                                             </button>

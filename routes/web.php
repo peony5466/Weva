@@ -10,7 +10,6 @@ use App\Http\Controllers\MemberController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 use App\Models\Category;
-
 use App\Http\Controllers\DashboardController;
 use App\Models\Order;
 use App\Models\User;
@@ -63,13 +62,11 @@ Route::get('/dashboard', function () {
     if (!Auth::check()) return redirect()->route('login');
 
     if (Auth::user()->role === 'admin') {
-        // Calculs des données réelles
         $stats = [
-            'citizens' => User::count(),
-            // Somme des ventes en Euros (si tu as une colonne price dans Order)
-            'fiat_sales' => Order::where('currency', 'fiat')->sum('total_price'),
-            // Somme des ventes en WT (Vault Credits)
-            'wt_sales' => Order::where('currency', 'wt')->sum('total_price'),
+            'citizens'    => User::count(),
+            'fiat_sales'  => Order::where('status', 'paid')->where('currency', 'fiat')->sum('total'),
+            'wt_sales'    => Order::where('status', 'paid')->where('currency', 'wt')->sum('total'),
+            'total_sales' => Order::where('status', 'paid')->sum('total'),
         ];
 
         return Inertia::render('dashboard', [
@@ -78,6 +75,7 @@ Route::get('/dashboard', function () {
     }
     return redirect()->route('wevavip');
 })->name('dashboard');
+
 /*
 |--------------------------------------------------------------------------
 | 3. ROUTES PROTÉGÉES (AUTH REQUIS)
@@ -118,11 +116,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         })->name('wevavip');
 
         Route::get('/dashboard/tokens', function () {
+            $user = Auth::user();
+
+            $orders = \App\Models\Order::where('user_id', $user->id)
+                ->where('status', 'paid')        // Seulement les commandes payées
+                ->latest()
+                ->take(10)
+                ->get(['order_number', 'points_earned', 'points_used', 'created_at']);
+
             return Inertia::render('client/mytoken', [
-                'userPoints' => Auth::user()->points,
-                'orders' => \App\Models\Order::where('user_id', Auth::id())->latest()->take(10)->get()
+                'userPoints' => $user->points,
+                'orders'     => $orders,
             ]);
-        })->name('tokens.my-wallet');
+        })->name('tokens.my-wallet')->middleware('auth');
 
         Route::get('/dashboard/personalize', function () {
             return Inertia::render('client/customizer');

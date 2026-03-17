@@ -9,8 +9,6 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use Illuminate\Http\Request;
 
-
-
 class CartController extends Controller
 {
     /**
@@ -23,27 +21,39 @@ class CartController extends Controller
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
+            'variant_id' => 'nullable|exists:product_variants,id',
         ]);
 
         $product = Product::findOrFail($request->product_id);
         $cart = session()->get('cart', []);
 
         $quantityToAdd = (int) $request->input('quantity', 1);
-        $cartKey = $product->id . ($request->variant_name ? '-' . $request->variant_name : '');
+
+        if ($request->variant_id) {
+            $variant = \App\Models\ProductVariant::find($request->variant_id);
+            $cartKey = $product->id.'-v'.$request->variant_id;
+            $variantName = $variant?->size ?? 'Unique';
+            $variantStock = $variant?->stock ?? 0;
+        } else {
+            $cartKey = $product->id;
+            $variantName = 'Unique';
+            $variantStock = $product->variants()->sum('stock');
+        }
 
         if (isset($cart[$cartKey])) {
             $cart[$cartKey]['quantity'] += $quantityToAdd;
         } else {
-            // AJOUT DES CLÉS EXCLUSIVES ICI
             $cart[$cartKey] = [
                 'id' => $product->id,
                 'name' => $product->name,
                 'price' => $product->price,
-                'wt_price' => $product->wt_price, // Ajouté
-                'is_exclusive' => (bool)$product->is_exclusive, // Ajouté (force le format boolean)
+                'wt_price' => $product->wt_price,
+                'is_exclusive' => (bool) $product->is_exclusive,
                 'quantity' => $quantityToAdd,
                 'image' => $product->image_path,
-                'variant' => $request->variant_name ?? 'Unique',
+                'variant_id' => $request->variant_id ?? null,
+                'variant' => $variantName,
+                'stock' => $variantStock,
             ];
         }
 
@@ -52,7 +62,7 @@ class CartController extends Controller
         return back()->with('success', 'Asset_Synced_To_Bag');
     }
 
-// ... reste du code
+    // ... reste du code
 
     /**
      * Mettre à jour la quantité d'un article déjà présent dans le panier
