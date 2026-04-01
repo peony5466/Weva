@@ -126,14 +126,14 @@ export default function Confidentialite() {
             <Head title="Politique de Confidentialité — WEVA" />
 
             <div className="min-h-screen bg-[#faf8f4] pt-24 pb-20">
-                <div className="max-w-3xl mx-auto px-6">
+                <div className="max-w-3xl mx-auto px-4 sm:px-6">
 
                     {/* Header */}
                     <div className="mb-16 pb-10 border-b border-gray-200">
                         <p className="text-[9px] font-bold uppercase tracking-[0.5em] text-gray-400 mb-4">
                             WEVA · Protection des Données
                         </p>
-                        <h1 className="text-4xl font-semibold uppercase tracking-[0.15em] text-black mb-4">
+                        <h1 className="text-2xl md:text-4xl font-semibold uppercase tracking-[0.1em] md:tracking-[0.15em]">
                             Politique de<br />Confidentialité
                         </h1>
                         <p className="text-[11px] text-gray-400 uppercase tracking-[0.2em]">
@@ -155,8 +155,8 @@ export default function Confidentialite() {
                     <div className="space-y-0">
                         {sections.map((section) => (
                             <div key={section.id} className="border-t border-gray-200 py-10">
-                                <div className="flex items-start gap-8">
-                                    <span className="text-[10px] font-black text-gray-300 uppercase tracking-[0.3em] shrink-0 pt-1 w-8">
+                                <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-8">
+                                    <span className="text-[10px] font-black text-gray-300 uppercase tracking-[0.3em] shrink-0 pt-1 w-auto md:w-8">
                                         {section.id}
                                     </span>
                                     <div className="flex-1">

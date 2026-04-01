@@ -48,8 +48,4 @@ class Product extends Model
     }
 }
 
-class Product extends Model
-{
-    //
-    protected $fillable = ['name', 'price', 'color', 'imageSrc', 'imageAlt'];
-    }
+

@@ -64,7 +64,7 @@ Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear')
 // Pages légales
 Route::get('/cgv', fn() => Inertia::render('legal/cgv'))->name('cgv');
 Route::get('/confidentialite', fn() => Inertia::render('legal/confidentialite'))->name('confidentialite');
-Route::get('/legal', fn() => Inertia::render('legal/mentions-legales'))->name('legal');
+Route::get('/legal', fn() => Inertia::render('legal/mentions-legals'))->name('legal');
 
 /*
 |--------------------------------------------------------------------------

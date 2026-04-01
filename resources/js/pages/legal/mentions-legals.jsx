@@ -7,14 +7,14 @@ export default function MentionsLegales() {
             <Head title="Mentions Légales — WEVA" />
 
             <div className="min-h-screen bg-[#faf8f4] pt-24 pb-20">
-                <div className="max-w-3xl mx-auto px-6">
+                <div className="max-w-3xl mx-auto px-4 sm:px-6">
 
                     {/* Header */}
                     <div className="mb-16 pb-10 border-b border-gray-200">
                         <p className="text-[9px] font-bold uppercase tracking-[0.5em] text-gray-400 mb-4">
                             WEVA · Informations Légales
                         </p>
-                        <h1 className="text-4xl font-semibold uppercase tracking-[0.15em] text-black mb-4">
+                        <h1 className="text-2xl md:text-4xl font-semibold uppercase tracking-[0.1em] md:tracking-[0.15em]">
                             Mentions Légales
                         </h1>
                         <p className="text-[11px] text-gray-400 uppercase tracking-[0.2em]">
@@ -27,7 +27,7 @@ export default function MentionsLegales() {
 
                         {/* Éditeur */}
                         <div className="border-t border-gray-200 py-10">
-                            <div className="flex items-start gap-8">
+                            <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-8">
                                 <span className="text-[10px] font-black text-gray-300 uppercase tracking-[0.3em] shrink-0 pt-1 w-8">01</span>
                                 <div className="flex-1">
                                     <h2 className="text-[13px] font-black uppercase tracking-[0.25em] text-black mb-5">
@@ -44,7 +44,7 @@ export default function MentionsLegales() {
                                             ['E-mail', 'contact@weva.fr'],
                                             ['Directeur de publication', 'Le Président de WEVA SAS'],
                                         ].map(([label, value]) => (
-                                            <div key={label} className="flex gap-6">
+                                            <div key={label} className="flex flex-col md:flex-row gap-1 md:gap-6">
                                                 <span className="text-[10px] font-black uppercase tracking-wide text-gray-400 shrink-0 w-52">
                                                     {label}
                                                 </span>
@@ -61,7 +61,7 @@ export default function MentionsLegales() {
                         {/* Hébergement */}
                         <div className="border-t border-gray-200 py-10">
                             <div className="flex items-start gap-8">
-                                <span className="text-[10px] font-black text-gray-300 uppercase tracking-[0.3em] shrink-0 pt-1 w-8">02</span>
+                                <span className="text-[10px] font-black text-gray-300 uppercase tracking-[0.3em] shrink-0 pt-1 w-auto md:w-8">02</span>
                                 <div className="flex-1">
                                     <h2 className="text-[13px] font-black uppercase tracking-[0.25em] text-black mb-5">
                                         Hébergement
@@ -72,8 +72,8 @@ export default function MentionsLegales() {
                                             ['Adresse', '2 rue Kellermann, 59100 Roubaix, France'],
                                             ['Site web', 'www.ovh.com'],
                                         ].map(([label, value]) => (
-                                            <div key={label} className="flex gap-6">
-                                                <span className="text-[10px] font-black uppercase tracking-wide text-gray-400 shrink-0 w-52">
+                                            <div key={label} className="flex flex-col md:flex-row gap-1 md:gap-6">
+                                                <span className="text-[10px] font-black uppercase tracking-wide text-gray-400 shrink-0 w-full md:w-52">
                                                     {label}
                                                 </span>
                                                 <span className="text-[12px] text-black font-light">

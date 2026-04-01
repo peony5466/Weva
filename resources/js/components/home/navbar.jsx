@@ -10,8 +10,6 @@ import {
 } from 'lucide-react';
 import { Bars3Icon } from '@heroicons/react/24/outline';
 import Logo from '@/assets/images/Logo.svg';
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import Logo from '@/assets/images/wevaLogo.png';
 
 export default function Navbar({ onOpenCart }) {
     const { auth, cartCount } = usePage().props;
