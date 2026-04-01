@@ -1,82 +1,117 @@
-import { AppSidebar } from '@/components/app-sidebar';
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import ClientLayout from '@/layouts/client-layout';
 import { Head, Link } from '@inertiajs/react';
+import { ShoppingBag, ChevronRight, Package } from 'lucide-react';
 
-export default function MyOrders({ auth, orders = [] }) {
+const statusStyle = {
+    paid:       'bg-green-50 text-green-600',
+    completed:  'bg-green-50 text-green-600',
+    pending:    'bg-yellow-50 text-yellow-600',
+    pending_payment: 'bg-yellow-50 text-yellow-600',
+    cancelled:  'bg-red-50 text-red-500',
+};
+
+const statusLabel = {
+    paid:            'Payée',
+    completed:       'Livrée',
+    pending:         'En attente',
+    pending_payment: 'Paiement en attente',
+    cancelled:       'Annulée',
+};
+
+export default function Orders({ orders = [] }) {
     return (
-        <SidebarProvider>
-            <AppSidebar />
-            <SidebarInset className="bg-[#0A0A0A] text-white">
-                <Head title="HISTORY — WEVA" />
+        <ClientLayout>
+            <Head title="Mes commandes — WEVA" />
 
-                <div className="flex flex-col min-h-screen selection:bg-white selection:text-black">
-                    <div className="p-8 lg:p-16 max-w-[1400px] mx-auto w-full space-y-20">
+            <div className="min-h-screen bg-[#faf8f4] pt-24 pb-20">
+                <div className="max-w-3xl mx-auto px-6 space-y-8">
 
-                        {/* HEADER */}
-                        <header className="flex justify-between items-end border-b border-white/10 pb-6">
-                            <div className="space-y-1">
-                                <span className="text-[10px] tracking-[0.5em] text-neutral-500 uppercase font-light">Archive / Logs</span>
-                                <h1 className="text-2xl font-light tracking-[0.2em] text-white uppercase">Order History</h1>
+                    {/* Header */}
+                    <div>
+                        <p className="text-[9px] font-bold uppercase tracking-[0.4em] text-gray-400 mb-2">
+                            WEVA · Mon compte
+                        </p>
+                        <h1 className="text-3xl font-semibold uppercase tracking-tight text-black">
+                            Mes commandes
+                        </h1>
+                    </div>
+
+                    {orders.length === 0 ? (
+                        <div className="bg-white border border-gray-100 p-16 text-center">
+                            <ShoppingBag className="w-10 h-10 text-gray-200 mx-auto mb-4" />
+                            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-gray-300 mb-6">
+                                Aucune commande pour l'instant
+                            </p>
+                            <Link
+                                href={route('shop.index')}
+                                className="inline-block bg-black text-white text-[10px] font-black uppercase tracking-[0.3em] px-8 py-3 hover:bg-zinc-800 transition-colors"
+                            >
+                                Découvrir la collection
+                            </Link>
+                        </div>
+                    ) : (
+                        <div className="bg-white border border-gray-100">
+                            <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+                                <Package className="w-4 h-4 text-gray-400" />
+                                <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500">
+                                    {orders.length} commande{orders.length > 1 ? 's' : ''}
+                                </h2>
                             </div>
-                        </header>
 
-                        {/* ORDERS LIST */}
-                        <div className="space-y-4">
-                            {orders.length > 0 ? (
-                                orders.map((order) => (
-                                    <Link
-                                        key={order.id}
-                                        href={route('client.orders.show', order.id)}
-                                        className="bg-[#0F0F0F] border border-white/5 p-8 group hover:border-white/20 transition-all block"
-                                    >
-                                        <div className="flex flex-col md:flex-row justify-between gap-8">
-                                            {/* Infos de gauche */}
-                                            <div className="space-y-2">
-                                                <p className="text-[10px] text-neutral-600 uppercase tracking-widest">{order.order_number}</p>
-                                                <p className="text-xl font-light tracking-widest uppercase italic group-hover:text-[#E67E22] transition-colors">
-                                                    {new Date(order.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                            <div className="divide-y divide-gray-50">
+                                {orders.map(order => (
+                                    <div key={order.id} className="flex items-center justify-between px-6 py-5 hover:bg-[#faf8f4] transition-colors">
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-3 mb-1">
+                                                <p className="text-[12px] font-black text-black uppercase tracking-wide">
+                                                    {order.order_number}
+                                                </p>
+                                                <span className={`text-[8px] font-bold uppercase tracking-wide px-2 py-0.5 ${statusStyle[order.status] || 'bg-gray-50 text-gray-500'}`}>
+                                                    {statusLabel[order.status] || order.status}
+                                                </span>
+                                            </div>
+                                            <p className="text-[10px] text-gray-400 uppercase tracking-wide">
+                                                {new Date(order.created_at).toLocaleDateString('fr-FR', {
+                                                    day: '2-digit', month: 'long', year: 'numeric'
+                                                })}
+                                            </p>
+                                            {order.points_earned > 0 && (
+                                                <p className="text-[9px] text-black font-bold mt-1">
+                                                    +{order.points_earned} tokens gagnés
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div className="text-right flex items-center gap-4">
+                                            <div>
+                                                {parseFloat(order.discount) > 0 && (
+                                                    <p className="text-[9px] text-green-600 font-bold">
+                                                        -{parseFloat(order.discount).toFixed(2)}€ cashback
+                                                    </p>
+                                                )}
+                                                <p className="text-[14px] font-black text-black">
+                                                    {parseFloat(order.total).toFixed(2)}€
                                                 </p>
                                             </div>
-
-                                            {/* Infos de droite */}
-                                            <div className="flex flex-wrap gap-12 text-right items-center">
-                                                <div>
-                                                    <p className="text-[9px] text-neutral-600 uppercase tracking-widest mb-1">Status</p>
-                                                    <p className={`text-[10px] uppercase font-bold tracking-widest ${order.status === 'paid' ? 'text-green-500' : 'text-[#E67E22]'}`}>
-                                                        {order.status}
-                                                    </p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-[9px] text-neutral-600 uppercase tracking-widest mb-1">Amount</p>
-                                                    <p className="text-lg font-light tracking-tighter">{order.total} €</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-[9px] text-neutral-600 uppercase tracking-widest mb-1">Earned</p>
-                                                    <p className="text-lg text-white font-light tracking-tighter">+{order.points_earned} WT</p>
-                                                </div>
-                                                <div className="text-neutral-700 group-hover:text-white transition-colors">
-                                                    →
-                                                </div>
-                                            </div>
+                                            <ChevronRight className="w-4 h-4 text-gray-300" />
                                         </div>
-                                    </Link>
-                                ))
-                            ) : (
-                                <div className="py-20 text-center border border-dashed border-white/10 text-[10px] uppercase tracking-[0.5em] text-neutral-600">
-                                    No records found in database
-                                </div>
-                            )}
+                                    </div>
+                                ))}
+                            </div>
                         </div>
+                    )}
 
-                        {/* DECORATIVE TEXTURE */}
-                        <div className="pt-12 opacity-5 pointer-events-none select-none">
-                            <p className="text-[10vw] font-black tracking-tighter text-white leading-none">
-                                ARCHIVE
-                            </p>
-                        </div>
+                    {/* Retour VIP */}
+                    <div className="text-center">
+                        <Link
+                            href={route('wevavip')}
+                            className="text-[10px] font-black uppercase tracking-[0.3em] border-b border-black pb-1 hover:opacity-60 transition-opacity"
+                        >
+                            ← Retour espace VIP
+                        </Link>
                     </div>
+
                 </div>
-            </SidebarInset>
-        </SidebarProvider>
+            </div>
+        </ClientLayout>
     );
 }

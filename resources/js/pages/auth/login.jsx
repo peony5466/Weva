@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 // Importation de l'image pour la colonne de gauche
-import Affiche22 from '@/assets/images/Affiche22.png'; 
+import Affiche22 from '@/assets/images/Affiche22.png';
 // Note : Le composant AuthLayout est retiré de cette structure
 
 export default function Login({ status, canResetPassword }) {
@@ -31,14 +31,14 @@ export default function Login({ status, canResetPassword }) {
             <Head title="Log in" />
 
             {/* 🛑 1. COLONNE IMAGE (À GAUCHE) 🛑 */}
-            <div 
+            <div
                 className="hidden lg:block lg:w-1/2 dark:bg-gray-900"
                 style={{
                     // Styles pour l'image de fond
-                    backgroundColor: 'var(--color-black)', 
+                    backgroundColor: 'var(--color-black)',
                     backgroundImage: `url(${Affiche22})`,
-                    backgroundPosition: 'center', 
-                    backgroundRepeat: 'no-repeat', 
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat',
                     backgroundSize: 'cover' // Remplir la hauteur et couper la largeur
                 }}
             >

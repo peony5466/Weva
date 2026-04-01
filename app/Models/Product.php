@@ -3,27 +3,29 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo; // Import nécessaire
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
 {
-    // Assure-toi que category_id est bien dans ton fillable
     protected $fillable = [
         'name',
         'slug',
         'description',
+        'marque',
+        'composition',
+        'entretien',
         'price',
-        'wt_price',      // Ajout
+        'wt_price',
         'is_exclusive',
-        'category_id', // <--- IMPORTANT
+        'category_id',
         'is_limited',
-        'image_path'
+        'image_path',
     ];
 
-    /**
-     * Un produit appartient à une catégorie
-     */
+    // ✅ Ajouter 'stock' dans les appends pour qu'il soit inclus dans toJson/toArray
+    protected $appends = ['stock'];
+
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
@@ -31,17 +33,19 @@ class Product extends Model
 
     public function variants(): HasMany
     {
-        // On précise bien le nom de la classe ProductVariant
         return $this->hasMany(ProductVariant::class);
     }
 
-    /**
-     * Tes variantes existantes
-     */
-    // public function variants(): HasMany
-    // {
-    //     return $this->hasMany(Variant::class);
-    // }
+    // ✅ Accessor correct dans le Model (Laravel 9+)
+    public function getStockAttribute(): int
+    {
+        // Si les variants sont déjà chargés, on évite une requête SQL
+        if ($this->relationLoaded('variants')) {
+            return (int) $this->variants->sum('stock');
+        }
+
+        return (int) $this->variants()->sum('stock');
+    }
 }
 
 class Product extends Model

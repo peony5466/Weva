@@ -1,35 +1,39 @@
-import React from 'react';
+// import { Link } from '@inertiajs/react';
 
-const ProductCard = ({ product }) => {
-    return (
-        <div className="group flex flex-col gap-4 w-full cursor-pointer">
+// export default function ProductCard({ product }) {
+//     if (!product) return null;
 
-            <div className="relative aspect-[3/5] w-full overflow-hidden bg-[#F5F5F5]">
-                <img
-                    src={product.image}
-                    alt={product.name}
-                    className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
-                />
+//     const imageSrc = product.image_path
+//         ? product.image_path.startsWith('http')
+//             ? product.image_path
+//             : `/storage/${product.image_path.replace('storage/', '')}`
+//         : null;
 
+//     return (
+//         <Link
+//             href={route('shop.show', { product: product.slug })}
+//             className="flex flex-col items-start w-full group cursor-pointer"
+//         >
+//             <div className="w-full aspect-[4/3] bg-[#f5f5f3] flex items-center justify-center mb-4 overflow-hidden">
+//                 {imageSrc ? (
+//                     <img
+//                         src={imageSrc}
+//                         alt={product.name}
+//                         className="w-[75%] h-[75%] object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-105"
+//                     />
+//                 ) : (
+//                     <span className="text-[10px] text-gray-400">No Image</span>
+//                 )}
+//             </div>
 
-                {product.tag && (
-                    <span className="absolute top-4 left-4 bg-white/80 backdrop-blur-sm px-3 py-1 text-[10px] uppercase tracking-widest">
-                        {product.tag}
-                    </span>
-                )}
-            </div>
-
-
-            <div className="flex flex-col gap-1 px-1">
-                <h3 className="text-[13px] font-light text-gray-900 uppercase tracking-tight">
-                    {product.name}
-                </h3>
-                <p className="text-[14px] font-semibold text-gray-900">
-                    ${product.price}
-                </p>
-            </div>
-        </div>
-    );
-};
-
-export default ProductCard;
+//             <div className="text-left">
+//                 <h3 className="text-[13px] font-medium text-black leading-tight">
+//                     {product.name || 'Nom du produit'}
+//                 </h3>
+//                 <p className="text-[13px] text-gray-500 mt-1">
+//                     € {Number(product.price).toFixed(2)}
+//                 </p>
+//             </div>
+//         </Link>
+//     );
+// }

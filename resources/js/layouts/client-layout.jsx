@@ -1,20 +1,18 @@
 import React, { useState } from 'react';
 import Navbar from '@/components/home/navbar';
+import Footer from '@/components/home/footer';
 import CartDrawer from '@/components/ui/cart-drawer';
 import { usePage } from '@inertiajs/react';
 
-export default function ClientLayout({ children }) {
+export default function ClientLayout({ children, showFooter = true }) {
     const [cartOpen, setCartOpen] = useState(false);
     const { cart } = usePage().props;
 
     return (
-        <div className="min-h-screen bg-white">
-            {/* On passe la fonction d'ouverture à la Navbar */}
+        <div className="min-h-screen bg-white flex flex-col">
             <Navbar onOpenCart={() => setCartOpen(true)} />
-
-            <main>{children}</main>
-
-            {/* Le panier est maintenant global */}
+            <main className="flex-1">{children}</main>
+            {showFooter && <Footer />}
             <CartDrawer open={cartOpen} setOpen={setCartOpen} />
         </div>
     );

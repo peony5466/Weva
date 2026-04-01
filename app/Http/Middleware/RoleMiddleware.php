@@ -15,14 +15,22 @@ class RoleMiddleware
      */
     public function handle(Request $request, Closure $next, string $role): Response
     {
-        // Si l'utilisateur n'est pas connecté ou n'a pas le bon rôle
         if (!$request->user() || $request->user()->role !== $role) {
-            // Si c'est un client, on l'envoie vers son espace "Avatar"
-            if ($request->user() && $request->user()->role === 'client') {
-                return redirect()->route('avatar');
+
+            if (!$request->user()) {
+                return redirect()->route('login');
             }
-            // Sinon (visiteur), retour à l'accueil ou login
-            return redirect()->route('login');
+
+            // Redirection selon le rôle réel
+            if ($request->user()->role === 'admin') {
+                return redirect()->route('dashboard');
+            }
+
+            if ($request->user()->role === 'client') {
+                return redirect()->route('wevavip'); // ✅ route qui existe
+            }
+
+            return redirect()->route('welcome');
         }
 
         return $next($request);
