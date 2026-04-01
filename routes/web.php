@@ -147,6 +147,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('/dashboard/orders', function () {
             $orders = Order::where('user_id', auth()->id())
+                ->with('items.product')
                 ->latest()
                 ->get();
 
@@ -154,6 +155,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 'orders' => $orders,
             ]);
         })->name('client.orders');
+
+        Route::get('/dashboard/orders/{order_number}', function ($order_number) {
+            $order = Order::where('order_number', $order_number)
+                ->where('user_id', auth()->id())
+                ->with('items.product')
+                ->firstOrFail();
+
+            return Inertia::render('client/orders/show', [
+                'order' => $order,
+            ]);
+        })->name('client.orders.show');
     });
 });
 

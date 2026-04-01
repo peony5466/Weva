@@ -19,8 +19,7 @@ export default function ProductShow({ product }) {
     const getImageUrl = (imagePath) => {
         if (!imagePath) return null;
         if (imagePath.startsWith('http')) return imagePath;
-        if (imagePath.startsWith('images/products/')) return `/${imagePath}`;
-        return imagePath.startsWith('products/') ? `/storage/${imagePath}` : `/images/${imagePath}`;
+        return `/images/${imagePath}`;
     };
 
     const handleAddToBag = (e) => {

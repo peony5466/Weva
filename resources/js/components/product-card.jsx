@@ -7,8 +7,6 @@ export default function ProductCard({ product }) {
     const getImageUrl = (imagePath) => {
         if (!imagePath) return null;
         if (imagePath.startsWith('http')) return imagePath;
-        if (imagePath.startsWith('images/products/')) return `/${imagePath}`;
-        if (imagePath.startsWith('products/')) return `/storage/${imagePath}`;
         return `/images/${imagePath}`;
     };
 

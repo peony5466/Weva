@@ -1,50 +1,41 @@
 import ClientLayout from '@/layouts/client-layout';
 import { Head, Link } from '@inertiajs/react';
-import { CheckCircle, Package, Home, Printer } from 'lucide-react';
+import { CheckCircle, Home, Package, Printer } from 'lucide-react';
 
 export default function Success({ order, tokensEarned = 0, cashbackApplied = 0 }) {
-
     const getImageUrl = (path) => {
         if (!path) return null;
         if (path.startsWith('http')) return path;
-        if (path.startsWith('images/products/')) return `/${path}`;
-        return `/storage/${path}`;
+        return `/images/${path}`;
     };
 
     return (
         <ClientLayout>
             <Head title="Commande confirmée — WEVA" />
 
-            <div className="min-h-screen bg-[#faf8f4] pt-24 pb-20 px-6">
-                <div className="max-w-2xl mx-auto space-y-10">
-
+            <div className="min-h-screen bg-[#faf8f4] px-6 pt-24 pb-20">
+                <div className="mx-auto max-w-2xl space-y-10">
                     {/* Header */}
-                    <div className="text-center space-y-4">
-                        <div className="inline-flex items-center justify-center w-16 h-16 bg-black rounded-full mb-2">
-                            <CheckCircle className="w-8 h-8 text-white stroke-[1.5]" />
+                    <div className="space-y-4 text-center">
+                        <div className="mb-2 inline-flex h-16 w-16 items-center justify-center rounded-full bg-black">
+                            <CheckCircle className="h-8 w-8 stroke-[1.5] text-white" />
                         </div>
-                        <h1 className="text-3xl font-semibold uppercase tracking-tight text-black">
-                            Commande Confirmée
-                        </h1>
-                        <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-gray-400">
+                        <h1 className="text-3xl font-semibold tracking-tight text-black uppercase">Commande Confirmée</h1>
+                        <p className="text-[11px] font-bold tracking-[0.3em] text-gray-400 uppercase">
                             Réf. <span className="text-black">{order.order_number}</span>
                         </p>
                     </div>
 
                     {/* Tokens earned */}
                     {tokensEarned > 0 && (
-                        <div className="bg-black text-white p-5 flex items-center justify-between">
+                        <div className="flex items-center justify-between bg-black p-5 text-white">
                             <div>
-                                <p className="text-[9px] uppercase tracking-[0.3em] text-gray-400 mb-1">
-                                    Tokens gagnés
-                                </p>
+                                <p className="mb-1 text-[9px] tracking-[0.3em] text-gray-400 uppercase">Tokens gagnés</p>
                                 <p className="text-2xl font-black">+{tokensEarned} 🪙</p>
                             </div>
                             {cashbackApplied > 0 && (
                                 <div className="text-right">
-                                    <p className="text-[9px] uppercase tracking-[0.3em] text-gray-400 mb-1">
-                                        Cashback appliqué
-                                    </p>
+                                    <p className="mb-1 text-[9px] tracking-[0.3em] text-gray-400 uppercase">Cashback appliqué</p>
                                     <p className="text-xl font-black text-green-400">-{cashbackApplied}€</p>
                                 </div>
                             )}
@@ -52,58 +43,52 @@ export default function Success({ order, tokensEarned = 0, cashbackApplied = 0 }
                     )}
 
                     {/* Order items */}
-                    <div className="bg-white border border-gray-100">
-                        <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-                            <Package className="w-4 h-4" />
-                            <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500">
-                                Articles commandés
-                            </h2>
+                    <div className="border border-gray-100 bg-white">
+                        <div className="flex items-center gap-2 border-b border-gray-100 px-6 py-4">
+                            <Package className="h-4 w-4" />
+                            <h2 className="text-[10px] font-black tracking-[0.3em] text-gray-500 uppercase">Articles commandés</h2>
                         </div>
 
                         <div className="divide-y divide-gray-50">
                             {order.items?.map((item, i) => (
                                 <div key={i} className="flex items-center gap-4 p-5">
-                                    <div className="w-16 h-16 bg-[#f8f7f4] shrink-0 overflow-hidden">
+                                    <div className="h-16 w-16 shrink-0 overflow-hidden bg-[#f8f7f4]">
                                         {item.product?.image_path ? (
                                             <img
                                                 src={getImageUrl(item.product.image_path)}
                                                 alt={item.product?.name}
-                                                className="w-full h-full object-contain"
+                                                className="h-full w-full object-contain"
                                             />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-[8px] text-gray-300 font-bold uppercase">
+                                            <div className="flex h-full w-full items-center justify-center text-[8px] font-bold text-gray-300 uppercase">
                                                 WEVA
                                             </div>
                                         )}
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-[12px] font-semibold uppercase tracking-wide text-black truncate">
-                                            {item.product?.name}
-                                        </p>
-                                        <p className="text-[10px] text-gray-400 uppercase tracking-wider mt-0.5">
+                                    <div className="min-w-0 flex-1">
+                                        <p className="truncate text-[12px] font-semibold tracking-wide text-black uppercase">{item.product?.name}</p>
+                                        <p className="mt-0.5 text-[10px] tracking-wider text-gray-400 uppercase">
                                             Taille: {item.attributes?.size || 'Unique'} · Qté: {item.quantity}
                                         </p>
                                     </div>
-                                    <p className="text-[13px] font-bold text-black shrink-0">
-                                        {parseFloat(item.price * item.quantity).toFixed(2)}€
-                                    </p>
+                                    <p className="shrink-0 text-[13px] font-bold text-black">{parseFloat(item.price * item.quantity).toFixed(2)}€</p>
                                 </div>
                             ))}
                         </div>
 
                         {/* Totals */}
-                        <div className="bg-[#faf8f4] border-t border-gray-100 p-6 space-y-2">
-                            <div className="flex justify-between text-[11px] font-bold uppercase tracking-wide text-gray-500">
+                        <div className="space-y-2 border-t border-gray-100 bg-[#faf8f4] p-6">
+                            <div className="flex justify-between text-[11px] font-bold tracking-wide text-gray-500 uppercase">
                                 <span>Sous-total</span>
                                 <span>{parseFloat(order.subtotal).toFixed(2)}€</span>
                             </div>
                             {parseFloat(order.discount) > 0 && (
-                                <div className="flex justify-between text-[11px] font-bold uppercase tracking-wide text-green-600">
+                                <div className="flex justify-between text-[11px] font-bold tracking-wide text-green-600 uppercase">
                                     <span>Cashback (-15%)</span>
                                     <span>-{parseFloat(order.discount).toFixed(2)}€</span>
                                 </div>
                             )}
-                            <div className="flex justify-between text-lg font-black uppercase tracking-tight text-black pt-2 border-t border-gray-200 mt-2">
+                            <div className="mt-2 flex justify-between border-t border-gray-200 pt-2 text-lg font-black tracking-tight text-black uppercase">
                                 <span>Total</span>
                                 <span>{parseFloat(order.total).toFixed(2)}€</span>
                             </div>
@@ -112,36 +97,33 @@ export default function Success({ order, tokensEarned = 0, cashbackApplied = 0 }
 
                     {/* Infos livraison */}
                     {order.shipping_address && (
-                        <div className="bg-white border border-gray-100 p-6">
-                            <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-gray-400 mb-2">
-                                Adresse de livraison
-                            </p>
+                        <div className="border border-gray-100 bg-white p-6">
+                            <p className="mb-2 text-[9px] font-bold tracking-[0.3em] text-gray-400 uppercase">Adresse de livraison</p>
                             <p className="text-[13px] text-gray-700">{order.shipping_address}</p>
                         </div>
                     )}
 
                     {/* Actions */}
-                    <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="flex flex-col gap-3 sm:flex-row">
                         <Link
                             href="/"
-                            className="flex-1 bg-black text-white py-4 text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-2 hover:bg-zinc-800 transition-colors"
+                            className="flex flex-1 items-center justify-center gap-2 bg-black py-4 text-[10px] font-black tracking-[0.3em] text-white uppercase transition-colors hover:bg-zinc-800"
                         >
-                            <Home className="w-4 h-4" /> Retour accueil
+                            <Home className="h-4 w-4" /> Retour accueil
                         </Link>
                         <Link
                             href={route('shop.index')}
-                            className="flex-1 border border-black text-black py-4 text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
+                            className="flex flex-1 items-center justify-center gap-2 border border-black py-4 text-[10px] font-black tracking-[0.3em] text-black uppercase transition-colors hover:bg-gray-50"
                         >
                             Continuer mes achats
                         </Link>
                         <button
                             onClick={() => window.print()}
-                            className="sm:w-auto border border-gray-200 text-gray-500 py-4 px-6 text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
+                            className="flex items-center justify-center gap-2 border border-gray-200 px-6 py-4 text-[10px] font-black tracking-[0.3em] text-gray-500 uppercase transition-colors hover:bg-gray-50 sm:w-auto"
                         >
-                            <Printer className="w-4 h-4" />
+                            <Printer className="h-4 w-4" />
                         </button>
                     </div>
-
                 </div>
             </div>
         </ClientLayout>

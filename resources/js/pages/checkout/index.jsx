@@ -46,8 +46,7 @@ export default function Checkout() {
     const getImageUrl = (path) => {
         if (!path) return null;
         if (path.startsWith('http')) return path;
-        if (path.startsWith('images/products/')) return `/${path}`;
-        return `/storage/${path}`;
+        return `/images/${path}`;
     };
 
     return (

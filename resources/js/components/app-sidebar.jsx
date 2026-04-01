@@ -3,7 +3,7 @@ import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { Link, usePage } from '@inertiajs/react';
-import { Coins, Database, LayoutGrid, Layers, Package, ShoppingBag, UserCircle, Users } from 'lucide-react';
+import { Coins, Database, Layers, LayoutGrid, Package, ShoppingBag, UserCircle, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 
 export function AppSidebar() {
@@ -15,23 +15,18 @@ export function AppSidebar() {
 
     if (userRole === 'admin') {
         mainNavItems = [
-            { title: 'System Control',  url: '/dashboard',                  icon: LayoutGrid },
-            { title: 'Inventory Log',   url: '/dashboard/admin/products',   icon: Package },
-            { title: 'Terminal Orders', url: '/dashboard/admin/orders',     icon: ShoppingBag },
-            { title: 'Citizens',        url: '/dashboard/admin/users',      icon: Users },
-            { title: 'Categories',      url: '/dashboard/admin/categories', icon: Layers },
+            { title: 'System Control', url: '/dashboard', icon: LayoutGrid },
+            { title: 'Inventory Log', url: '/dashboard/admin/products', icon: Package },
+            { title: 'Terminal Orders', url: '/dashboard/admin/orders', icon: ShoppingBag },
+            { title: 'Citizens', url: '/dashboard/admin/users', icon: Users },
+            { title: 'Categories', url: '/dashboard/admin/categories', icon: Layers },
         ];
     } else if (user) {
         mainNavItems = [
-            { title: 'Vip Protocol',  url: '/dashboard/wevavip', icon: UserCircle },
-            { title: 'Asset Vault',   url: '/dashboard/tokens',  icon: Coins },
-            { title: 'Order History', url: '/dashboard/orders',  icon: Database },
-            { title: 'Boutique',      url: '/shop',              icon: ShoppingBag },
-        ];
-    } else {
-        mainNavItems = [
-            { title: 'Boutique',         url: '/shop',  icon: ShoppingBag },
-            { title: 'Initialize Login', url: '/login', icon: UserCircle },
+            { title: 'Vip Protocol', url: '/dashboard/wevavip', icon: UserCircle },
+            // { title: 'Asset Vault', url: '/dashboard/tokens', icon: Coins },
+            { title: 'Historique des Commandes', url: '/dashboard/orders', icon: Database },
+            { title: 'Boutique', url: '/shop', icon: ShoppingBag },
         ];
     }
 
