@@ -11,7 +11,7 @@ export default function ProductDetails({ product }) {
     <div className="bg-white">
       <div className="pt-6 pb-16 sm:pb-24">
         {/* Breadcrumb */}
-        <Navbar/>
+        <Navbar />
 
 
         <div className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -94,7 +94,7 @@ export default function ProductDetails({ product }) {
                   type="submit"
                   className="mt-8 flex w-full items-center justify-center rounded-md bg-indigo-600 px-8 py-3 text-base font-medium text-white hover:bg-indigo-700"
                 >
-                  Add to cart
+                  Ajouter au panier
                 </button>
               </form>
 

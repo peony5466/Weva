@@ -256,7 +256,7 @@ export default function CartDrawer({ open, setOpen }) {
 
                         {!hasEnoughPoints && (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 12px', backgroundColor: '#fef2f2', fontSize: '9px', color: '#dc2626', fontWeight: 700 }}>
-                                <AlertTriangle size={12} /> Insufficient WT balance
+                                <AlertTriangle size={12} />  WT inssufisants
                             </div>
                         )}
 
@@ -295,13 +295,13 @@ export default function CartDrawer({ open, setOpen }) {
                                     cursor: 'not-allowed',
                                 }}
                             >
-                                {items.length === 0 ? 'Bag_Empty' : hasStockIssue ? 'Stock_Exceeded' : 'Insufficient_Funds'}
+                                {items.length === 0 ? 'Bag_Empty' : hasStockIssue ? 'Stock_Exceeded' : 'WT_Insuffisant'}
                             </button>
                         )}
 
                         <p style={{ fontSize: '8px', textAlign: 'center', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.2em', fontWeight: 700, fontStyle: 'italic', lineHeight: 1.8 }}>
-                            Secure_Nexus_Transmission // WEVA_OS 2.6<br />
-                            No_Refunds_On_Vault_Assets
+                            Transmission Sécurisée // WEVA_OS 2.6<br />
+                            Aucun remboursement sur les actifs vault
                         </p>
                     </div>
                 )}

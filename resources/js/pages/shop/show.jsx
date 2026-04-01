@@ -129,13 +129,12 @@ export default function ProductShow({ product }) {
                                                     key={variant.id}
                                                     onClick={() => available && setSelectedVariant(variant.id)}
                                                     disabled={!available}
-                                                    className={`flex h-10 w-10 items-center justify-center border text-[11px] font-semibold transition-all duration-200 ${
-                                                        selected
+                                                    className={`flex h-10 w-10 items-center justify-center border text-[11px] font-semibold transition-all duration-200 ${selected
                                                             ? 'border-black bg-black text-white'
                                                             : available
-                                                              ? 'border-gray-200 bg-white text-black hover:border-black'
-                                                              : 'cursor-not-allowed border-gray-100 bg-gray-50 text-gray-300 line-through'
-                                                    }`}
+                                                                ? 'border-gray-200 bg-white text-black hover:border-black'
+                                                                : 'cursor-not-allowed border-gray-100 bg-gray-50 text-gray-300 line-through'
+                                                        }`}
                                                 >
                                                     {variant.size}
                                                 </button>
@@ -176,27 +175,26 @@ export default function ProductShow({ product }) {
                             <button
                                 onClick={handleAddToBag}
                                 disabled={isOutOfStock || !selectedVariant || adding}
-                                className={`mb-4 w-full py-4 text-[11px] font-black tracking-[0.3em] uppercase transition-all duration-300 ${
-                                    added
+                                className={`mb-4 w-full py-4 text-[11px] font-black tracking-[0.3em] uppercase transition-all duration-300 ${added
                                         ? 'bg-green-600 text-white'
                                         : isOutOfStock
-                                          ? 'cursor-not-allowed bg-gray-100 text-gray-400'
-                                          : !selectedVariant
                                             ? 'cursor-not-allowed bg-gray-100 text-gray-400'
-                                            : adding
-                                              ? 'cursor-wait bg-gray-200 text-gray-500'
-                                              : 'bg-black text-white hover:bg-zinc-800'
-                                }`}
+                                            : !selectedVariant
+                                                ? 'cursor-not-allowed bg-gray-100 text-gray-400'
+                                                : adding
+                                                    ? 'cursor-wait bg-gray-200 text-gray-500'
+                                                    : 'bg-black text-white hover:bg-zinc-800'
+                                    }`}
                             >
                                 {added
                                     ? '✓ Ajouté'
                                     : isOutOfStock
-                                      ? 'Épuisé'
-                                      : !selectedVariant
-                                        ? 'Choisir une taille'
-                                        : adding
-                                          ? '...'
-                                          : 'Add to Bag'}
+                                        ? 'Épuisé'
+                                        : !selectedVariant
+                                            ? 'Choisir une taille'
+                                            : adding
+                                                ? '...'
+                                                : 'Ajouter au panier'}
                             </button>
 
                             {/* Divider */}
