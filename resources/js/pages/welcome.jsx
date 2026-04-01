@@ -24,7 +24,7 @@ export default function Welcome() {
                         Weva · 2026
                     </p>
                     <h2 className="text-2xl font-semibold uppercase tracking-[0.2em] text-black">
-                        New Arrivals
+                        Nouveautés
                     </h2>
                 </div>
 

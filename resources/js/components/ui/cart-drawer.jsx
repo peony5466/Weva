@@ -100,7 +100,7 @@ export default function CartDrawer({ open, setOpen }) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <ShoppingBag size={18} />
                         <span style={{ fontSize: '11px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em' }}>
-                            Your_Bag
+                            Panier
                         </span>
                         {items.length > 0 && (
                             <span style={{

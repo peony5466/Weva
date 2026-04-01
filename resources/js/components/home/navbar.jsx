@@ -51,7 +51,7 @@ export default function Navbar({ onOpenCart }) {
                     <div className="flex flex-1 items-center justify-end gap-6">
                         <button onClick={onOpenCart} className="group relative flex items-center gap-1 focus:outline-none">
                             <span className="text-[11px] font-[1000] tracking-tighter uppercase italic transition group-hover:text-gray-400">
-                                Your_Bag
+                                Panier
                             </span>
                             <div className="relative">
                                 <ShoppingBag className="h-5 w-5 text-gray-900 transition group-hover:text-gray-400" strokeWidth={2.5} />

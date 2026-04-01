@@ -87,12 +87,7 @@ export default function WevaVip({ progress = {}, recentOrders = [] }) {
                                     <p className="mb-1 text-[10px] font-black tracking-[0.3em] text-neutral-400 uppercase">Programme de fidélité</p>
                                     <p className="text-xl font-black text-white">{points} / 250 tokens</p>
                                 </div>
-                                <Link
-                                    href={route('tokens.my-wallet')}
-                                    className="flex items-center gap-1 border-b border-white text-[9px] font-black tracking-[0.2em] text-white uppercase transition-opacity hover:opacity-60"
-                                >
-                                    Voir détails <ChevronRight size={10} />
-                                </Link>
+
                             </div>
 
                             {/* Barre */}
@@ -119,7 +114,7 @@ export default function WevaVip({ progress = {}, recentOrders = [] }) {
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                             {[
                                 { icon: ShoppingBag, label: 'Mes commandes', href: '/dashboard/orders', sub: 'Historique & suivi' },
-                                { icon: Coins, label: 'Mes tokens', href: route('tokens.my-wallet'), sub: 'Solde & transactions' },
+                                // { icon: Coins, label: 'Mes tokens', href: route('tokens.my-wallet'), sub: 'Solde & transactions' },
                                 { icon: Clock, label: 'La boutique', href: route('shop.index'), sub: 'Nouveaux arrivages' },
                             ].map(({ icon: Icon, label, href, sub }) => (
                                 <Link
@@ -138,40 +133,7 @@ export default function WevaVip({ progress = {}, recentOrders = [] }) {
                             ))}
                         </div>
 
-                        {/* Commandes récentes */}
-                        {recentOrders.length > 0 && (
-                            <div className="border border-white/10 bg-[#111]">
-                                <div className="border-b border-white/10 px-6 py-4">
-                                    <h2 className="text-[10px] font-black tracking-[0.3em] text-neutral-400 uppercase">Commandes récentes</h2>
-                                </div>
-                                <div className="divide-y divide-white/5">
-                                    {recentOrders.slice(0, 5).map((order) => (
-                                        <div key={order.id} className="flex items-center justify-between px-6 py-4">
-                                            <div>
-                                                <p className="text-[11px] font-semibold text-white">{order.order_number}</p>
-                                                <p className="mt-0.5 text-[9px] tracking-wide text-neutral-500 uppercase">
-                                                    {new Date(order.created_at).toLocaleDateString('fr-FR')}
-                                                </p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-[12px] font-black text-white">{parseFloat(order.total).toFixed(2)}€</p>
-                                                <span
-                                                    className={`px-2 py-0.5 text-[8px] font-bold tracking-wide uppercase ${
-                                                        order.status === 'completed'
-                                                            ? 'bg-green-900/30 text-green-400'
-                                                            : order.status === 'pending'
-                                                              ? 'bg-yellow-900/30 text-yellow-400'
-                                                              : 'bg-neutral-800 text-neutral-400'
-                                                    }`}
-                                                >
-                                                    {order.status}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+
 
                         {recentOrders.length === 0 && (
                             <div className="border border-white/10 bg-[#111] p-12 text-center">

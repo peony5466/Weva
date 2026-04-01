@@ -61,13 +61,13 @@ export default function ProductShow({ product }) {
             <div className="min-h-screen bg-white text-black antialiased">
                 <main className="grid min-h-screen grid-cols-1 pt-20 lg:grid-cols-12">
                     {/* IMAGE */}
-                    <div className="relative flex items-center justify-center bg-[#f8f7f4] p-12 lg:col-span-7 lg:min-h-screen">
+                    <div className="relative flex items-center justify-center bg-[#f8f7f4] p-4 sm:p-8 md:p-12 lg:col-span-7 lg:min-h-screen lg:p-12">
                         <div className={`w-full max-w-xl transition-opacity duration-500 ${isOutOfStock ? 'opacity-40' : 'opacity-100'}`}>
                             {product.image_path ? (
                                 <img
                                     src={getImageUrl(product.image_path)}
                                     alt={product.name}
-                                    className="h-auto w-full object-contain"
+                                    className="h-[50vh] w-full object-contain sm:h-[60vh] md:h-[70vh] lg:h-auto"
                                     onError={(e) => {
                                         e.target.style.display = 'none';
                                     }}
