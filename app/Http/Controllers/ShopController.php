@@ -33,7 +33,7 @@ class ShopController extends Controller
                 'category'     => $product->category,
             ]);
 
-        return Inertia::render('Shop/index', [
+        return Inertia::render('shop/index', [
             'products'        => $products,
             'categories'      => Category::select('id', 'name', 'slug')->get(),
             'currentCategory' => $request->input('category'),
@@ -47,7 +47,7 @@ class ShopController extends Controller
             ->where('slug', $slug)
             ->firstOrFail();
 
-        return Inertia::render('Shop/show', [
+        return Inertia::render('shop/show', [
             'product' => array_merge($product->toArray(), [
                 'is_exclusive' => (bool) $product->is_exclusive, // ✅ bool aussi sur show
                 'wt_price'     => $product->wt_price,
