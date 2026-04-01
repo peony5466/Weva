@@ -12,13 +12,13 @@ export default function Dashboard({ stats = {}, logs = [] }) {
             sub: 'Membres enregistrés',
         },
         {
-            label: 'Ventes totales',
+            label: 'Ventes €',
             value: `€${Number(stats.total_sales ?? 0).toLocaleString('fr-FR', { minimumFractionDigits: 2 })}`,
             icon: '💶',
             sub: 'Commandes payées',
         },
         {
-            label: 'WT Points utilisés',
+            label: 'Ventes WT',
             value: `${Number(stats.wt_sales ?? 0).toLocaleString()} WT`,
             icon: '🪙',
             sub: 'Tokens dépensés',
@@ -123,13 +123,20 @@ export default function Dashboard({ stats = {}, logs = [] }) {
                             </div>
                         ) : (
                             logs.map((log, i) => (
-                                <div
+                                <Link
                                     key={log.id}
-                                    className="grid grid-cols-5 gap-4 border-b border-white/5 px-6 py-4 transition-colors hover:bg-white/2"
+                                    href={route('admin.orders.show', log.order_number)}
+                                    className="grid cursor-pointer grid-cols-5 gap-4 border-b border-white/5 px-6 py-4 transition-colors hover:bg-white/2"
                                     style={{ animationDelay: `${400 + i * 40}ms` }}
                                 >
                                     <span className="truncate text-sm font-medium text-white/70">{log.user}</span>
-                                    <span className="text-sm font-black text-white">€{Number(log.amount).toFixed(2)}</span>
+                                    <span className="text-sm font-black text-white">
+                                        {log.wt_amount > 0 ? (
+                                            <span className="text-amber-400">{log.wt_amount} WT</span>
+                                        ) : (
+                                            <span>€{Number(log.amount).toFixed(2)}</span>
+                                        )}
+                                    </span>
                                     <span className="text-sm text-white/40">{log.points > 0 ? `${log.points} WT` : '—'}</span>
                                     <span>
                                         <span
@@ -139,7 +146,7 @@ export default function Dashboard({ stats = {}, logs = [] }) {
                                         </span>
                                     </span>
                                     <span className="font-mono text-xs text-white/30">{log.date}</span>
-                                </div>
+                                </Link>
                             ))
                         )}
                     </div>

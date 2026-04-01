@@ -10,6 +10,7 @@ use App\Http\Controllers\ShopController;
 use App\Http\Controllers\TokenController;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -81,11 +82,84 @@ Route::get('/legal', fn () => Inertia::render('legal/mentions-legales'))->name('
 Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/dashboard', function () {
-        if (Auth::user()->role === 'admin') {
-            return Inertia::render('dashboard');
+        if (Auth::user()->role !== 'admin') {
+            return redirect()->route('wevavip');
         }
 
-        return redirect()->route('wevavip');
+        // Stats
+        $citizens = User::count();
+
+        // Ventes en euros (commandes payées dont les produits ne sont pas WT exclusifs)
+        $totalSalesEuros = Order::whereIn('status', ['paid', 'completed'])
+            ->with('items.product')
+            ->get()
+            ->sum(function ($order) {
+                return $order->items->sum(function ($item) {
+                    $product = $item->product;
+                    if ($product && $product->is_exclusive && $product->wt_price) {
+                        return 0; // produit payé en WT, pas en euros
+                    }
+
+                    return $item->price * $item->quantity;
+                });
+            });
+
+        // Ventes en WT (commandes payées avec produits exclusifs)
+        $totalSalesWT = Order::whereIn('status', ['paid', 'completed'])
+            ->with('items.product')
+            ->get()
+            ->sum(function ($order) {
+                return $order->items->sum(function ($item) {
+                    $product = $item->product;
+                    if ($product && $product->is_exclusive && $product->wt_price) {
+                        return $product->wt_price * $item->quantity;
+                    }
+
+                    return 0;
+                });
+            });
+
+        $orders = Order::count();
+        $pending = Order::where('status', 'pending')->count();
+
+        // Logs (dernières commandes)
+        $logs = Order::with('user')
+            ->latest()
+            ->take(10)
+            ->get()
+            ->map(function ($order) {
+                $isWT = $order->items->contains(function ($item) {
+                    return $item->product && $item->product->is_exclusive && $item->product->wt_price;
+                });
+
+                return [
+                    'id' => $order->id,
+                    'order_number' => $order->order_number,
+                    'user' => $order->user?->name ?? 'Inconnu',
+                    'amount' => $isWT ? 0 : $order->total,
+                    'wt_amount' => $isWT ? $order->items->sum(function ($item) {
+                        $product = $item->product;
+
+                        return ($product && $product->is_exclusive && $product->wt_price)
+                            ? $product->wt_price * $item->quantity
+                            : 0;
+                    }) : 0,
+                    'points' => $order->points_earned ?? 0,
+                    'status' => $order->status,
+                    'date' => $order->created_at->format('d/m/Y'),
+                ];
+            });
+
+        return Inertia::render('dashboard', [
+            'stats' => [
+                'citizens' => $citizens,
+                'total_sales' => $totalSalesEuros,
+                'wt_sales' => $totalSalesWT,
+                'orders' => $orders,
+                'pending' => $pending,
+            ],
+            'logs' => $logs,
+        ]);
     })->name('dashboard');
 
     Route::post('/addresses', [AddressController::class, 'store'])->name('addresses.store');
@@ -114,7 +188,47 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/users', [MemberController::class, 'store'])->name('users.store');
         Route::delete('/users/{user}', [MemberController::class, 'destroy'])->name('users.destroy');
 
-        Route::get('/orders', fn () => Inertia::render('admin/orders/index'))->name('orders.index');
+        Route::get('/orders', function () {
+            $orders = Order::with('user')
+                ->latest()
+                ->get()
+                ->map(function ($order) {
+                    $isWT = $order->items && $order->items->contains(function ($item) {
+                        return $item->product && $item->product->is_exclusive && $item->product->wt_price;
+                    });
+
+                    return [
+                        'id' => $order->id,
+                        'order_number' => $order->order_number,
+                        'user' => $order->user?->name ?? 'Inconnu',
+                        'user_email' => $order->email,
+                        'total' => $isWT ? 0 : $order->total,
+                        'wt_total' => $isWT ? $order->items->sum(function ($item) {
+                            $product = $item->product;
+
+                            return ($product && $product->is_exclusive && $product->wt_price)
+                                ? $product->wt_price * $item->quantity
+                                : 0;
+                        }) : 0,
+                        'status' => $order->status,
+                        'created_at' => $order->created_at->format('d/m/Y H:i'),
+                    ];
+                });
+
+            return Inertia::render('admin/orders/index', [
+                'orders' => $orders,
+            ]);
+        })->name('orders.index');
+
+        Route::get('/orders/{order_number}', function ($order_number) {
+            $order = Order::where('order_number', $order_number)
+                ->with(['user', 'items.product'])
+                ->firstOrFail();
+
+            return Inertia::render('admin/orders/show', [
+                'order' => $order,
+            ]);
+        })->name('orders.show');
     });
 
     /* --- ZONE CLIENT --- */
