@@ -71,28 +71,64 @@ export default function Success({ order, tokensEarned = 0, cashbackApplied = 0 }
                                             Taille: {item.attributes?.size || 'Unique'} · Qté: {item.quantity}
                                         </p>
                                     </div>
-                                    <p className="shrink-0 text-[13px] font-bold text-black">{parseFloat(item.price * item.quantity).toFixed(2)}€</p>
+                                    <p className="shrink-0 text-[13px] font-bold">
+                                        {item.product?.is_exclusive && item.product?.wt_price ? (
+                                            <span className="text-amber-600">{item.product.wt_price * item.quantity} WT</span>
+                                        ) : (
+                                            <span className="text-black">{parseFloat(item.price * item.quantity).toFixed(2)}€</span>
+                                        )}
+                                    </p>
                                 </div>
                             ))}
                         </div>
 
-                        {/* Totals */}
-                        <div className="space-y-2 border-t border-gray-100 bg-[#faf8f4] p-6">
-                            <div className="flex justify-between text-[11px] font-bold tracking-wide text-gray-500 uppercase">
-                                <span>Sous-total</span>
-                                <span>{parseFloat(order.subtotal).toFixed(2)}€</span>
-                            </div>
-                            {parseFloat(order.discount) > 0 && (
-                                <div className="flex justify-between text-[11px] font-bold tracking-wide text-green-600 uppercase">
-                                    <span>Cashback (-15%)</span>
-                                    <span>-{parseFloat(order.discount).toFixed(2)}€</span>
+                        {/* Totaux */}
+                        {(() => {
+                            const fiatTotal =
+                                order.items?.reduce((sum, item) => {
+                                    if (item.product?.is_exclusive && item.product?.wt_price) return sum;
+                                    return sum + item.price * item.quantity;
+                                }, 0) || 0;
+
+                            const wtTotal =
+                                order.items?.reduce((sum, item) => {
+                                    if (item.product?.is_exclusive && item.product?.wt_price) {
+                                        return sum + item.product.wt_price * item.quantity;
+                                    }
+                                    return sum;
+                                }, 0) || 0;
+
+                            return (
+                                <div className="space-y-2 border-t border-gray-100 bg-[#faf8f4] p-6">
+                                    {fiatTotal > 0 && (
+                                        <div className="flex justify-between text-[11px] font-bold tracking-wide text-gray-500 uppercase">
+                                            <span>Sous-total</span>
+                                            <span>{parseFloat(fiatTotal).toFixed(2)}€</span>
+                                        </div>
+                                    )}
+                                    {wtTotal > 0 && (
+                                        <div className="flex justify-between text-[11px] font-bold tracking-wide text-amber-600 uppercase">
+                                            <span>WT Total</span>
+                                            <span>{wtTotal} WT</span>
+                                        </div>
+                                    )}
+                                    {parseFloat(order.discount) > 0 && (
+                                        <div className="flex justify-between text-[11px] font-bold tracking-wide text-green-600 uppercase">
+                                            <span>Cashback (-15%)</span>
+                                            <span>-{parseFloat(order.discount).toFixed(2)}€</span>
+                                        </div>
+                                    )}
+                                    <div className="mt-2 flex justify-between border-t border-gray-200 pt-2 text-lg font-black tracking-tight text-black uppercase">
+                                        <span>Total</span>
+                                        <span>
+                                            {fiatTotal > 0 && <span>{parseFloat(fiatTotal).toFixed(2)}€</span>}
+                                            {fiatTotal > 0 && wtTotal > 0 && <span className="mx-2">/</span>}
+                                            {wtTotal > 0 && <span className="text-amber-600">{wtTotal} WT</span>}
+                                        </span>
+                                    </div>
                                 </div>
-                            )}
-                            <div className="mt-2 flex justify-between border-t border-gray-200 pt-2 text-lg font-black tracking-tight text-black uppercase">
-                                <span>Total</span>
-                                <span>{parseFloat(order.total).toFixed(2)}€</span>
-                            </div>
-                        </div>
+                            );
+                        })()}
                     </div>
 
                     {/* Infos livraison */}

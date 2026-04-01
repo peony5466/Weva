@@ -167,9 +167,14 @@ export default function Checkout() {
                                                     </p>
                                                 </div>
                                                 <p className="shrink-0 text-[12px] font-bold">
-                                                    {item.is_exclusive || item.wt_price > 0
-                                                        ? `${item.wt_price * item.quantity} WT`
-                                                        : `${(item.price * item.quantity).toFixed(2)}€`}
+                                                    {item.wt_price > 0 ? (
+                                                        <>
+                                                            <span className="text-gray-500">{(item.price * item.quantity).toFixed(2)}€</span>
+                                                            <span className="ml-2 text-amber-600">({item.wt_price * item.quantity} WT)</span>
+                                                        </>
+                                                    ) : (
+                                                        <span>{(item.price * item.quantity).toFixed(2)}€</span>
+                                                    )}
                                                 </p>
                                             </div>
                                         ))}
@@ -201,7 +206,11 @@ export default function Checkout() {
                                         )}
                                         <div className="flex justify-between border-t border-gray-100 pt-3 text-lg font-black text-black">
                                             <span>Total</span>
-                                            <span>{fiatTotal > 0 ? `${finalTotal.toFixed(2)}€` : `${wtTotal} WT`}</span>
+                                            <span>
+                                                {fiatTotal > 0 && <span>{finalTotal.toFixed(2)}€</span>}
+                                                {wtTotal > 0 && fiatTotal > 0 && <span className="mx-2">/</span>}
+                                                {wtTotal > 0 && <span className="text-amber-600">{wtTotal} WT</span>}
+                                            </span>
                                         </div>
                                         <p className="text-right text-[9px] text-gray-400">+{pointsToEarn} tokens après commande</p>
                                     </div>
@@ -216,7 +225,9 @@ export default function Checkout() {
                                                 : 'bg-black text-white hover:bg-zinc-800'
                                         }`}
                                     >
-                                        {processing ? 'Traitement...' : wtTotal > 0 ? `Payer ${wtTotal} WT` : `Payer ${finalTotal.toFixed(2)}€`}
+                                        {processing
+                                            ? 'Traitement...'
+                                            : `Payer ${fiatTotal > 0 ? `${finalTotal.toFixed(2)}€` : ''}${fiatTotal > 0 && wtTotal > 0 ? ' / ' : ''}${wtTotal > 0 ? `${wtTotal} WT` : ''}`}
                                     </button>
 
                                     <div className="mt-4 flex items-center justify-center gap-2 opacity-40">

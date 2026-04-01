@@ -60,7 +60,19 @@ class OrderController extends Controller
         $discount = $pricing['discount_amount'];
         $total = $pricing['total'];
 
-        // ── ÉTAPE 3 : Transaction DB ──────────────────────────────────────────
+        // ── ÉTAPE 2b : Détecter paiement WT ─────────────────────────────────────
+        $hasWTItems = false;
+        $wtTotal = 0;
+        foreach ($cart as $cartId => $item) {
+            $productId = explode('-', $cartId)[0];
+            $product = Product::find($productId);
+            if ($product && $product->is_exclusive && $product->wt_price) {
+                $hasWTItems = true;
+                $wtTotal += $product->wt_price * ($item['quantity'] ?? 1);
+            }
+        }
+
+        // ── PAIEMENT : Stripe Checkout ───────────────────────────────────────────
         try {
             // Récupérer l'adresse de livraison
             $address = null;
@@ -161,6 +173,23 @@ class OrderController extends Controller
         if ($order->status === 'pending_payment') {
 
             $order->update(['status' => 'paid']);
+
+            // Déduire les tokens WT pour les produits exclusifs
+            $order->load('items.product');
+            $wtTotal = $order->items->sum(function ($item) {
+                $product = $item->product;
+                if ($product && $product->is_exclusive && $product->wt_price) {
+                    return $product->wt_price * $item->quantity;
+                }
+
+                return 0;
+            });
+
+            if ($wtTotal > 0 && $order->user_id) {
+                $user = User::find($order->user_id);
+                $tokenService = new TokenService;
+                $tokenService->spendTokens($user, $wtTotal);
+            }
 
             // Récompense tokens : 1€ payé = 1 token (sur le total APRÈS cashback)
             if ($order->user_id) {

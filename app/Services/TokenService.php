@@ -2,9 +2,9 @@
 
 namespace App\Services;
 
-use App\Models\User;
 use App\Models\Order;
 use App\Models\TokenTransaction;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -15,9 +15,11 @@ use Illuminate\Support\Facades\DB;
  */
 class TokenService
 {
-    public const TOKENS_PER_EURO    = 1;    // 1€ = 1 token
+    public const TOKENS_PER_EURO = 1;    // 1€ = 1 token
+
     public const CASHBACK_THRESHOLD = 250;  // tokens requis
-    public const CASHBACK_PERCENT   = 15;   // % de réduction
+
+    public const CASHBACK_PERCENT = 15;   // % de réduction
 
     // ── Le user a-t-il droit au cashback ? ───────────────────────────────────
     public function hasCashback(User $user): bool
@@ -29,19 +31,19 @@ class TokenService
     // Appelé dans OrderController AVANT de créer la commande
     public function applyDiscount(User $user, float $subtotal): array
     {
-        $eligible       = $this->hasCashback($user);
-        $pct            = $eligible ? self::CASHBACK_PERCENT : 0;
+        $eligible = $this->hasCashback($user);
+        $pct = $eligible ? self::CASHBACK_PERCENT : 0;
         $discountAmount = $eligible ? round($subtotal * $pct / 100, 2) : 0.0;
-        $total          = round($subtotal - $discountAmount, 2);
+        $total = round($subtotal - $discountAmount, 2);
 
         return [
-            'eligible'         => $eligible,
+            'eligible' => $eligible,
             'discount_percent' => $pct,
-            'discount_amount'  => $discountAmount,
-            'subtotal'         => $subtotal,
-            'total'            => $total,
-            'points'           => (int) $user->points,
-            'points_needed'    => max(0, self::CASHBACK_THRESHOLD - (int) $user->points),
+            'discount_amount' => $discountAmount,
+            'subtotal' => $subtotal,
+            'total' => $total,
+            'points' => (int) $user->points,
+            'points_needed' => max(0, self::CASHBACK_THRESHOLD - (int) $user->points),
         ];
     }
 
@@ -49,10 +51,12 @@ class TokenService
     // Appelé dans OrderController APRÈS création de la commande
     public function rewardOrderTokens(User $user, Order $order): int
     {
-        $amount       = (float) $order->total;
+        $amount = (float) $order->total;
         $tokensEarned = (int) floor($amount * self::TOKENS_PER_EURO);
 
-        if ($tokensEarned <= 0) return 0;
+        if ($tokensEarned <= 0) {
+            return 0;
+        }
 
         DB::transaction(function () use ($user, $order, $tokensEarned, $amount) {
             $user->increment('points', $tokensEarned);
@@ -62,11 +66,11 @@ class TokenService
             $order->update(['points_earned' => $tokensEarned]);
 
             TokenTransaction::create([
-                'user_id'      => $user->id,
-                'order_id'     => $order->id,
-                'amount'       => $tokensEarned,
-                'type'         => 'order_reward',
-                'description'  => "Commande #{$order->order_number} — +{$tokensEarned} tokens",
+                'user_id' => $user->id,
+                'order_id' => $order->id,
+                'amount' => $tokensEarned,
+                'type' => 'order_reward',
+                'description' => "Commande #{$order->order_number} — +{$tokensEarned} tokens",
                 'order_amount' => $amount,
             ]);
         });
@@ -77,18 +81,30 @@ class TokenService
     // ── Données de progression pour le front ─────────────────────────────────
     public function getProgress(User $user): array
     {
-        $points   = (int) $user->points;
+        $points = (int) $user->points;
         $eligible = $points >= self::CASHBACK_THRESHOLD;
         $progress = min(100, (int) round($points / self::CASHBACK_THRESHOLD * 100));
 
         return [
-            'points'           => $points,
-            'threshold'        => self::CASHBACK_THRESHOLD,
-            'eligible'         => $eligible,
+            'points' => $points,
+            'threshold' => self::CASHBACK_THRESHOLD,
+            'eligible' => $eligible,
             'cashback_percent' => self::CASHBACK_PERCENT,
-            'points_needed'    => max(0, self::CASHBACK_THRESHOLD - $points),
+            'points_needed' => max(0, self::CASHBACK_THRESHOLD - $points),
             'progress_percent' => $progress,
-            'total_spent'      => (float) ($user->total_spent ?? 0),
+            'total_spent' => (float) ($user->total_spent ?? 0),
         ];
+    }
+
+    // ── Déduit les tokens du compte (paiement WT) ─────────────────────────────
+    public function spendTokens(User $user, int $amount): bool
+    {
+        if ((int) $user->points < $amount) {
+            return false;
+        }
+
+        $user->decrement('points', $amount);
+
+        return true;
     }
 }
