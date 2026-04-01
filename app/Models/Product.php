@@ -47,9 +47,3 @@ class Product extends Model
         return (int) $this->variants()->sum('stock');
     }
 }
-
-class Product extends Model
-{
-    //
-    protected $fillable = ['name', 'price', 'color', 'imageSrc', 'imageAlt'];
-    }
