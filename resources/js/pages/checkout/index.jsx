@@ -1,13 +1,26 @@
 import ClientLayout from '@/layouts/client-layout';
 import { Head, useForm, usePage } from '@inertiajs/react';
-import { ShieldCheck, MapPin, Mail, Tag } from 'lucide-react';
+import { Mail, MapPin, ShieldCheck, Tag } from 'lucide-react';
 
 export default function Checkout() {
     const { auth, cart, cartTotal = 0 } = usePage().props;
     const user = auth?.user;
     const items = Object.values(cart || {});
 
-    const fiatTotal = cartTotal || items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+    const fiatTotal =
+        cartTotal ||
+        items.reduce((acc, item) => {
+            if (item.is_exclusive || item.wt_price > 0) return acc;
+            return acc + item.price * item.quantity;
+        }, 0);
+
+    const wtTotal = items.reduce((acc, item) => {
+        if (item.is_exclusive || item.wt_price > 0) {
+            return acc + (item.wt_price || 0) * item.quantity;
+        }
+        return acc;
+    }, 0);
+
     const pointsToEarn = Math.floor(fiatTotal);
 
     // Cashback si user a >= 250 tokens
@@ -42,201 +55,177 @@ export default function Checkout() {
             <Head title="Checkout — WEVA" />
 
             <div className="min-h-screen bg-[#faf8f4] pt-24 pb-20">
-                <div className="max-w-5xl mx-auto px-6">
-
+                <div className="mx-auto max-w-5xl px-6">
                     {/* Header */}
                     <div className="mb-12">
-                        <p className="text-[9px] font-bold uppercase tracking-[0.4em] text-gray-400 mb-2">
-                            WEVA · Finaliser ma commande
-                        </p>
-                        <h1 className="text-3xl font-semibold uppercase tracking-tight text-black">
-                            Checkout
-                        </h1>
+                        <p className="mb-2 text-[9px] font-bold tracking-[0.4em] text-gray-400 uppercase">WEVA · Finaliser ma commande</p>
+                        <h1 className="text-3xl font-semibold tracking-tight text-black uppercase">Checkout</h1>
                     </div>
 
                     <form onSubmit={handleSubmit}>
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-
+                        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
                             {/* ── GAUCHE ── */}
-                            <div className="lg:col-span-7 space-y-6">
-
+                            <div className="space-y-6 lg:col-span-7">
                                 {/* Email (si non connecté) */}
                                 {!user && (
-                                    <div className="bg-white border border-gray-100 p-6">
-                                        <div className="flex items-center gap-2 mb-4">
-                                            <Mail className="w-4 h-4 text-gray-400" />
-                                            <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500">
-                                                Contact
-                                            </h2>
+                                    <div className="border border-gray-100 bg-white p-6">
+                                        <div className="mb-4 flex items-center gap-2">
+                                            <Mail className="h-4 w-4 text-gray-400" />
+                                            <h2 className="text-[10px] font-black tracking-[0.3em] text-gray-500 uppercase">Contact</h2>
                                         </div>
                                         <input
                                             type="email"
                                             value={data.email}
-                                            onChange={e => setData('email', e.target.value)}
+                                            onChange={(e) => setData('email', e.target.value)}
                                             placeholder="votre@email.com"
                                             required
-                                            className="w-full border border-gray-200 bg-white px-4 py-3 text-[12px] tracking-wide focus:border-black focus:outline-none transition-colors"
+                                            className="w-full border border-gray-200 bg-white px-4 py-3 text-[12px] tracking-wide transition-colors focus:border-black focus:outline-none"
                                         />
-                                        {errors.email && (
-                                            <p className="text-red-500 text-[10px] mt-2">{errors.email}</p>
-                                        )}
+                                        {errors.email && <p className="mt-2 text-[10px] text-red-500">{errors.email}</p>}
                                     </div>
                                 )}
 
                                 {/* Adresse */}
-                                <div className="bg-white border border-gray-100 p-6">
-                                    <div className="flex items-center gap-2 mb-4">
-                                        <MapPin className="w-4 h-4 text-gray-400" />
-                                        <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500">
-                                            Adresse de livraison
-                                        </h2>
+                                <div className="border border-gray-100 bg-white p-6">
+                                    <div className="mb-4 flex items-center gap-2">
+                                        <MapPin className="h-4 w-4 text-gray-400" />
+                                        <h2 className="text-[10px] font-black tracking-[0.3em] text-gray-500 uppercase">Adresse de livraison</h2>
                                     </div>
                                     <textarea
                                         value={data.address}
-                                        onChange={e => setData('address', e.target.value)}
+                                        onChange={(e) => setData('address', e.target.value)}
                                         placeholder="Numéro, rue, ville, code postal, pays"
                                         required
                                         rows={3}
-                                        className="w-full border border-gray-200 bg-white px-4 py-3 text-[12px] tracking-wide focus:border-black focus:outline-none transition-colors resize-none"
+                                        className="w-full resize-none border border-gray-200 bg-white px-4 py-3 text-[12px] tracking-wide transition-colors focus:border-black focus:outline-none"
                                     />
-                                    {errors.address && (
-                                        <p className="text-red-500 text-[10px] mt-2">{errors.address}</p>
-                                    )}
+                                    {errors.address && <p className="mt-2 text-[10px] text-red-500">{errors.address}</p>}
                                 </div>
 
                                 {/* Cashback info */}
                                 {user && (
-                                    <div className={`border p-5 ${hasCashback ? 'bg-black text-white border-black' : 'bg-white border-gray-100'}`}>
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <Tag className="w-4 h-4" />
-                                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em]">
-                                                Tokens WEVA
-                                            </h3>
+                                    <div className={`border p-5 ${hasCashback ? 'border-black bg-black text-white' : 'border-gray-100 bg-white'}`}>
+                                        <div className="mb-2 flex items-center gap-2">
+                                            <Tag className="h-4 w-4" />
+                                            <h3 className="text-[10px] font-black tracking-[0.3em] uppercase">Tokens WEVA</h3>
                                         </div>
-                                        <div className="flex justify-between items-center">
+                                        <div className="flex items-center justify-between">
                                             <div>
                                                 <p className={`text-[12px] font-semibold ${hasCashback ? 'text-white' : 'text-black'}`}>
                                                     {user.points || 0} tokens
                                                 </p>
-                                                <p className={`text-[10px] mt-0.5 ${hasCashback ? 'text-gray-300' : 'text-gray-400'}`}>
+                                                <p className={`mt-0.5 text-[10px] ${hasCashback ? 'text-gray-300' : 'text-gray-400'}`}>
                                                     {hasCashback
                                                         ? '🎉 Cashback -15% appliqué automatiquement'
                                                         : `${250 - (user.points || 0)} tokens avant le cashback -15%`}
                                                 </p>
                                             </div>
-                                            {hasCashback && (
-                                                <span className="text-2xl font-black text-green-400">-15%</span>
-                                            )}
+                                            {hasCashback && <span className="text-2xl font-black text-green-400">-15%</span>}
                                         </div>
                                     </div>
                                 )}
 
                                 {/* Paiement info */}
-                                <div className="bg-white border border-gray-100 p-6">
-                                    <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 mb-4">
-                                        Paiement
-                                    </h2>
-                                    <div className="flex items-center gap-3 p-4 border border-gray-100 bg-[#faf8f4]">
-                                        <div className="w-8 h-8 bg-black rounded flex items-center justify-center">
-                                            <span className="text-white text-[8px] font-black">CB</span>
+                                <div className="border border-gray-100 bg-white p-6">
+                                    <h2 className="mb-4 text-[10px] font-black tracking-[0.3em] text-gray-500 uppercase">Paiement</h2>
+                                    <div className="flex items-center gap-3 border border-gray-100 bg-[#faf8f4] p-4">
+                                        <div className="flex h-8 w-8 items-center justify-center rounded bg-black">
+                                            <span className="text-[8px] font-black text-white">CB</span>
                                         </div>
                                         <div>
                                             <p className="text-[12px] font-semibold text-black">Carte bancaire</p>
                                             <p className="text-[10px] text-gray-400">Visa, Mastercard, Amex — via Stripe</p>
                                         </div>
                                     </div>
-                                    <p className="text-[10px] text-gray-400 mt-3 text-center">
-                                        Le paiement Stripe sera intégré prochainement
-                                    </p>
+                                    <p className="mt-3 text-center text-[10px] text-gray-400">Le paiement Stripe sera intégré prochainement</p>
                                 </div>
-
                             </div>
 
                             {/* ── DROITE — Récap ── */}
                             <div className="lg:col-span-5">
-                                <div className="bg-white border border-gray-100 p-6 sticky top-28">
-                                    <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 mb-6 pb-4 border-b border-gray-100">
+                                <div className="sticky top-28 border border-gray-100 bg-white p-6">
+                                    <h2 className="mb-6 border-b border-gray-100 pb-4 text-[10px] font-black tracking-[0.3em] text-gray-500 uppercase">
                                         Récapitulatif
                                     </h2>
 
                                     {/* Items */}
-                                    <div className="space-y-4 mb-6">
+                                    <div className="mb-6 space-y-4">
                                         {items.map((item, i) => (
                                             <div key={i} className="flex items-center gap-3">
-                                                <div className="w-12 h-12 bg-[#f8f7f4] shrink-0 overflow-hidden">
+                                                <div className="h-12 w-12 shrink-0 overflow-hidden bg-[#f8f7f4]">
                                                     {item.image ? (
-                                                        <img
-                                                            src={getImageUrl(item.image)}
-                                                            alt={item.name}
-                                                            className="w-full h-full object-contain"
-                                                        />
+                                                        <img src={getImageUrl(item.image)} alt={item.name} className="h-full w-full object-contain" />
                                                     ) : (
-                                                        <div className="w-full h-full flex items-center justify-center text-[7px] text-gray-300 font-bold">
+                                                        <div className="flex h-full w-full items-center justify-center text-[7px] font-bold text-gray-300">
                                                             WEVA
                                                         </div>
                                                     )}
                                                 </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-[11px] font-semibold uppercase tracking-wide truncate">
-                                                        {item.name}
-                                                    </p>
-                                                    <p className="text-[9px] text-gray-400 uppercase tracking-wide">
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="truncate text-[11px] font-semibold tracking-wide uppercase">{item.name}</p>
+                                                    <p className="text-[9px] tracking-wide text-gray-400 uppercase">
                                                         {item.variant || 'Unique'} · Qté {item.quantity}
                                                     </p>
                                                 </div>
-                                                <p className="text-[12px] font-bold shrink-0">
-                                                    {(item.price * item.quantity).toFixed(2)}€
+                                                <p className="shrink-0 text-[12px] font-bold">
+                                                    {item.is_exclusive || item.wt_price > 0
+                                                        ? `${item.wt_price * item.quantity} WT`
+                                                        : `${(item.price * item.quantity).toFixed(2)}€`}
                                                 </p>
                                             </div>
                                         ))}
                                     </div>
 
                                     {/* Totaux */}
-                                    <div className="border-t border-gray-100 pt-4 space-y-2">
-                                        <div className="flex justify-between text-[11px] text-gray-500">
-                                            <span>Sous-total</span>
-                                            <span>{fiatTotal.toFixed(2)}€</span>
-                                        </div>
+                                    <div className="space-y-2 border-t border-gray-100 pt-4">
+                                        {fiatTotal > 0 && (
+                                            <div className="flex justify-between text-[11px] text-gray-500">
+                                                <span>Sous-total</span>
+                                                <span>{fiatTotal.toFixed(2)}€</span>
+                                            </div>
+                                        )}
+                                        {wtTotal > 0 && (
+                                            <div className="flex justify-between text-[11px] font-bold text-amber-600">
+                                                <span>WT Total</span>
+                                                <span>{wtTotal} WT</span>
+                                            </div>
+                                        )}
                                         <div className="flex justify-between text-[11px] text-gray-500">
                                             <span>Livraison</span>
-                                            <span className="text-green-600 font-semibold">Gratuite</span>
+                                            <span className="font-semibold text-green-600">Gratuite</span>
                                         </div>
                                         {hasCashback && (
-                                            <div className="flex justify-between text-[11px] text-green-600 font-bold">
+                                            <div className="flex justify-between text-[11px] font-bold text-green-600">
                                                 <span>Cashback -15%</span>
                                                 <span>-{discountAmount.toFixed(2)}€</span>
                                             </div>
                                         )}
-                                        <div className="flex justify-between text-lg font-black text-black pt-3 border-t border-gray-100">
+                                        <div className="flex justify-between border-t border-gray-100 pt-3 text-lg font-black text-black">
                                             <span>Total</span>
-                                            <span>{finalTotal.toFixed(2)}€</span>
+                                            <span>{fiatTotal > 0 ? `${finalTotal.toFixed(2)}€` : `${wtTotal} WT`}</span>
                                         </div>
-                                        <p className="text-[9px] text-gray-400 text-right">
-                                            +{pointsToEarn} tokens après commande
-                                        </p>
+                                        <p className="text-right text-[9px] text-gray-400">+{pointsToEarn} tokens après commande</p>
                                     </div>
 
                                     {/* Submit */}
                                     <button
                                         type="submit"
                                         disabled={processing || items.length === 0}
-                                        className={`mt-6 w-full py-4 text-[11px] font-black uppercase tracking-[0.4em] transition-all
-                                            ${processing || items.length === 0
-                                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                                : 'bg-black text-white hover:bg-zinc-800'}`}
+                                        className={`mt-6 w-full py-4 text-[11px] font-black tracking-[0.4em] uppercase transition-all ${
+                                            processing || items.length === 0
+                                                ? 'cursor-not-allowed bg-gray-100 text-gray-400'
+                                                : 'bg-black text-white hover:bg-zinc-800'
+                                        }`}
                                     >
-                                        {processing ? 'Traitement...' : `Payer ${finalTotal.toFixed(2)}€`}
+                                        {processing ? 'Traitement...' : wtTotal > 0 ? `Payer ${wtTotal} WT` : `Payer ${finalTotal.toFixed(2)}€`}
                                     </button>
 
-                                    <div className="flex items-center justify-center gap-2 mt-4 opacity-40">
-                                        <ShieldCheck className="w-3 h-3" />
-                                        <span className="text-[8px] font-bold uppercase tracking-[0.3em]">
-                                            Paiement sécurisé SSL
-                                        </span>
+                                    <div className="mt-4 flex items-center justify-center gap-2 opacity-40">
+                                        <ShieldCheck className="h-3 w-3" />
+                                        <span className="text-[8px] font-bold tracking-[0.3em] uppercase">Paiement sécurisé SSL</span>
                                     </div>
                                 </div>
                             </div>
-
                         </div>
                     </form>
                 </div>
