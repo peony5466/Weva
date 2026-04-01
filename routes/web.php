@@ -2,13 +2,15 @@
 
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\ProductController;
+use App\Models\Product;
 use App\Http\Controllers\ShopController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\MemberController;
-use App\Http\Controllers\CartController;
-use App\Http\Controllers\OrderController;
+use Illuminate\Support\Facades\Auth;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -24,27 +26,42 @@ Route::get('/', function () {
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/shop/{product:slug}', [ShopController::class, 'show'])->name('shop.show');
 
+// Détail produit
+Route::get('/product/{id}', function ($id) {
+    return Inertia::render('ProductDetail', [
+        'id' => $id,
+    ]);
+})->name('product.detail');
+
 // Page Token publique
-Route::get('/token', function () {
+Route::get('/client/token', function () {
     return Inertia::render('client/token');
 })->name('token.public');
 
-// Panier (Public pour pouvoir ajouter des items sans être connecté)
+// Checkout
+Route::get('/checkout', function () {
+    return Inertia::render('checkout/index');
+})->name('checkout');
+Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
+
+// Cart
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 Route::post('/cart', [CartController::class, 'store'])->name('cart.store');
 Route::delete('/cart/{id}', [CartController::class, 'destroy'])->name('cart.destroy');
 Route::patch('/cart/{key}', [CartController::class, 'update'])->name('cart.update');
-Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
+
+// Checkout success
+Route::get('/checkout/success/{order_number}', [OrderController::class, 'success'])->name('checkout.success');
+
 
 /*
 |--------------------------------------------------------------------------
-| 2. DISPATCHER DASHBOARD
+| 2. DISPATCHER DASHBOARD(Connexion requise)
 |--------------------------------------------------------------------------
 */
 
+// Dashboard dispatcher
 Route::get('/dashboard', function () {
-    if (!Auth::check()) return redirect()->route('login');
-
     if (Auth::user()->role === 'admin') {
         return Inertia::render('dashboard');
     }
@@ -132,7 +149,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('/users/{user}/ban', [MemberController::class, 'toggleBan'])->name('users.ban');
         Route::delete('/users/{user}', [MemberController::class, 'destroy'])->name('users.destroy');
 
-        // Commandes Admin
+        // Commandes admin        // Commandes Admin
         Route::get('/orders', function () {
             return Inertia::render('admin/orders/index', [
                 'orders' => \App\Models\Order::with('user')->latest()->get()->map(fn($o) => [
@@ -150,6 +167,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 });
 
-/* --- AUTHENTIFICATION --- */
+/* --- ZONE CLIENT --- */
+Route::middleware(['role:client'])->group(function () {
+
+    Route::get('/dashboard/wevavip', function () {
+        return Inertia::render('client/wevavip');
+    })->name('wevavip');
+
+    Route::get('/dashboard/tokens', function () {
+        return Inertia::render('client/mytoken');
+    })->name('tokens.my-wallet');
+});
+
+// Customizer
+Route::get('/dashboard/personalize', function () {
+    return Inertia::render('client/customizer');
+})->name('avatar.customize');
+
+/*
+|--------------------------------------------------------------------------
+| 3. AUTHENTIFICATION
+|--------------------------------------------------------------------------
+*/
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
