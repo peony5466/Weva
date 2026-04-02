@@ -15,7 +15,8 @@ export default function CartDrawer({ open, setOpen }) {
     const getImageUrl = (imagePath) => {
         if (!imagePath) return null;
         if (imagePath.startsWith('http')) return imagePath;
-        return `/images/${imagePath}`;
+        if (imagePath.startsWith('images/')) return '/' + imagePath;
+        return '/images/' + imagePath;
     };
 
     const totals = useMemo(() => {
@@ -48,8 +49,6 @@ export default function CartDrawer({ open, setOpen }) {
         }
     };
 
-    // DEBUG - remove after fix confirmed
-    console.log('CartDrawer render — open:', open);
 
     return (
         <>

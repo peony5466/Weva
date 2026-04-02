@@ -12,19 +12,18 @@ class Product extends Model
         'name',
         'slug',
         'description',
-        'marque',
-        'composition',
-        'entretien',
         'price',
-        'wt_price',
-        'is_exclusive',
         'category_id',
         'is_limited',
+        'is_active',
         'image_path',
     ];
 
-    // ✅ Ajouter 'stock' dans les appends pour qu'il soit inclus dans toJson/toArray
-    protected $appends = ['stock'];
+    protected $casts = [
+        'is_limited' => 'boolean',
+        'is_active'  => 'boolean',
+        'price'      => 'decimal:2',
+    ];
 
     public function category(): BelongsTo
     {
@@ -36,14 +35,8 @@ class Product extends Model
         return $this->hasMany(ProductVariant::class);
     }
 
-    // ✅ Accessor correct dans le Model (Laravel 9+)
-    public function getStockAttribute(): int
+    public function getTotalStockAttribute(): int
     {
-        // Si les variants sont déjà chargés, on évite une requête SQL
-        if ($this->relationLoaded('variants')) {
-            return (int) $this->variants->sum('stock');
-        }
-
         return (int) $this->variants()->sum('stock');
     }
 }

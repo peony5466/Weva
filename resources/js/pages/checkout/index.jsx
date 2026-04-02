@@ -22,8 +22,6 @@ export default function Checkout() {
     }, 0);
 
     const pointsToEarn = Math.floor(fiatTotal);
-
-    // Cashback si user a >= 250 tokens
     const hasCashback = user && (user.points || 0) >= 250;
     const discountAmount = hasCashback ? Math.round(fiatTotal * 0.15 * 100) / 100 : 0;
     const finalTotal = fiatTotal - discountAmount;
@@ -31,22 +29,24 @@ export default function Checkout() {
     const { data, setData, post, processing, errors } = useForm({
         email: user?.email || '',
         address: '',
+        city: '',
+        postal_code: '',
+        country: '',
     });
 
     const handleSubmit = (e) => {
         e.preventDefault();
         post(route('orders.store'), {
             preserveScroll: true,
-            onError: (err) => {
-                console.error('Checkout error:', err);
-            },
+            onError: (err) => console.error('Checkout error:', err),
         });
     };
 
     const getImageUrl = (path) => {
         if (!path) return null;
         if (path.startsWith('http')) return path;
-        return `/images/${path}`;
+        if (path.startsWith('images/')) return '/' + path;
+return '/images/' + path;
     };
 
     return (
@@ -65,7 +65,7 @@ export default function Checkout() {
                         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
                             {/* ── GAUCHE ── */}
                             <div className="space-y-6 lg:col-span-7">
-                                {/* Email (si non connecté) */}
+                                {/* Email */}
                                 {!user && (
                                     <div className="border border-gray-100 bg-white p-6">
                                         <div className="mb-4 flex items-center gap-2">
@@ -78,27 +78,64 @@ export default function Checkout() {
                                             onChange={(e) => setData('email', e.target.value)}
                                             placeholder="votre@email.com"
                                             required
-                                            className="w-full border border-gray-200 bg-white px-4 py-3 text-[12px] tracking-wide transition-colors focus:border-black focus:outline-none"
+                                            className="w-full border border-gray-200 bg-white px-4 py-3 text-[12px] tracking-wide focus:border-black focus:outline-none"
                                         />
                                         {errors.email && <p className="mt-2 text-[10px] text-red-500">{errors.email}</p>}
                                     </div>
                                 )}
 
                                 {/* Adresse */}
-                                <div className="border border-gray-100 bg-white p-6">
-                                    <div className="mb-4 flex items-center gap-2">
+                                <div className="border border-gray-100 bg-white p-6 space-y-4">
+                                    <div className="mb-2 flex items-center gap-2">
                                         <MapPin className="h-4 w-4 text-gray-400" />
-                                        <h2 className="text-[10px] font-black tracking-[0.3em] text-gray-500 uppercase">Adresse de livraison</h2>
+                                        <h2 className="text-[10px] font-black tracking-[0.3em] text-gray-500 uppercase">
+                                            Adresse de livraison
+                                        </h2>
                                     </div>
-                                    <textarea
+
+                                    <input
+                                        type="text"
                                         value={data.address}
                                         onChange={(e) => setData('address', e.target.value)}
-                                        placeholder="Numéro, rue, ville, code postal, pays"
+                                        placeholder="Numéro, rue"
                                         required
-                                        rows={3}
-                                        className="w-full resize-none border border-gray-200 bg-white px-4 py-3 text-[12px] tracking-wide transition-colors focus:border-black focus:outline-none"
+                                        className="w-full border border-gray-200 bg-white px-4 py-3 text-[12px] tracking-wide focus:border-black focus:outline-none"
                                     />
-                                    {errors.address && <p className="mt-2 text-[10px] text-red-500">{errors.address}</p>}
+                                    {errors.address && <p className="mt-1 text-[10px] text-red-500">{errors.address}</p>}
+
+                                    <input
+                                        type="text"
+                                        value={data.city}
+                                        onChange={(e) => setData('city', e.target.value)}
+                                        placeholder="Ville"
+                                        required
+                                        className="w-full border border-gray-200 bg-white px-4 py-3 text-[12px] tracking-wide focus:border-black focus:outline-none"
+                                    />
+                                    {errors.city && <p className="mt-1 text-[10px] text-red-500">{errors.city}</p>}
+
+                                    <input
+                                        type="text"
+                                        value={data.postal_code}
+                                        onChange={(e) => setData('postal_code', e.target.value)}
+                                        placeholder="Code postal"
+                                        required
+                                        className="w-full border border-gray-200 bg-white px-4 py-3 text-[12px] tracking-wide focus:border-black focus:outline-none"
+                                    />
+                                    {errors.postal_code && <p className="mt-1 text-[10px] text-red-500">{errors.postal_code}</p>}
+
+                                    <select
+                                        value={data.country}
+                                        onChange={(e) => setData('country', e.target.value)}
+                                        required
+                                        className="w-full border border-gray-200 bg-white px-4 py-3 text-[12px] tracking-wide focus:border-black focus:outline-none"
+                                    >
+                                        <option value="">Sélectionnez un pays</option>
+                                        <option value="FR">France</option>
+                                        <option value="BE">Belgique</option>
+                                        <option value="CH">Suisse</option>
+                                        <option value="US">États-Unis</option>
+                                    </select>
+                                    {errors.country && <p className="mt-1 text-[10px] text-red-500">{errors.country}</p>}
                                 </div>
 
                                 {/* Cashback info */}
@@ -124,7 +161,7 @@ export default function Checkout() {
                                     </div>
                                 )}
 
-                                {/* Paiement info */}
+                                {/* Paiement */}
                                 <div className="border border-gray-100 bg-white p-6">
                                     <h2 className="mb-4 text-[10px] font-black tracking-[0.3em] text-gray-500 uppercase">Paiement</h2>
                                     <div className="flex items-center gap-3 border border-gray-100 bg-[#faf8f4] p-4">
@@ -155,16 +192,12 @@ export default function Checkout() {
                                                     {item.image ? (
                                                         <img src={getImageUrl(item.image)} alt={item.name} className="h-full w-full object-contain" />
                                                     ) : (
-                                                        <div className="flex h-full w-full items-center justify-center text-[7px] font-bold text-gray-300">
-                                                            WEVA
-                                                        </div>
+                                                        <div className="flex h-full w-full items-center justify-center text-[7px] font-bold text-gray-300">WEVA</div>
                                                     )}
                                                 </div>
                                                 <div className="min-w-0 flex-1">
                                                     <p className="truncate text-[11px] font-semibold tracking-wide uppercase">{item.name}</p>
-                                                    <p className="text-[9px] tracking-wide text-gray-400 uppercase">
-                                                        {item.variant || 'Unique'} · Qté {item.quantity}
-                                                    </p>
+                                                    <p className="text-[9px] tracking-wide text-gray-400 uppercase">{item.variant || 'Unique'} · Qté {item.quantity}</p>
                                                 </div>
                                                 <p className="shrink-0 text-[12px] font-bold">
                                                     {item.wt_price > 0 ? (
