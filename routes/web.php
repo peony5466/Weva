@@ -1,19 +1,17 @@
 <?php
 
-use App\Http\Controllers\AddressController;
-use App\Http\Controllers\CartController;
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\MemberController;
-use App\Http\Controllers\OrderController;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\ShopController;
-use App\Http\Controllers\TokenController;
-use App\Models\Order;
-use App\Models\Product;
-use App\Models\User;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\ShopController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\MemberController;
+use App\Http\Controllers\TokenController;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Order;
+use App\Models\Product;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,28 +34,15 @@ Route::get('/', function () {
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/shop/{product:slug}', [ShopController::class, 'show'])->name('shop.show');
 
-// Détail produit
-Route::get('/product/{id}', function ($id) {
-    return Inertia::render('ProductDetail', [
-        'id' => $id,
-    ]);
-})->name('product.detail');
-
 Route::get('/client/token', function () {
     return Inertia::render('client/token');
 })->name('token.public');
 
 Route::get('/checkout', function () {
-    $cart = session()->get('cart', []);
-    $total = collect($cart)->sum(fn ($item) => $item['price'] * $item['quantity']);
-
-    $addresses = auth()->check()
-        ? auth()->user()->addresses()->orderBy('is_default', 'desc')->get()->toArray()
-        : [];
-
+    $cart  = session()->get('cart', []);
+    $total = collect($cart)->sum(fn($item) => $item['price'] * $item['quantity']);
     return Inertia::render('checkout/index', [
         'cartTotal' => $total,
-        'addresses' => $addresses,
     ]);
 })->name('checkout');
 
@@ -70,9 +55,9 @@ Route::patch('/cart/{key}', [CartController::class, 'update'])->name('cart.updat
 Route::post('/cart/clear', [CartController::class, 'clear'])->name('cart.clear');
 
 // Pages légales
-Route::get('/cgv', fn () => Inertia::render('legal/cgv'))->name('cgv');
-Route::get('/confidentialite', fn () => Inertia::render('legal/confidentialite'))->name('confidentialite');
-Route::get('/legal', fn () => Inertia::render('legal/mentions-legales'))->name('legal');
+Route::get('/cgv', fn() => Inertia::render('legal/cgv'))->name('cgv');
+Route::get('/confidentialite', fn() => Inertia::render('legal/confidentialite'))->name('confidentialite');
+Route::get('/legal', fn() => Inertia::render('legal/mentions-legales'))->name('legal');
 
 /*
 |--------------------------------------------------------------------------
@@ -82,90 +67,11 @@ Route::get('/legal', fn () => Inertia::render('legal/mentions-legales'))->name('
 Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/dashboard', function () {
-        if (Auth::user()->role !== 'admin') {
-            return redirect()->route('wevavip');
+        if (Auth::user()->role === 'admin') {
+            return Inertia::render('dashboard');
         }
-
-        // Stats
-        $citizens = User::count();
-
-        // Ventes en euros (commandes payées dont les produits ne sont pas WT exclusifs)
-        $totalSalesEuros = Order::whereIn('status', ['paid', 'completed'])
-            ->with('items.product')
-            ->get()
-            ->sum(function ($order) {
-                return $order->items->sum(function ($item) {
-                    $product = $item->product;
-                    if ($product && $product->is_exclusive && $product->wt_price) {
-                        return 0; // produit payé en WT, pas en euros
-                    }
-
-                    return $item->price * $item->quantity;
-                });
-            });
-
-        // Ventes en WT (commandes payées avec produits exclusifs)
-        $totalSalesWT = Order::whereIn('status', ['paid', 'completed'])
-            ->with('items.product')
-            ->get()
-            ->sum(function ($order) {
-                return $order->items->sum(function ($item) {
-                    $product = $item->product;
-                    if ($product && $product->is_exclusive && $product->wt_price) {
-                        return $product->wt_price * $item->quantity;
-                    }
-
-                    return 0;
-                });
-            });
-
-        $orders = Order::count();
-        $pending = Order::where('status', 'pending')->count();
-
-        // Logs (dernières commandes)
-        $logs = Order::with('user')
-            ->latest()
-            ->take(10)
-            ->get()
-            ->map(function ($order) {
-                $isWT = $order->items->contains(function ($item) {
-                    return $item->product && $item->product->is_exclusive && $item->product->wt_price;
-                });
-
-                return [
-                    'id' => $order->id,
-                    'order_number' => $order->order_number,
-                    'user' => $order->user?->name ?? 'Inconnu',
-                    'amount' => $isWT ? 0 : $order->total,
-                    'wt_amount' => $isWT ? $order->items->sum(function ($item) {
-                        $product = $item->product;
-
-                        return ($product && $product->is_exclusive && $product->wt_price)
-                            ? $product->wt_price * $item->quantity
-                            : 0;
-                    }) : 0,
-                    'points' => $order->points_earned ?? 0,
-                    'status' => $order->status,
-                    'date' => $order->created_at->format('d/m/Y'),
-                ];
-            });
-
-        return Inertia::render('dashboard', [
-            'stats' => [
-                'citizens' => $citizens,
-                'total_sales' => $totalSalesEuros,
-                'wt_sales' => $totalSalesWT,
-                'orders' => $orders,
-                'pending' => $pending,
-            ],
-            'logs' => $logs,
-        ]);
+        return redirect()->route('wevavip');
     })->name('dashboard');
-
-    Route::post('/addresses', [AddressController::class, 'store'])->name('addresses.store');
-    Route::put('/addresses/{address}', [AddressController::class, 'update'])->name('addresses.update');
-    Route::delete('/addresses/{address}', [AddressController::class, 'destroy'])->name('addresses.destroy');
-    Route::post('/addresses/{address}/default', [AddressController::class, 'setDefault'])->name('addresses.setDefault');
 
     /* --- ZONE ADMIN --- */
     Route::middleware(['role:admin'])->prefix('dashboard/admin')->name('admin.')->group(function () {
@@ -188,71 +94,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/users', [MemberController::class, 'store'])->name('users.store');
         Route::delete('/users/{user}', [MemberController::class, 'destroy'])->name('users.destroy');
 
-        Route::get('/orders', function () {
-            $orders = Order::with('user')
-                ->latest()
-                ->get()
-                ->map(function ($order) {
-                    $isWT = $order->items && $order->items->contains(function ($item) {
-                        return $item->product && $item->product->is_exclusive && $item->product->wt_price;
-                    });
-
-                    return [
-                        'id' => $order->id,
-                        'order_number' => $order->order_number,
-                        'user' => $order->user?->name ?? 'Inconnu',
-                        'user_email' => $order->email,
-                        'total' => $isWT ? 0 : $order->total,
-                        'wt_total' => $isWT ? $order->items->sum(function ($item) {
-                            $product = $item->product;
-
-                            return ($product && $product->is_exclusive && $product->wt_price)
-                                ? $product->wt_price * $item->quantity
-                                : 0;
-                        }) : 0,
-                        'status' => $order->status,
-                        'created_at' => $order->created_at->format('d/m/Y H:i'),
-                    ];
-                });
-
-            return Inertia::render('admin/orders/index', [
-                'orders' => $orders,
-            ]);
-        })->name('orders.index');
-
-        Route::get('/orders/{order_number}', function ($order_number) {
-            $order = Order::where('order_number', $order_number)
-                ->with(['user', 'items.product'])
-                ->firstOrFail();
-
-            return Inertia::render('admin/orders/show', [
-                'order' => $order,
-            ]);
-        })->name('orders.show');
+        Route::get('/orders', fn() => Inertia::render('admin/orders/index'))->name('orders.index');
     });
 
     /* --- ZONE CLIENT --- */
     Route::middleware(['role:client'])->group(function () {
 
-        Route::get('/dashboard/addresses', function () {
-            $addresses = auth()->user()->addresses()->orderBy('is_default', 'desc')->get();
-
-            return Inertia::render('client/addresses', [
-                'addresses' => $addresses,
-            ]);
-        })->name('client.addresses');
-
         Route::get('/dashboard/wevavip', function () {
-            $user = auth()->user();
-            $tokenService = new \App\Services\TokenService;
-            $progress = $tokenService->getProgress($user);
+            $user         = auth()->user();
+            $tokenService = new \App\Services\TokenService();
+            $progress     = $tokenService->getProgress($user);
             $recentOrders = Order::where('user_id', $user->id)
                 ->latest()
                 ->take(5)
                 ->get();
-
             return Inertia::render('client/wevavip', [
-                'progress' => $progress,
+                'progress'     => $progress,
                 'recentOrders' => $recentOrders,
             ]);
         })->name('wevavip');
@@ -261,34 +118,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('/dashboard/orders', function () {
             $orders = Order::where('user_id', auth()->id())
-                ->with('items.product')
                 ->latest()
                 ->get();
-
             return Inertia::render('client/orders/index', [
                 'orders' => $orders,
             ]);
         })->name('client.orders');
-
-        Route::get('/dashboard/orders/{order_number}', function ($order_number) {
-            $order = Order::where('order_number', $order_number)
-                ->where('user_id', auth()->id())
-                ->with('items.product')
-                ->firstOrFail();
-
-            return Inertia::render('client/orders/show', [
-                'order' => $order,
-            ]);
-        })->name('client.orders.show');
     });
 });
 
-Route::get('/dashboard/personalize', fn () => Inertia::render('client/customizer'))->name('avatar.customize');
+Route::get('/dashboard/personalize', fn() => Inertia::render('client/customizer'))->name('avatar.customize');
 
 /*
 |--------------------------------------------------------------------------
 | 3. AUTHENTIFICATION
 |--------------------------------------------------------------------------
 */
-require __DIR__.'/settings.php';
-require __DIR__.'/auth.php';
+require __DIR__ . '/settings.php';
+require __DIR__ . '/auth.php';

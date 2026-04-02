@@ -3,7 +3,7 @@ import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { Link, usePage } from '@inertiajs/react';
-import { Coins, Database, Layers, LayoutGrid, Package, ShoppingBag, UserCircle, Users } from 'lucide-react';
+import { Coins, Database, LayoutGrid, Layers, Package, ShoppingBag, UserCheck, UserCircle } from 'lucide-react';
 import AppLogo from './app-logo';
 
 export function AppSidebar() {
@@ -15,20 +15,27 @@ export function AppSidebar() {
 
     if (userRole === 'admin') {
         mainNavItems = [
-            { title: 'System Control', url: '/dashboard', icon: LayoutGrid },
-            { title: 'Inventory Log', url: '/dashboard/admin/products', icon: Package },
-            { title: 'Terminal Orders', url: '/dashboard/admin/orders', icon: ShoppingBag },
-            { title: 'Citizens', url: '/dashboard/admin/users', icon: Users },
-            { title: 'Categories', url: '/dashboard/admin/categories', icon: Layers },
+            { title: 'System Control',    url: route('dashboard'),              icon: LayoutGrid },
+            { title: 'Inventory Log',     url: route('admin.products.index'),   icon: Package },
+            { title: 'Core Categories',   url: route('admin.categories.index'), icon: Layers },
+            { title: 'Citizen Registry',  url: route('admin.users.index'),      icon: UserCheck },
+            { title: 'Terminal Orders',   url: route('admin.orders.index'),     icon: ShoppingBag },
         ];
     } else if (user) {
         mainNavItems = [
-            { title: 'Vip Protocol', url: '/dashboard/wevavip', icon: UserCircle },
-            // { title: 'Asset Vault', url: '/dashboard/tokens', icon: Coins },
-            { title: 'Historique des Commandes', url: '/dashboard/orders', icon: Database },
-            { title: 'Boutique', url: '/shop', icon: ShoppingBag },
+            { title: 'Vip Protocol',  url: route('wevavip'),          icon: UserCircle },
+            { title: 'Asset Vault',   url: route('tokens.my-wallet'), icon: Coins },
+            { title: 'Order History', url: route('client.orders'),    icon: Database },
+            { title: 'Boutique',      url: route('shop.index'),       icon: ShoppingBag },
+        ];
+    } else {
+        mainNavItems = [
+            { title: 'Access Boutique',  url: route('shop.index'), icon: ShoppingBag },
+            { title: 'Initialize Login', url: route('login'),       icon: UserCircle },
         ];
     }
+
+    const footerNavItems = [];
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -36,7 +43,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={user ? '/' : '/'} prefetch>
+                            <Link href={user ? route('dashboard') : route('home')} prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
@@ -49,7 +56,7 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={[]} className="mt-auto" />
+                <NavFooter items={footerNavItems} className="mt-auto" />
                 {user && <NavUser />}
             </SidebarFooter>
         </Sidebar>
