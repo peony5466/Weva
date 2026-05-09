@@ -16,6 +16,7 @@ export default function Register() {
         email: '',
         password: '',
         password_confirmation: '',
+        rgpd: false,
     });
 
     const submit = (e) => {
@@ -111,7 +112,35 @@ export default function Register() {
                                 <InputError message={errors.password_confirmation} />
                             </div>
 
-                            <Button type="submit" className="mt-2 w-full" tabIndex={5} disabled={processing}>
+                            {/* Case RGPD */}
+                            <div className="flex items-start gap-3">
+                                <input
+                                    id="rgpd"
+                                    type="checkbox"
+                                    checked={data.rgpd}
+                                    onChange={(e) => setData('rgpd', e.target.checked)}
+                                    disabled={processing}
+                                    className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-black"
+                                    tabIndex={5}
+                                />
+                                <label htmlFor="rgpd" className="cursor-pointer text-sm text-gray-600 dark:text-gray-400">
+                                    J'accepte la{' '}
+                                    <a
+                                        href="/confidentialite"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="font-medium text-black underline underline-offset-2 hover:opacity-70 dark:text-white"
+                                    >
+                                        politique de confidentialité
+                                    </a>{' '}
+                                    et le traitement de mes données personnelles conformément au RGPD.
+                                </label>
+                            </div>
+                            {errors.rgpd && (
+                                <p className="text-sm text-red-500">{errors.rgpd}</p>
+                            )}
+
+                            <Button type="submit" className="mt-2 w-full" tabIndex={6} disabled={processing || !data.rgpd}>
                                 {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
                                 Create account
                             </Button>

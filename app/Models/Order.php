@@ -20,6 +20,8 @@ class Order extends Model
         'stripe_payment_intent_id',
         'shipping_address',
         'email',
+        'payment_method',
+        'crypto_payment_id',
     ];
 
     // Relation : Une commande appartient à un utilisateur

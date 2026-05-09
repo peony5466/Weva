@@ -30,7 +30,7 @@ class RoleMiddleware
                 return redirect()->route('wevavip'); // ✅ route qui existe
             }
 
-            return redirect()->route('welcome');
+            abort(403, 'Accès non autorisé.');
         }
 
         return $next($request);

@@ -15,10 +15,18 @@ class DashboardTest extends TestCase
         $this->get('/dashboard')->assertRedirect('/login');
     }
 
-    public function test_authenticated_users_can_visit_the_dashboard()
+    public function test_admin_can_visit_the_dashboard()
     {
-        $this->actingAs($user = User::factory()->create());
+        $admin = User::factory()->create(['role' => 'admin']);
 
-        $this->get('/dashboard')->assertOk();
+        $this->actingAs($admin)->get('/dashboard')->assertOk();
+    }
+
+    public function test_client_is_redirected_from_admin_dashboard()
+    {
+        $client = User::factory()->create(['role' => 'client']);
+
+        // Le RoleMiddleware redirige les clients vers leur espace (wevavip)
+        $this->actingAs($client)->get('/dashboard')->assertRedirect();
     }
 }
