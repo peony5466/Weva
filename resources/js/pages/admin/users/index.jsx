@@ -122,7 +122,7 @@ export default function UserIndex({ users }) {
                                         {/* WALLET */}
                                         <td className="px-6 py-4 text-center">
                                             <span className="text-sm font-bold text-gray-300 font-mono italic">
-                                                {citizen.balance ?? 0} <span className="text-[10px] opacity-30 text-white">WT</span>
+                                                {citizen.points ?? 0} <span className="text-[10px] opacity-30 text-white">WT</span>
                                             </span>
                                         </td>
 

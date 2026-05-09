@@ -128,6 +128,16 @@ export default function Edit({ product, categories = [] }) {
                                         className={`h-2 w-2 rounded-full ${data.is_limited ? 'bg-amber-500 shadow-[0_0_10px_#f59e0b]' : 'bg-gray-800'}`}
                                     />
                                 </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setData('is_exclusive', !data.is_exclusive)}
+                                    className={`flex w-full items-center justify-between rounded-lg border p-4 transition-all ${data.is_exclusive ? 'border-purple-500/50 bg-purple-500/10 text-purple-400' : 'border-white/5 bg-white/5 text-gray-400'}`}
+                                >
+                                    <span className="text-[10px] font-black tracking-widest uppercase">WT_Exclusive</span>
+                                    <div
+                                        className={`h-2 w-2 rounded-full ${data.is_exclusive ? 'bg-purple-500 shadow-[0_0_10px_#a855f7]' : 'bg-gray-800'}`}
+                                    />
+                                </button>
                             </div>
                         </div>
 

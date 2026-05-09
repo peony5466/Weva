@@ -17,33 +17,16 @@ class TokenService
 {
     public const TOKENS_PER_EURO = 1;    // 1€ = 1 token
 
-    public const CASHBACK_THRESHOLD = 250;  // tokens requis
-
-    public const CASHBACK_PERCENT = 15;   // % de réduction
-
-    // ── Le user a-t-il droit au cashback ? ───────────────────────────────────
-    public function hasCashback(User $user): bool
-    {
-        return (int) $user->points >= self::CASHBACK_THRESHOLD;
-    }
-
-    // ── Calcule le pricing avec/sans cashback ─────────────────────────────────
-    // Appelé dans OrderController AVANT de créer la commande
     public function applyDiscount(User $user, float $subtotal): array
     {
-        $eligible = $this->hasCashback($user);
-        $pct = $eligible ? self::CASHBACK_PERCENT : 0;
-        $discountAmount = $eligible ? round($subtotal * $pct / 100, 2) : 0.0;
-        $total = round($subtotal - $discountAmount, 2);
-
         return [
-            'eligible' => $eligible,
-            'discount_percent' => $pct,
-            'discount_amount' => $discountAmount,
-            'subtotal' => $subtotal,
-            'total' => $total,
-            'points' => (int) $user->points,
-            'points_needed' => max(0, self::CASHBACK_THRESHOLD - (int) $user->points),
+            'eligible'         => false,
+            'discount_percent' => 0,
+            'discount_amount'  => 0.0,
+            'subtotal'         => $subtotal,
+            'total'            => $subtotal,
+            'points'           => (int) $user->points,
+            'points_needed'    => 0,
         ];
     }
 
@@ -82,17 +65,14 @@ class TokenService
     public function getProgress(User $user): array
     {
         $points = (int) $user->points;
-        $eligible = $points >= self::CASHBACK_THRESHOLD;
-        $progress = min(100, (int) round($points / self::CASHBACK_THRESHOLD * 100));
 
         return [
-            'points' => $points,
-            'threshold' => self::CASHBACK_THRESHOLD,
-            'eligible' => $eligible,
-            'cashback_percent' => self::CASHBACK_PERCENT,
-            'points_needed' => max(0, self::CASHBACK_THRESHOLD - $points),
-            'progress_percent' => $progress,
-            'total_spent' => (float) ($user->total_spent ?? 0),
+            'points'           => $points,
+            'eligible'         => false,
+            'cashback_percent' => 0,
+            'points_needed'    => 0,
+            'progress_percent' => 0,
+            'total_spent'      => (float) ($user->total_spent ?? 0),
         ];
     }
 

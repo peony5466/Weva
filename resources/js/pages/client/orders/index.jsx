@@ -60,7 +60,7 @@ export default function Orders({ orders = [] }) {
 
                             <div className="divide-y divide-gray-50">
                                 {orders.map(order => (
-                                    <div key={order.id} className="flex items-center justify-between px-6 py-5 hover:bg-[#faf8f4] transition-colors">
+                                    <Link key={order.id} href={route('client.orders.show', order.order_number)} className="flex items-center justify-between px-6 py-5 hover:bg-[#faf8f4] transition-colors">
                                         <div className="flex-1">
                                             <div className="flex items-center gap-3 mb-1">
                                                 <p className="text-[12px] font-black text-black uppercase tracking-wide">
@@ -83,18 +83,13 @@ export default function Orders({ orders = [] }) {
                                         </div>
                                         <div className="text-right flex items-center gap-4">
                                             <div>
-                                                {parseFloat(order.discount) > 0 && (
-                                                    <p className="text-[9px] text-green-600 font-bold">
-                                                        -{parseFloat(order.discount).toFixed(2)}€ cashback
-                                                    </p>
-                                                )}
                                                 <p className="text-[14px] font-black text-black">
                                                     {parseFloat(order.total).toFixed(2)}€
                                                 </p>
                                             </div>
                                             <ChevronRight className="w-4 h-4 text-gray-300" />
                                         </div>
-                                    </div>
+                                    </Link>
                                 ))}
                             </div>
                         </div>

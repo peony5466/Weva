@@ -2,11 +2,11 @@ import ClientLayout from '@/layouts/client-layout';
 import { Head, Link } from '@inertiajs/react';
 import { CheckCircle, Home, Package, Printer } from 'lucide-react';
 
-export default function Success({ order, tokensEarned = 0, cashbackApplied = 0 }) {
+export default function Success({ order, tokensEarned = 0 }) {
     const getImageUrl = (path) => {
         if (!path) return null;
         if (path.startsWith('http')) return path;
-        return `/images/${path}`;
+        return '/storage/' + path.replace(/^storage\//, '');
     };
 
     return (
@@ -33,13 +33,7 @@ export default function Success({ order, tokensEarned = 0, cashbackApplied = 0 }
                                 <p className="mb-1 text-[9px] tracking-[0.3em] text-gray-400 uppercase">Tokens gagnés</p>
                                 <p className="text-2xl font-black">+{tokensEarned} 🪙</p>
                             </div>
-                            {cashbackApplied > 0 && (
-                                <div className="text-right">
-                                    <p className="mb-1 text-[9px] tracking-[0.3em] text-gray-400 uppercase">Cashback appliqué</p>
-                                    <p className="text-xl font-black text-green-400">-{cashbackApplied}€</p>
-                                </div>
-                            )}
-                        </div>
+                            </div>
                     )}
 
                     {/* Order items */}
@@ -110,12 +104,6 @@ export default function Success({ order, tokensEarned = 0, cashbackApplied = 0 }
                                         <div className="flex justify-between text-[11px] font-bold tracking-wide text-amber-600 uppercase">
                                             <span>WT Total</span>
                                             <span>{wtTotal} WT</span>
-                                        </div>
-                                    )}
-                                    {parseFloat(order.discount) > 0 && (
-                                        <div className="flex justify-between text-[11px] font-bold tracking-wide text-green-600 uppercase">
-                                            <span>Cashback (-15%)</span>
-                                            <span>-{parseFloat(order.discount).toFixed(2)}€</span>
                                         </div>
                                     )}
                                     <div className="mt-2 flex justify-between border-t border-gray-200 pt-2 text-lg font-black tracking-tight text-black uppercase">

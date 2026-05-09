@@ -90,7 +90,7 @@ export default function OrderShow({ order }) {
                                         <div className="h-16 w-16 flex-shrink-0 overflow-hidden border border-white/10 bg-black">
                                             {item.product?.image_path ? (
                                                 <img
-                                                    src={`/images/${item.product.image_path}`}
+                                                    src={`/storage/${item.product.image_path.replace(/^storage\//, '')}`}
                                                     alt={item.product.name}
                                                     className="h-full w-full object-cover"
                                                 />

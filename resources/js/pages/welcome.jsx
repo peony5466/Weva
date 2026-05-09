@@ -1,11 +1,14 @@
+import { useState } from 'react';
 import { Head, usePage, Link } from '@inertiajs/react';
 import Navbar from '@/components/home/navbar';
 import HomePart from '@/components/home/homePart';
 import Footer from '@/components/home/footer';
 import ProductGrid from '@/components/product-grid';
+import CartDrawer from '@/components/ui/cart-drawer';
 
 export default function Welcome() {
     const { featuredProducts = [] } = usePage().props;
+    const [cartOpen, setCartOpen] = useState(false);
 
     return (
         <>
@@ -14,7 +17,8 @@ export default function Welcome() {
                 <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600,700" rel="stylesheet" />
             </Head>
 
-            <Navbar />
+            <Navbar onOpenCart={() => setCartOpen(true)} />
+            <CartDrawer open={cartOpen} setOpen={setCartOpen} />
             <HomePart />
 
             {/* Section nouveautés */}

@@ -105,40 +105,19 @@ export default function CreateProduct({ categories }) {
                                     </div>
 
                                     {/* SWITCH EXCLUSIF */}
-                                    <div
-                                        className={`rounded-lg border p-5 transition-all duration-500 ${data.is_exclusive ? 'border-amber-500/40 bg-amber-500/10 shadow-[0_0_15px_rgba(245,158,11,0.1)]' : 'border-white/5 bg-[#1A1A1A]'}`}
+                                    <button
+                                        type="button"
+                                        onClick={() => setData((prev) => ({
+                                            ...prev,
+                                            is_exclusive: !prev.is_exclusive,
+                                            price: !prev.is_exclusive ? '' : prev.price,
+                                            wt_price: !prev.is_exclusive ? prev.wt_price : '',
+                                        }))}
+                                        className={`flex w-full items-center justify-between rounded-lg border p-4 transition-all ${data.is_exclusive ? 'border-purple-500/50 bg-purple-500/10 text-purple-400' : 'border-white/5 bg-white/5 text-gray-400'}`}
                                     >
-                                        <div className="mb-4 flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <Sparkles className={`h-4 w-4 ${data.is_exclusive ? 'text-amber-500' : 'text-gray-600'}`} />
-                                                <label
-                                                    htmlFor="exclusive"
-                                                    className={`cursor-pointer text-[11px] font-black tracking-[0.2em] uppercase ${data.is_exclusive ? 'text-amber-500' : 'text-gray-500'}`}
-                                                >
-                                                    Exclusive_Vault
-                                                </label>
-                                            </div>
-                                            <input
-                                                type="checkbox"
-                                                id="exclusive"
-                                                checked={data.is_exclusive}
-                                                onChange={(e) => {
-                                                    setData((prev) => ({
-                                                        ...prev,
-                                                        is_exclusive: e.target.checked,
-                                                        price: e.target.checked ? '' : prev.price, // Reset prix fiat si exclusif
-                                                        wt_price: e.target.checked ? prev.wt_price : '', // Reset points si pas exclusif
-                                                    }));
-                                                }}
-                                                className="h-4 w-4 cursor-pointer accent-amber-500"
-                                            />
-                                        </div>
-                                        <p className="text-[9px] leading-relaxed text-gray-600 uppercase">
-                                            {data.is_exclusive
-                                                ? 'Asset will be tradeable only via WT Credits. Fiat currency disabled.'
-                                                : 'Standard transaction mode. Fiat currency enabled.'}
-                                        </p>
-                                    </div>
+                                        <span className="text-[10px] font-black tracking-widest uppercase">WT_Exclusive</span>
+                                        <div className={`h-2 w-2 rounded-full ${data.is_exclusive ? 'bg-purple-500 shadow-[0_0_10px_#a855f7]' : 'bg-gray-800'}`} />
+                                    </button>
                                 </div>
 
                                 <div className="space-y-6">

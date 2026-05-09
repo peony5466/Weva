@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
 use App\Models\TokenTransaction;
 use App\Services\TokenService;
 use Illuminate\Http\Request;
@@ -16,17 +17,14 @@ class TokenController extends Controller
      */
     public function wallet(Request $request)
     {
-        $user     = $request->user();
-        $progress = $this->tokenService->getProgress($user);
-        $history  = TokenTransaction::where('user_id', $user->id)
-                        ->with('order:id,order_number')
-                        ->latest()
-                        ->take(15)
-                        ->get();
+        $user   = $request->user();
+        $orders = Order::where('user_id', $user->id)
+                    ->latest()
+                    ->get(['order_number', 'total', 'points_earned', 'created_at']);
 
         return Inertia::render('client/mytoken', [
-            'progress' => $progress,
-            'history'  => $history,
+            'userPoints' => (int) $user->points,
+            'orders'     => $orders,
         ]);
     }
 }

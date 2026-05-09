@@ -38,11 +38,9 @@ return [
         'secret' => env('STRIPE_SECRET'),
     ],
 
-    'nowpayments' => [
-        'api_key'         => env('NOWPAYMENTS_API_KEY', ''),
-        'ipn_secret'      => env('NOWPAYMENTS_IPN_SECRET', ''),
-        'sandbox'         => env('NOWPAYMENTS_SANDBOX', false),
-        'sandbox_api_key' => env('NOWPAYMENTS_SANDBOX_KEY', ''),
+    'coinbase' => [
+        'api_key'    => env('COINBASE_COMMERCE_API_KEY', ''),
+        'webhook_secret' => env('COINBASE_COMMERCE_WEBHOOK_SECRET', ''),
     ],
 
 ];

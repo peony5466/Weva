@@ -80,35 +80,6 @@ export default function WevaVip({ progress = {}, recentOrders = [] }) {
                             ))}
                         </div>
 
-                        {/* Tokens progress */}
-                        <div className="border border-white/10 bg-[#111] p-6">
-                            <div className="mb-4 flex items-center justify-between">
-                                <div>
-                                    <p className="mb-1 text-[10px] font-black tracking-[0.3em] text-neutral-400 uppercase">Programme de fidélité</p>
-                                    <p className="text-xl font-black text-white">{points} / 250 tokens</p>
-                                </div>
-
-                            </div>
-
-                            {/* Barre */}
-                            <div className="mb-3 h-2 overflow-hidden rounded-full bg-[#222]">
-                                <div className="h-full rounded-full bg-white transition-all duration-1000" style={{ width: `${pct}%` }} />
-                            </div>
-
-                            <div className="flex justify-between">
-                                <span className="text-[9px] tracking-wide text-neutral-400 uppercase">{pct}% vers le cashback</span>
-                                <span className="text-[9px] tracking-wide text-neutral-400 uppercase">
-                                    {eligible ? '🎉 -15% actif !' : `encore ${needed} tokens`}
-                                </span>
-                            </div>
-
-                            {eligible && (
-                                <div className="mt-4 flex items-center justify-between bg-white p-4 text-black">
-                                    <p className="text-[11px] font-black tracking-[0.2em] uppercase">Cashback -15% activé</p>
-                                    <p className="text-[11px] font-light text-neutral-600">Appliqué automatiquement</p>
-                                </div>
-                            )}
-                        </div>
 
                         {/* Raccourcis */}
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">

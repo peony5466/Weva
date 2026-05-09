@@ -17,11 +17,10 @@ export default function ProductShow({ product }) {
     const isOutOfStock = totalStock <= 0;
 
     const getImageUrl = (imagePath) => {
-    if (!imagePath) return null;
-    if (imagePath.startsWith('http')) return imagePath;
-    if (imagePath.startsWith('images/')) return '/' + imagePath;
-    return '/images/' + imagePath;
-};
+        if (!imagePath) return null;
+        if (imagePath.startsWith('http')) return imagePath;
+        return '/storage/' + imagePath.replace(/^storage\//, '');
+    };
 
     const handleAddToBag = (e) => {
         e.preventDefault();

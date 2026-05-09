@@ -5,11 +5,10 @@ export default function ProductCard({ product }) {
     const isOutOfStock = totalStock <= 0;
 
     const getImageUrl = (imagePath) => {
-    if (!imagePath) return null;
-    if (imagePath.startsWith('http')) return imagePath;
-    if (imagePath.startsWith('images/')) return '/' + imagePath;
-    return '/images/' + imagePath;
-};
+        if (!imagePath) return null;
+        if (imagePath.startsWith('http')) return imagePath;
+        return '/storage/' + imagePath.replace(/^storage\//, '');
+    };
 
     return (
         <div className="group flex w-full flex-col bg-white">

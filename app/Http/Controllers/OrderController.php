@@ -144,25 +144,17 @@ class OrderController extends Controller
                 return redirect()->route('checkout.success', $order->order_number);
             }
 
-            // ── Paiement Crypto (NOWPayments) ────────────────────────────────
+            // ── Paiement Crypto (MetaMask / ETH) ─────────────────────────────
             if ($paymentMethod === 'crypto') {
-                $cryptoService = app(CryptoPaymentService::class);
-                $invoice = $cryptoService->createInvoice([
-                    'amount'       => max($total, 2), // NOWPayments minimum ~2€
-                    'order_number' => $order->order_number,
-                ]);
-
-                $order->update(['crypto_payment_id' => $invoice['payment_id']]);
-
-                return Inertia::location($invoice['invoice_url']);
+                $txHash = $request->input('tx_hash', 'METAMASK_' . strtoupper(uniqid()));
+                $order->update(['crypto_payment_id' => $txHash]);
+                return redirect()->route('checkout.success', $order->order_number);
             }
 
             // ── Paiement Stripe (carte bancaire) — flux existant ─────────────
             Stripe::setApiKey(config('services.stripe.secret'));
 
-            $description = $pricing['eligible']
-                ? "Cashback -15% appliqué ({$pricing['discount_amount']}€ économisés)"
-                : '1€ = 1 token · Encore '.$pricing['points_needed'].' tokens avant le cashback';
+            $description = 'Commande WEVA — 1€ = 1 token';
 
             $checkoutSession = Session::create([
                 'payment_method_types' => ['card'],

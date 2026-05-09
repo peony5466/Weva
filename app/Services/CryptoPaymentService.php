@@ -8,62 +8,55 @@ use Illuminate\Support\Facades\Log;
 class CryptoPaymentService
 {
     private string $apiKey;
-    private string $baseUrl;
+    private string $baseUrl = 'https://api.commerce.coinbase.com';
 
     public function __construct()
     {
-        $sandbox = config('services.nowpayments.sandbox', false);
-        $this->apiKey  = $sandbox
-            ? config('services.nowpayments.sandbox_api_key', '')
-            : config('services.nowpayments.api_key', '');
-        $this->baseUrl = $sandbox
-            ? 'https://api-sandbox.nowpayments.io/v1'
-            : 'https://api.nowpayments.io/v1';
+        $this->apiKey = config('services.coinbase.api_key', '');
     }
 
-    /**
-     * Crée une facture de paiement crypto via NOWPayments.
-     * Retourne ['invoice_url' => '...', 'payment_id' => '...'] ou lance une exception.
-     */
     public function createInvoice(array $params): array
     {
         $response = Http::withHeaders([
-            'x-api-key' => $this->apiKey,
-            'Content-Type' => 'application/json',
-        ])->post("{$this->baseUrl}/invoice", [
-            'price_amount'       => $params['amount'],
-            'price_currency'     => 'eur',
-            'order_id'           => $params['order_number'],
-            'order_description'  => "Commande WEVA #{$params['order_number']}",
-            'ipn_callback_url'   => route('crypto.webhook'),
-            'success_url'        => route('checkout.success', $params['order_number']),
-            'cancel_url'         => route('checkout'),
+            'X-CC-Api-Key'      => $this->apiKey,
+            'X-CC-Version'      => '2018-03-22',
+            'Content-Type'      => 'application/json',
+        ])->post("{$this->baseUrl}/charges", [
+            'name'        => "Commande WEVA #{$params['order_number']}",
+            'description' => "Paiement commande #{$params['order_number']}",
+            'pricing_type' => 'fixed_price',
+            'local_price' => [
+                'amount'   => number_format((float) $params['amount'], 2, '.', ''),
+                'currency' => 'EUR',
+            ],
+            'metadata' => [
+                'order_number' => $params['order_number'],
+            ],
+            'redirect_url' => route('checkout.success', $params['order_number']),
+            'cancel_url'   => route('checkout'),
         ]);
 
         if (! $response->successful()) {
-            Log::error('NOWPayments invoice error', ['body' => $response->body()]);
-            throw new \RuntimeException('Impossible de créer la facture crypto : '.$response->body());
+            Log::error('Coinbase Commerce charge error', ['body' => $response->body()]);
+            throw new \RuntimeException('Impossible de créer la facture crypto : ' . $response->body());
         }
 
-        $data = $response->json();
+        $data = $response->json('data');
 
         return [
-            'invoice_url' => $data['invoice_url'],
-            'payment_id'  => (string) $data['id'],
+            'invoice_url' => $data['hosted_url'],
+            'payment_id'  => $data['code'],
         ];
     }
 
-    /**
-     * Vérifie la signature IPN d'un webhook NOWPayments.
-     */
     public function verifyWebhookSignature(string $payload, string $signature): bool
     {
-        $secret = config('services.nowpayments.ipn_secret', '');
+        $secret = config('services.coinbase.webhook_secret', '');
         if (empty($secret)) {
-            return true; // Pas de secret configuré → on accepte (dev only)
+            return true;
         }
-        $expected = hash_hmac('sha512', $payload, $secret);
+        $expected = hash_hmac('sha256', $payload, $secret);
 
-        return hash_equals($expected, strtolower($signature));
+        return hash_equals($expected, $signature);
     }
 }

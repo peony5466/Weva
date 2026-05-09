@@ -13,16 +13,20 @@ class Product extends Model
         'slug',
         'description',
         'price',
+        'wt_price',
         'category_id',
         'is_limited',
+        'is_exclusive',
         'is_active',
         'image_path',
     ];
 
     protected $casts = [
-        'is_limited' => 'boolean',
-        'is_active'  => 'boolean',
-        'price'      => 'decimal:2',
+        'is_limited'   => 'boolean',
+        'is_exclusive' => 'boolean',
+        'is_active'    => 'boolean',
+        'price'        => 'decimal:2',
+        'wt_price'     => 'decimal:2',
     ];
 
     public function category(): BelongsTo

@@ -89,7 +89,7 @@ export default function ProductIndex({ products, filters }) {
                                                     <div className="h-12 w-10 flex-shrink-0 overflow-hidden border border-white/10 bg-[#1A1A1A]">
                                                         {product.image_path ? (
                                                             <img
-                                                                src={`/images/${product.image_path}`}
+                                                                src={`/storage/${product.image_path.replace(/^storage\//, '')}`}
                                                                 alt=""
                                                                 className="h-full w-full object-cover grayscale transition-all group-hover:grayscale-0"
                                                             />

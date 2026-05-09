@@ -15,8 +15,7 @@ export default function CartDrawer({ open, setOpen }) {
     const getImageUrl = (imagePath) => {
         if (!imagePath) return null;
         if (imagePath.startsWith('http')) return imagePath;
-        if (imagePath.startsWith('images/')) return '/' + imagePath;
-        return '/images/' + imagePath;
+        return '/storage/' + imagePath.replace(/^storage\//, '');
     };
 
     const totals = useMemo(() => {

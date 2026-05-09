@@ -57,8 +57,9 @@ Route::get('/checkout', function () {
         : [];
 
     return Inertia::render('checkout/index', [
-        'cartTotal' => $total,
-        'addresses' => $addresses,
+        'cartTotal'          => $total,
+        'addresses'          => $addresses,
+        'merchantEthAddress' => env('MERCHANT_ETH_ADDRESS', ''),
     ]);
 })->name('checkout');
 

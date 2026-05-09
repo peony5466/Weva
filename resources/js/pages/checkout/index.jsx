@@ -1,12 +1,12 @@
 import ClientLayout from '@/layouts/client-layout';
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { ethers } from 'ethers';
 import { Bitcoin, CreditCard, Mail, MapPin, ShieldCheck, Tag, Wallet } from 'lucide-react';
 import { useState } from 'react';
 
-// ── Icônes crypto inline ───────────────────────────────────────────────────────
 const CryptoIcons = () => (
     <div className="flex items-center gap-2">
-        {['BTC', 'ETH', 'USDT', 'BNB', 'SOL'].map((coin) => (
+        {['ETH'].map((coin) => (
             <span
                 key={coin}
                 className="rounded border border-gray-200 bg-[#faf8f4] px-2 py-0.5 text-[9px] font-bold tracking-wider text-gray-500"
@@ -14,11 +14,10 @@ const CryptoIcons = () => (
                 {coin}
             </span>
         ))}
-        <span className="text-[9px] text-gray-400">+60 coins</span>
+        <span className="text-[9px] text-gray-400">via MetaMask</span>
     </div>
 );
 
-// ── Méthodes disponibles ───────────────────────────────────────────────────────
 const PAYMENT_METHODS = [
     {
         id: 'stripe',
@@ -31,7 +30,7 @@ const PAYMENT_METHODS = [
     {
         id: 'crypto',
         label: 'Cryptomonnaie',
-        sublabel: 'BTC, ETH, USDT, BNB, SOL et +60 coins',
+        sublabel: 'Payer en ETH via MetaMask',
         icon: <Bitcoin className="h-4 w-4" />,
         badge: '₿',
         badgeBg: 'bg-orange-500',
@@ -46,12 +45,24 @@ const PAYMENT_METHODS = [
     },
 ];
 
+const CRYPTO_STATUS_LABELS = {
+    idle: null,
+    connecting: 'Connexion à MetaMask…',
+    fetching_price: 'Récupération du prix ETH…',
+    waiting: 'En attente de confirmation dans MetaMask…',
+    confirming: 'Transaction en cours de confirmation…',
+    error: 'Erreur — réessayez',
+};
+
 export default function Checkout() {
-    const { auth, cart, cartTotal = 0 } = usePage().props;
+    const { auth, cart, cartTotal = 0, merchantEthAddress = '' } = usePage().props;
     const user = auth?.user;
     const items = Object.values(cart || {});
 
     const [selectedMethod, setSelectedMethod] = useState('stripe');
+    const [cryptoStatus, setCryptoStatus] = useState('idle');
+    const [cryptoError, setCryptoError] = useState('');
+    const [ethAmount, setEthAmount] = useState(null);
 
     const fiatTotal =
         cartTotal ||
@@ -68,23 +79,102 @@ export default function Checkout() {
     }, 0);
 
     const pointsToEarn = Math.floor(fiatTotal);
-    const hasCashback = user && (user.points || 0) >= 250;
-    const discountAmount = hasCashback ? Math.round(fiatTotal * 0.15 * 100) / 100 : 0;
-    const finalTotal = fiatTotal - discountAmount;
+    const finalTotal = fiatTotal;
 
     const { data, setData, post, processing, errors } = useForm({
         email: user?.email || '',
         address: '',
         payment_method: 'stripe',
+        tx_hash: '',
     });
 
     const handleMethodSelect = (id) => {
         setSelectedMethod(id);
         setData('payment_method', id);
+        setCryptoStatus('idle');
+        setCryptoError('');
+        setEthAmount(null);
+    };
+
+    const handleMetaMaskPayment = async () => {
+        if (!window.ethereum) {
+            setCryptoError("MetaMask non détecté. Installez l'extension MetaMask dans votre navigateur.");
+            return;
+        }
+        if (!merchantEthAddress) {
+            setCryptoError('Adresse wallet marchande non configurée.');
+            return;
+        }
+        if (!data.address) {
+            setCryptoError('Veuillez renseigner votre adresse de livraison.');
+            return;
+        }
+
+        try {
+            setCryptoError('');
+            setCryptoStatus('connecting');
+
+            const provider = new ethers.BrowserProvider(window.ethereum);
+            await provider.send('eth_requestAccounts', []);
+            const signer = await provider.getSigner();
+
+            setCryptoStatus('fetching_price');
+            const res = await fetch(
+                'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=eur'
+            );
+            const priceData = await res.json();
+            const ethPriceInEur = priceData.ethereum.eur;
+            const eth = Math.max(finalTotal, 0.01) / ethPriceInEur;
+            const ethFormatted = eth.toFixed(8);
+            setEthAmount(ethFormatted);
+
+            setCryptoStatus('waiting');
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            const from = accounts[0];
+            const valueHex = '0x' + BigInt(Math.round(parseFloat(ethFormatted) * 1e18)).toString(16);
+
+            const txHash = await window.ethereum.request({
+                method: 'eth_sendTransaction',
+                params: [{
+                    from,
+                    to: merchantEthAddress,
+                    value: valueHex,
+                    gas: '0x5208', // 21000 gas fixe pour un transfer ETH
+                }],
+            });
+
+            setCryptoStatus('confirming');
+
+            // Soumettre la commande avec le hash de transaction
+            router.post(route('orders.store'), {
+                email: data.email,
+                address: data.address,
+                payment_method: 'crypto',
+                tx_hash: txHash,
+            }, {
+                onError: (err) => {
+                    setCryptoError('Erreur lors de la confirmation de commande.');
+                    setCryptoStatus('error');
+                    console.error(err);
+                },
+            });
+        } catch (err) {
+            console.error('MetaMask error:', err);
+            if (err.code === 4001) {
+                setCryptoError('Transaction refusée dans MetaMask.');
+            } else {
+                setCryptoError(err.message || 'Erreur MetaMask.');
+            }
+            setCryptoStatus('error');
+        }
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        if (selectedMethod === 'crypto') {
+            handleMetaMaskPayment();
+            return;
+        }
         post(route('orders.store'), {
             preserveScroll: true,
             onError: (err) => console.error('Checkout error:', err),
@@ -94,20 +184,26 @@ export default function Checkout() {
     const getImageUrl = (path) => {
         if (!path) return null;
         if (path.startsWith('http')) return path;
-        return `/images/${path}`;
+        return '/storage/' + path.replace(/^storage\//, '');
     };
 
-    // Label du bouton selon méthode
     const submitLabel = () => {
-        if (processing) return 'Traitement...';
+        if (cryptoStatus === 'connecting') return 'Connexion MetaMask…';
+        if (cryptoStatus === 'fetching_price') return 'Récupération prix ETH…';
+        if (cryptoStatus === 'waiting') return 'Confirmez dans MetaMask…';
+        if (cryptoStatus === 'confirming') return 'Confirmation en cours…';
+        if (processing) return 'Traitement…';
+
         const amountStr = fiatTotal > 0 ? `${finalTotal.toFixed(2)}€` : '';
         const wtStr = wtTotal > 0 ? `${wtTotal} WT` : '';
         const amount = [amountStr, wtStr].filter(Boolean).join(' / ');
 
-        if (selectedMethod === 'crypto') return `Payer en crypto ${amount ? `· ${amount}` : ''}`;
+        if (selectedMethod === 'crypto') return `Payer avec MetaMask${ethAmount ? ` · ${ethAmount} ETH` : ''}`;
         if (selectedMethod === 'points') return `Payer avec mes Points WT${wtStr ? ` · ${wtStr}` : ''}`;
         return `Payer ${amount}`;
     };
+
+    const isCryptoLoading = ['connecting', 'fetching_price', 'waiting', 'confirming'].includes(cryptoStatus);
 
     return (
         <ClientLayout>
@@ -115,7 +211,6 @@ export default function Checkout() {
 
             <div className="min-h-screen bg-[#faf8f4] pt-24 pb-20">
                 <div className="mx-auto max-w-5xl px-6">
-                    {/* Header */}
                     <div className="mb-12">
                         <p className="mb-2 text-[9px] font-bold tracking-[0.4em] text-gray-400 uppercase">
                             WEVA · Finaliser ma commande
@@ -127,7 +222,6 @@ export default function Checkout() {
                         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
                             {/* ── GAUCHE ── */}
                             <div className="space-y-6 lg:col-span-7">
-                                {/* Email (si non connecté) */}
                                 {!user && (
                                     <div className="border border-gray-100 bg-white p-6">
                                         <div className="mb-4 flex items-center gap-2">
@@ -150,7 +244,6 @@ export default function Checkout() {
                                     </div>
                                 )}
 
-                                {/* Adresse */}
                                 <div className="border border-gray-100 bg-white p-6">
                                     <div className="mb-4 flex items-center gap-2">
                                         <MapPin className="h-4 w-4 text-gray-400" />
@@ -171,40 +264,24 @@ export default function Checkout() {
                                     )}
                                 </div>
 
-                                {/* Cashback info */}
                                 {user && (
-                                    <div
-                                        className={`border p-5 ${hasCashback ? 'border-black bg-black text-white' : 'border-gray-100 bg-white'}`}
-                                    >
+                                    <div className="border border-gray-100 bg-white p-5">
                                         <div className="mb-2 flex items-center gap-2">
                                             <Tag className="h-4 w-4" />
                                             <h3 className="text-[10px] font-black tracking-[0.3em] uppercase">
                                                 Tokens WEVA
                                             </h3>
                                         </div>
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <p
-                                                    className={`text-[12px] font-semibold ${hasCashback ? 'text-white' : 'text-black'}`}
-                                                >
-                                                    {user.points || 0} tokens
-                                                </p>
-                                                <p
-                                                    className={`mt-0.5 text-[10px] ${hasCashback ? 'text-gray-300' : 'text-gray-400'}`}
-                                                >
-                                                    {hasCashback
-                                                        ? '🎉 Cashback -15% appliqué automatiquement'
-                                                        : `${250 - (user.points || 0)} tokens avant le cashback -15%`}
-                                                </p>
-                                            </div>
-                                            {hasCashback && (
-                                                <span className="text-2xl font-black text-green-400">-15%</span>
-                                            )}
-                                        </div>
+                                        <p className="text-[12px] font-semibold text-black">
+                                            {user.points || 0} tokens
+                                        </p>
+                                        <p className="mt-0.5 text-[10px] text-gray-400">
+                                            1€ dépensé = 1 token gagné
+                                        </p>
                                     </div>
                                 )}
 
-                                {/* ── Sélecteur de méthode de paiement ── */}
+                                {/* Méthodes de paiement */}
                                 <div className="border border-gray-100 bg-white p-6">
                                     <h2 className="mb-4 text-[10px] font-black tracking-[0.3em] text-gray-500 uppercase">
                                         Méthode de paiement
@@ -213,8 +290,7 @@ export default function Checkout() {
                                     <div className="space-y-3">
                                         {PAYMENT_METHODS.map((method) => {
                                             const isSelected = selectedMethod === method.id;
-                                            const isDisabled =
-                                                method.id === 'points' && wtTotal === 0;
+                                            const isDisabled = method.id === 'points' && wtTotal === 0;
 
                                             return (
                                                 <button
@@ -231,39 +307,24 @@ export default function Checkout() {
                                                     }`}
                                                 >
                                                     <div className="flex items-center gap-3">
-                                                        {/* Icône badge */}
                                                         <div
                                                             className={`flex h-8 w-8 shrink-0 items-center justify-center rounded ${
-                                                                isSelected
-                                                                    ? 'bg-white text-black'
-                                                                    : `${method.badgeBg} text-white`
+                                                                isSelected ? 'bg-white text-black' : `${method.badgeBg} text-white`
                                                             }`}
                                                         >
-                                                            <span className="text-[9px] font-black">
-                                                                {method.badge}
-                                                            </span>
+                                                            <span className="text-[9px] font-black">{method.badge}</span>
                                                         </div>
-
-                                                        {/* Texte */}
                                                         <div className="flex-1">
-                                                            <p
-                                                                className={`text-[12px] font-semibold ${isSelected ? 'text-white' : 'text-black'}`}
-                                                            >
+                                                            <p className={`text-[12px] font-semibold ${isSelected ? 'text-white' : 'text-black'}`}>
                                                                 {method.label}
                                                             </p>
-                                                            <p
-                                                                className={`text-[10px] ${isSelected ? 'text-gray-300' : 'text-gray-400'}`}
-                                                            >
+                                                            <p className={`text-[10px] ${isSelected ? 'text-gray-300' : 'text-gray-400'}`}>
                                                                 {method.sublabel}
                                                             </p>
                                                         </div>
-
-                                                        {/* Radio indicator */}
                                                         <div
                                                             className={`h-4 w-4 shrink-0 rounded-full border-2 ${
-                                                                isSelected
-                                                                    ? 'border-white bg-white'
-                                                                    : 'border-gray-300 bg-white'
+                                                                isSelected ? 'border-white bg-white' : 'border-gray-300 bg-white'
                                                             }`}
                                                         >
                                                             {isSelected && (
@@ -272,18 +333,15 @@ export default function Checkout() {
                                                         </div>
                                                     </div>
 
-                                                    {/* Détail crypto étendu */}
                                                     {method.id === 'crypto' && isSelected && (
                                                         <div className="mt-3 border-t border-gray-700 pt-3">
                                                             <CryptoIcons />
                                                             <p className="mt-2 text-[9px] text-gray-400">
-                                                                Vous serez redirigé vers NOWPayments pour finaliser
-                                                                le paiement. Taux en temps réel.
+                                                                MetaMask s'ouvrira pour confirmer le paiement en ETH. Taux en temps réel via CoinGecko.
                                                             </p>
                                                         </div>
                                                     )}
 
-                                                    {/* Détail points étendu */}
                                                     {method.id === 'points' && isSelected && wtTotal > 0 && (
                                                         <div className="mt-3 border-t border-gray-700 pt-3">
                                                             <p className="text-[10px] text-amber-400">
@@ -299,6 +357,17 @@ export default function Checkout() {
                                         })}
                                     </div>
 
+                                    {/* Status MetaMask */}
+                                    {selectedMethod === 'crypto' && cryptoStatus !== 'idle' && (
+                                        <div className={`mt-4 rounded p-3 text-[10px] font-bold tracking-wide ${
+                                            cryptoStatus === 'error'
+                                                ? 'bg-red-50 text-red-600'
+                                                : 'bg-orange-50 text-orange-600'
+                                        }`}>
+                                            {cryptoStatus === 'error' ? cryptoError : CRYPTO_STATUS_LABELS[cryptoStatus]}
+                                        </div>
+                                    )}
+
                                     {errors.payment_method && (
                                         <p className="mt-2 text-[10px] text-red-500">{errors.payment_method}</p>
                                     )}
@@ -312,7 +381,6 @@ export default function Checkout() {
                                         Récapitulatif
                                     </h2>
 
-                                    {/* Items */}
                                     <div className="mb-6 space-y-4">
                                         {items.map((item, i) => (
                                             <div key={i} className="flex items-center gap-3">
@@ -355,7 +423,6 @@ export default function Checkout() {
                                         ))}
                                     </div>
 
-                                    {/* Totaux */}
                                     <div className="space-y-2 border-t border-gray-100 pt-4">
                                         {fiatTotal > 0 && (
                                             <div className="flex justify-between text-[11px] text-gray-500">
@@ -373,30 +440,23 @@ export default function Checkout() {
                                             <span>Livraison</span>
                                             <span className="font-semibold text-green-600">Gratuite</span>
                                         </div>
-                                        {hasCashback && (
-                                            <div className="flex justify-between text-[11px] font-bold text-green-600">
-                                                <span>Cashback -15%</span>
-                                                <span>-{discountAmount.toFixed(2)}€</span>
+                                        {selectedMethod === 'crypto' && ethAmount && (
+                                            <div className="flex justify-between text-[11px] font-bold text-orange-500">
+                                                <span>≈ en ETH</span>
+                                                <span>{ethAmount} ETH</span>
                                             </div>
                                         )}
 
-                                        {/* Badge méthode sélectionnée */}
                                         <div className="flex justify-between text-[11px] text-gray-500">
                                             <span>Paiement</span>
-                                            <span
-                                                className={`rounded px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
-                                                    selectedMethod === 'crypto'
-                                                        ? 'bg-orange-100 text-orange-600'
-                                                        : selectedMethod === 'points'
-                                                          ? 'bg-amber-100 text-amber-600'
-                                                          : 'bg-gray-100 text-gray-600'
-                                                }`}
-                                            >
-                                                {selectedMethod === 'crypto'
-                                                    ? 'Crypto'
+                                            <span className={`rounded px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
+                                                selectedMethod === 'crypto'
+                                                    ? 'bg-orange-100 text-orange-600'
                                                     : selectedMethod === 'points'
-                                                      ? 'Points WT'
-                                                      : 'Stripe'}
+                                                      ? 'bg-amber-100 text-amber-600'
+                                                      : 'bg-gray-100 text-gray-600'
+                                            }`}>
+                                                {selectedMethod === 'crypto' ? 'MetaMask' : selectedMethod === 'points' ? 'Points WT' : 'Stripe'}
                                             </span>
                                         </div>
 
@@ -404,12 +464,8 @@ export default function Checkout() {
                                             <span>Total</span>
                                             <span>
                                                 {fiatTotal > 0 && <span>{finalTotal.toFixed(2)}€</span>}
-                                                {wtTotal > 0 && fiatTotal > 0 && (
-                                                    <span className="mx-2">/</span>
-                                                )}
-                                                {wtTotal > 0 && (
-                                                    <span className="text-amber-600">{wtTotal} WT</span>
-                                                )}
+                                                {wtTotal > 0 && fiatTotal > 0 && <span className="mx-2">/</span>}
+                                                {wtTotal > 0 && <span className="text-amber-600">{wtTotal} WT</span>}
                                             </span>
                                         </div>
                                         <p className="text-right text-[9px] text-gray-400">
@@ -417,12 +473,11 @@ export default function Checkout() {
                                         </p>
                                     </div>
 
-                                    {/* Submit */}
                                     <button
                                         type="submit"
-                                        disabled={processing || items.length === 0}
+                                        disabled={processing || items.length === 0 || isCryptoLoading}
                                         className={`mt-6 w-full py-4 text-[11px] font-black tracking-[0.4em] uppercase transition-all ${
-                                            processing || items.length === 0
+                                            processing || items.length === 0 || isCryptoLoading
                                                 ? 'cursor-not-allowed bg-gray-100 text-gray-400'
                                                 : selectedMethod === 'crypto'
                                                   ? 'bg-orange-500 text-white hover:bg-orange-600'
