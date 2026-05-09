@@ -81,14 +81,18 @@ class OrderController extends Controller
 
         // ── PAIEMENT : Stripe Checkout ───────────────────────────────────────────
         try {
-            // Récupérer l'adresse de livraison
-            $address = null;
-            if ($request->address_id) {
-                $address = \App\Models\Address::find($request->address_id);
-            }
+            // Construire l'adresse de livraison depuis les champs du formulaire
+            $firstName = $request->input('first_name', '');
+            $lastName  = $request->input('last_name', '');
+            $street    = $request->input('address', '');
+            $city      = $request->input('city', '');
+            $postal    = $request->input('postal_code', '');
+            $country   = $request->input('country', 'France');
+
+            $shippingAddress = trim("{$firstName} {$lastName}, {$street}, {$postal} {$city}, {$country}");
 
             $order = DB::transaction(function () use (
-                $user, $cart, $subtotal, $discount, $total, $address, $paymentMethod
+                $user, $cart, $subtotal, $discount, $total, $shippingAddress, $paymentMethod
             ) {
                 $newOrder = Order::create([
                     'user_id'          => $user->id,
@@ -100,7 +104,7 @@ class OrderController extends Controller
                     'points_earned'    => 0,
                     'status'           => 'pending_payment',
                     'payment_method'   => $paymentMethod,
-                    'shipping_address' => $address ? "{$address->address}, {$address->postal_code} {$address->city}, {$address->country}" : '',
+                    'shipping_address' => $shippingAddress,
                     'email'            => $user->email,
                 ]);
 

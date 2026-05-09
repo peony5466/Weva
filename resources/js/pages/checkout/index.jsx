@@ -83,7 +83,13 @@ export default function Checkout() {
 
     const { data, setData, post, processing, errors } = useForm({
         email: user?.email || '',
+        first_name: '',
+        last_name: '',
         address: '',
+        city: '',
+        postal_code: '',
+        country: 'France',
+        phone: '',
         payment_method: 'stripe',
         tx_hash: '',
     });
@@ -105,8 +111,8 @@ export default function Checkout() {
             setCryptoError('Adresse wallet marchande non configurée.');
             return;
         }
-        if (!data.address) {
-            setCryptoError('Veuillez renseigner votre adresse de livraison.');
+        if (!data.first_name || !data.last_name || !data.address || !data.city || !data.postal_code) {
+            setCryptoError('Veuillez compléter tous les champs de livraison obligatoires.');
             return;
         }
 
@@ -148,7 +154,13 @@ export default function Checkout() {
             // Soumettre la commande avec le hash de transaction
             router.post(route('orders.store'), {
                 email: data.email,
+                first_name: data.first_name,
+                last_name: data.last_name,
                 address: data.address,
+                city: data.city,
+                postal_code: data.postal_code,
+                country: data.country,
+                phone: data.phone,
                 payment_method: 'crypto',
                 tx_hash: txHash,
             }, {
@@ -251,17 +263,108 @@ export default function Checkout() {
                                             Adresse de livraison
                                         </h2>
                                     </div>
-                                    <textarea
-                                        value={data.address}
-                                        onChange={(e) => setData('address', e.target.value)}
-                                        placeholder="Numéro, rue, ville, code postal, pays"
-                                        required
-                                        rows={3}
-                                        className="w-full resize-none border border-gray-200 bg-white px-4 py-3 text-[12px] tracking-wide transition-colors focus:border-black focus:outline-none"
-                                    />
-                                    {errors.address && (
-                                        <p className="mt-2 text-[10px] text-red-500">{errors.address}</p>
-                                    )}
+                                    <div className="space-y-3">
+                                        {/* Prénom / Nom */}
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="mb-1 block text-[9px] font-bold tracking-widest text-gray-400 uppercase">Prénom *</label>
+                                                <input
+                                                    type="text"
+                                                    value={data.first_name}
+                                                    onChange={(e) => setData('first_name', e.target.value)}
+                                                    placeholder="Marie"
+                                                    required
+                                                    className="w-full border border-gray-200 bg-white px-4 py-3 text-[12px] tracking-wide transition-colors focus:border-black focus:outline-none"
+                                                />
+                                                {errors.first_name && <p className="mt-1 text-[9px] text-red-500">{errors.first_name}</p>}
+                                            </div>
+                                            <div>
+                                                <label className="mb-1 block text-[9px] font-bold tracking-widest text-gray-400 uppercase">Nom *</label>
+                                                <input
+                                                    type="text"
+                                                    value={data.last_name}
+                                                    onChange={(e) => setData('last_name', e.target.value)}
+                                                    placeholder="Dupont"
+                                                    required
+                                                    className="w-full border border-gray-200 bg-white px-4 py-3 text-[12px] tracking-wide transition-colors focus:border-black focus:outline-none"
+                                                />
+                                                {errors.last_name && <p className="mt-1 text-[9px] text-red-500">{errors.last_name}</p>}
+                                            </div>
+                                        </div>
+
+                                        {/* Adresse */}
+                                        <div>
+                                            <label className="mb-1 block text-[9px] font-bold tracking-widest text-gray-400 uppercase">Adresse *</label>
+                                            <input
+                                                type="text"
+                                                value={data.address}
+                                                onChange={(e) => setData('address', e.target.value)}
+                                                placeholder="12 rue de la Paix"
+                                                required
+                                                className="w-full border border-gray-200 bg-white px-4 py-3 text-[12px] tracking-wide transition-colors focus:border-black focus:outline-none"
+                                            />
+                                            {errors.address && <p className="mt-1 text-[9px] text-red-500">{errors.address}</p>}
+                                        </div>
+
+                                        {/* Code postal / Ville */}
+                                        <div className="grid grid-cols-5 gap-3">
+                                            <div className="col-span-2">
+                                                <label className="mb-1 block text-[9px] font-bold tracking-widest text-gray-400 uppercase">Code postal *</label>
+                                                <input
+                                                    type="text"
+                                                    value={data.postal_code}
+                                                    onChange={(e) => setData('postal_code', e.target.value)}
+                                                    placeholder="75001"
+                                                    required
+                                                    className="w-full border border-gray-200 bg-white px-4 py-3 text-[12px] tracking-wide transition-colors focus:border-black focus:outline-none"
+                                                />
+                                                {errors.postal_code && <p className="mt-1 text-[9px] text-red-500">{errors.postal_code}</p>}
+                                            </div>
+                                            <div className="col-span-3">
+                                                <label className="mb-1 block text-[9px] font-bold tracking-widest text-gray-400 uppercase">Ville *</label>
+                                                <input
+                                                    type="text"
+                                                    value={data.city}
+                                                    onChange={(e) => setData('city', e.target.value)}
+                                                    placeholder="Paris"
+                                                    required
+                                                    className="w-full border border-gray-200 bg-white px-4 py-3 text-[12px] tracking-wide transition-colors focus:border-black focus:outline-none"
+                                                />
+                                                {errors.city && <p className="mt-1 text-[9px] text-red-500">{errors.city}</p>}
+                                            </div>
+                                        </div>
+
+                                        {/* Pays / Téléphone */}
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label className="mb-1 block text-[9px] font-bold tracking-widest text-gray-400 uppercase">Pays *</label>
+                                                <select
+                                                    value={data.country}
+                                                    onChange={(e) => setData('country', e.target.value)}
+                                                    className="w-full border border-gray-200 bg-white px-4 py-3 text-[12px] tracking-wide transition-colors focus:border-black focus:outline-none"
+                                                >
+                                                    <option>France</option>
+                                                    <option>Belgique</option>
+                                                    <option>Suisse</option>
+                                                    <option>Luxembourg</option>
+                                                    <option>Canada</option>
+                                                    <option>Maroc</option>
+                                                    <option>Algérie</option>
+                                                    <option>Tunisie</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="mb-1 block text-[9px] font-bold tracking-widest text-gray-400 uppercase">Téléphone</label>
+                                                <input
+                                                    type="tel"
+                                                    value={data.phone}
+                                                    onChange={(e) => setData('phone', e.target.value)}
+                                                    placeholder="+33 6 00 00 00 00"
+                                                    className="w-full border border-gray-200 bg-white px-4 py-3 text-[12px] tracking-wide transition-colors focus:border-black focus:outline-none"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {user && (
