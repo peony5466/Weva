@@ -1,6 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { CheckCircle, ExternalLink } from 'lucide-react';
+import { getImageUrl } from '@/utils/image';
 
 export default function OrderShow({ order }) {
     const breadcrumbs = [
@@ -135,7 +136,7 @@ export default function OrderShow({ order }) {
                                         <div className="h-16 w-16 flex-shrink-0 overflow-hidden border border-white/10 bg-black">
                                             {item.product?.image_path ? (
                                                 <img
-                                                    src={`/storage/${item.product.image_path.replace(/^storage\//, '')}`}
+                                                    src={getImageUrl(item.product.image_path)}
                                                     alt={item.product.name}
                                                     className="h-full w-full object-cover"
                                                 />

@@ -1,14 +1,9 @@
 import { Link } from '@inertiajs/react';
+import { getImageUrl } from '@/utils/image';
 
 export default function ProductCard({ product }) {
     const totalStock = product.variants?.reduce((sum, v) => sum + v.stock, 0) ?? product.stock ?? 1;
     const isOutOfStock = totalStock <= 0;
-
-    const getImageUrl = (imagePath) => {
-        if (!imagePath) return null;
-        if (imagePath.startsWith('http')) return imagePath;
-        return '/storage/' + imagePath.replace(/^storage\//, '');
-    };
 
     return (
         <div className="group flex w-full flex-col bg-white">

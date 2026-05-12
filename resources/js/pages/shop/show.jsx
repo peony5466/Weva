@@ -3,6 +3,7 @@ import ClientLayout from '@/layouts/client-layout';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Bookmark, Minus, Plus } from 'lucide-react';
 import { useState } from 'react';
+import { getImageUrl } from '@/utils/image';
 
 export default function ProductShow({ product }) {
     const [cartOpen, setCartOpen] = useState(false);
@@ -15,12 +16,6 @@ export default function ProductShow({ product }) {
 
     const totalStock = product.variants?.reduce((sum, v) => sum + v.stock, 0) || 0;
     const isOutOfStock = totalStock <= 0;
-
-    const getImageUrl = (imagePath) => {
-        if (!imagePath) return null;
-        if (imagePath.startsWith('http')) return imagePath;
-        return '/storage/' + imagePath.replace(/^storage\//, '');
-    };
 
     const handleAddToBag = (e) => {
         e.preventDefault();

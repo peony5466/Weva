@@ -1,6 +1,7 @@
 import { useMemo, useEffect } from 'react'
 import { X, Trash2, Coins, CreditCard, ShoppingBag, Plus, Minus, AlertTriangle, PackageX } from 'lucide-react'
 import { Link, router, usePage } from '@inertiajs/react'
+import { getImageUrl } from '@/utils/image'
 
 export default function CartDrawer({ open, setOpen }) {
     const { cart, auth } = usePage().props;
@@ -12,11 +13,6 @@ export default function CartDrawer({ open, setOpen }) {
         return () => { document.body.style.overflow = ''; };
     }, [open]);
 
-    const getImageUrl = (imagePath) => {
-        if (!imagePath) return null;
-        if (imagePath.startsWith('http')) return imagePath;
-        return '/storage/' + imagePath.replace(/^storage\//, '');
-    };
 
     const totals = useMemo(() => {
         let fiat = 0, wt = 0;

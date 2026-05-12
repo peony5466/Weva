@@ -2,6 +2,7 @@ import ClientLayout from '@/layouts/client-layout';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { Bitcoin, CreditCard, Mail, MapPin, ShieldCheck, Tag, Wallet } from 'lucide-react';
 import { useState } from 'react';
+import { getImageUrl } from '@/utils/image';
 
 const CryptoIcons = () => (
     <div className="flex items-center gap-2">
@@ -130,12 +131,6 @@ export default function Checkout() {
             preserveScroll: true,
             onError: (err) => console.error('Checkout error:', err),
         });
-    };
-
-    const getImageUrl = (path) => {
-        if (!path) return null;
-        if (path.startsWith('http')) return path;
-        return '/storage/' + path.replace(/^storage\//, '');
     };
 
     const submitLabel = () => {

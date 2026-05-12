@@ -2,9 +2,10 @@ import AppLayout from '@/layouts/app-layout';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { AlertCircle, ArrowLeft, Layers, Package, Plus, Tag, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { getImageUrl } from '@/utils/image';
 
 export default function Edit({ product, categories = [] }) {
-    const [preview, setPreview] = useState(product.image_path ? `/storage/${product.image_path}` : null);
+    const [preview, setPreview] = useState(product.image_path ? getImageUrl(product.image_path) : null);
 
     // Initialisation
     const { data, setData, post, processing, errors, transform } = useForm({

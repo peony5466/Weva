@@ -2,6 +2,7 @@ import AppLayout from '@/layouts/app-layout';
 import { Head, Link, router } from '@inertiajs/react';
 import { CheckCircle2, Edit2, Image as ImageIcon, Search, Trash2, XCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { getImageUrl } from '@/utils/image';
 
 export default function ProductIndex({ products, filters }) {
     const [search, setSearch] = useState(filters?.search || '');
@@ -89,7 +90,7 @@ export default function ProductIndex({ products, filters }) {
                                                     <div className="h-12 w-10 flex-shrink-0 overflow-hidden border border-white/10 bg-[#1A1A1A]">
                                                         {product.image_path ? (
                                                             <img
-                                                                src={`/storage/${product.image_path.replace(/^storage\//, '')}`}
+                                                                src={getImageUrl(product.image_path)}
                                                                 alt=""
                                                                 className="h-full w-full object-cover grayscale transition-all group-hover:grayscale-0"
                                                             />

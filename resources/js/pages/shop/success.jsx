@@ -1,13 +1,9 @@
 import ClientLayout from '@/layouts/client-layout';
 import { Head, Link } from '@inertiajs/react';
 import { CheckCircle, Home, Package, Printer } from 'lucide-react';
+import { getImageUrl } from '@/utils/image';
 
 export default function Success({ order, tokensEarned = 0 }) {
-    const getImageUrl = (path) => {
-        if (!path) return null;
-        if (path.startsWith('http')) return path;
-        return '/storage/' + path.replace(/^storage\//, '');
-    };
 
     return (
         <ClientLayout>
