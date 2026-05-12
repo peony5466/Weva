@@ -1,20 +1,14 @@
 import ClientLayout from '@/layouts/client-layout';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { ethers } from 'ethers';
 import { Bitcoin, CreditCard, Mail, MapPin, ShieldCheck, Tag, Wallet } from 'lucide-react';
 import { useState } from 'react';
 
 const CryptoIcons = () => (
     <div className="flex items-center gap-2">
-        {['ETH'].map((coin) => (
-            <span
-                key={coin}
-                className="rounded border border-gray-200 bg-[#faf8f4] px-2 py-0.5 text-[9px] font-bold tracking-wider text-gray-500"
-            >
-                {coin}
-            </span>
-        ))}
-        <span className="text-[9px] text-gray-400">via MetaMask</span>
+        <span className="rounded border border-gray-200 bg-[#faf8f4] px-2 py-0.5 text-[9px] font-bold tracking-wider text-gray-500">
+            ETH
+        </span>
+        <span className="text-[9px] text-gray-400">Scan QR code · MetaMask Mobile, Coinbase Wallet…</span>
     </div>
 );
 
@@ -45,14 +39,6 @@ const PAYMENT_METHODS = [
     },
 ];
 
-const CRYPTO_STATUS_LABELS = {
-    idle: null,
-    connecting: 'Connexion à MetaMask…',
-    fetching_price: 'Récupération du prix ETH…',
-    waiting: 'En attente de confirmation dans MetaMask…',
-    confirming: 'Transaction en cours de confirmation…',
-    error: 'Erreur — réessayez',
-};
 
 export default function Checkout() {
     const { auth, cart, cartTotal = 0, merchantEthAddress = '' } = usePage().props;
@@ -60,9 +46,8 @@ export default function Checkout() {
     const items = Object.values(cart || {});
 
     const [selectedMethod, setSelectedMethod] = useState('stripe');
-    const [cryptoStatus, setCryptoStatus] = useState('idle');
     const [cryptoError, setCryptoError] = useState('');
-    const [ethAmount, setEthAmount] = useState(null);
+    const [fetchingPrice, setFetchingPrice] = useState(false);
 
     const fiatTotal =
         cartTotal ||
@@ -97,16 +82,11 @@ export default function Checkout() {
     const handleMethodSelect = (id) => {
         setSelectedMethod(id);
         setData('payment_method', id);
-        setCryptoStatus('idle');
         setCryptoError('');
-        setEthAmount(null);
+        setTxHashInput('');
     };
 
-    const handleMetaMaskPayment = async () => {
-        if (!window.ethereum) {
-            setCryptoError("MetaMask non détecté. Installez l'extension MetaMask dans votre navigateur.");
-            return;
-        }
+    const handleGenerateQR = async () => {
         if (!merchantEthAddress) {
             setCryptoError('Adresse wallet marchande non configurée.');
             return;
@@ -115,76 +95,35 @@ export default function Checkout() {
             setCryptoError('Veuillez compléter tous les champs de livraison obligatoires.');
             return;
         }
-
         try {
             setCryptoError('');
-            setCryptoStatus('connecting');
-
-            const provider = new ethers.BrowserProvider(window.ethereum);
-            await provider.send('eth_requestAccounts', []);
-            const signer = await provider.getSigner();
-
-            setCryptoStatus('fetching_price');
-            const res = await fetch(
-                'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=eur'
-            );
+            setFetchingPrice(true);
+            const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=eur');
             const priceData = await res.json();
             const ethPriceInEur = priceData.ethereum.eur;
             const eth = Math.max(finalTotal, 0.01) / ethPriceInEur;
             const ethFormatted = eth.toFixed(8);
-            setEthAmount(ethFormatted);
-
-            setCryptoStatus('waiting');
-            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            const from = accounts[0];
-            const valueHex = '0x' + BigInt(Math.round(parseFloat(ethFormatted) * 1e18)).toString(16);
-
-            const txHash = await window.ethereum.request({
-                method: 'eth_sendTransaction',
-                params: [{
-                    from,
-                    to: merchantEthAddress,
-                    value: valueHex,
-                    gas: '0x5208', // 21000 gas fixe pour un transfer ETH
-                }],
-            });
-
-            setCryptoStatus('confirming');
-
-            // Soumettre la commande avec le hash de transaction
+            // Soumettre la commande → redirect vers pending (QR affiché là-bas)
             router.post(route('orders.store'), {
-                email: data.email,
-                first_name: data.first_name,
-                last_name: data.last_name,
-                address: data.address,
-                city: data.city,
-                postal_code: data.postal_code,
-                country: data.country,
-                phone: data.phone,
+                ...data,
                 payment_method: 'crypto',
-                tx_hash: txHash,
+                eth_amount: ethFormatted,
             }, {
-                onError: (err) => {
-                    setCryptoError('Erreur lors de la confirmation de commande.');
-                    setCryptoStatus('error');
-                    console.error(err);
+                onError: () => {
+                    setCryptoError('Erreur lors de la création de commande.');
+                    setFetchingPrice(false);
                 },
             });
-        } catch (err) {
-            console.error('MetaMask error:', err);
-            if (err.code === 4001) {
-                setCryptoError('Transaction refusée dans MetaMask.');
-            } else {
-                setCryptoError(err.message || 'Erreur MetaMask.');
-            }
-            setCryptoStatus('error');
+        } catch {
+            setCryptoError('Impossible de récupérer le prix ETH. Réessayez.');
+            setFetchingPrice(false);
         }
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (selectedMethod === 'crypto') {
-            handleMetaMaskPayment();
+            handleGenerateQR();
             return;
         }
         post(route('orders.store'), {
@@ -200,22 +139,15 @@ export default function Checkout() {
     };
 
     const submitLabel = () => {
-        if (cryptoStatus === 'connecting') return 'Connexion MetaMask…';
-        if (cryptoStatus === 'fetching_price') return 'Récupération prix ETH…';
-        if (cryptoStatus === 'waiting') return 'Confirmez dans MetaMask…';
-        if (cryptoStatus === 'confirming') return 'Confirmation en cours…';
+        if (fetchingPrice) return 'Récupération du prix ETH…';
         if (processing) return 'Traitement…';
-
-        const amountStr = fiatTotal > 0 ? `${finalTotal.toFixed(2)}€` : '';
         const wtStr = wtTotal > 0 ? `${wtTotal} WT` : '';
+        const amountStr = fiatTotal > 0 ? `${finalTotal.toFixed(2)}€` : '';
         const amount = [amountStr, wtStr].filter(Boolean).join(' / ');
-
-        if (selectedMethod === 'crypto') return `Payer avec MetaMask${ethAmount ? ` · ${ethAmount} ETH` : ''}`;
+        if (selectedMethod === 'crypto') return 'Générer le QR code de paiement';
         if (selectedMethod === 'points') return `Payer avec mes Points WT${wtStr ? ` · ${wtStr}` : ''}`;
         return `Payer ${amount}`;
     };
-
-    const isCryptoLoading = ['connecting', 'fetching_price', 'waiting', 'confirming'].includes(cryptoStatus);
 
     return (
         <ClientLayout>
@@ -440,7 +372,7 @@ export default function Checkout() {
                                                         <div className="mt-3 border-t border-gray-700 pt-3">
                                                             <CryptoIcons />
                                                             <p className="mt-2 text-[9px] text-gray-400">
-                                                                MetaMask s'ouvrira pour confirmer le paiement en ETH. Taux en temps réel via CoinGecko.
+                                                                Un QR code sera généré. Scannez-le depuis votre wallet mobile pour payer en ETH.
                                                             </p>
                                                         </div>
                                                     )}
@@ -460,14 +392,9 @@ export default function Checkout() {
                                         })}
                                     </div>
 
-                                    {/* Status MetaMask */}
-                                    {selectedMethod === 'crypto' && cryptoStatus !== 'idle' && (
-                                        <div className={`mt-4 rounded p-3 text-[10px] font-bold tracking-wide ${
-                                            cryptoStatus === 'error'
-                                                ? 'bg-red-50 text-red-600'
-                                                : 'bg-orange-50 text-orange-600'
-                                        }`}>
-                                            {cryptoStatus === 'error' ? cryptoError : CRYPTO_STATUS_LABELS[cryptoStatus]}
+                                    {selectedMethod === 'crypto' && cryptoError && (
+                                        <div className="mt-4 rounded bg-red-50 p-3 text-[10px] font-bold tracking-wide text-red-600">
+                                            {cryptoError}
                                         </div>
                                     )}
 
@@ -543,12 +470,6 @@ export default function Checkout() {
                                             <span>Livraison</span>
                                             <span className="font-semibold text-green-600">Gratuite</span>
                                         </div>
-                                        {selectedMethod === 'crypto' && ethAmount && (
-                                            <div className="flex justify-between text-[11px] font-bold text-orange-500">
-                                                <span>≈ en ETH</span>
-                                                <span>{ethAmount} ETH</span>
-                                            </div>
-                                        )}
 
                                         <div className="flex justify-between text-[11px] text-gray-500">
                                             <span>Paiement</span>
@@ -559,7 +480,7 @@ export default function Checkout() {
                                                       ? 'bg-amber-100 text-amber-600'
                                                       : 'bg-gray-100 text-gray-600'
                                             }`}>
-                                                {selectedMethod === 'crypto' ? 'MetaMask' : selectedMethod === 'points' ? 'Points WT' : 'Stripe'}
+                                                {selectedMethod === 'crypto' ? 'Crypto QR' : selectedMethod === 'points' ? 'Points WT' : 'Stripe'}
                                             </span>
                                         </div>
 
@@ -578,9 +499,9 @@ export default function Checkout() {
 
                                     <button
                                         type="submit"
-                                        disabled={processing || items.length === 0 || isCryptoLoading}
+                                        disabled={processing || items.length === 0 || fetchingPrice}
                                         className={`mt-6 w-full py-4 text-[11px] font-black tracking-[0.4em] uppercase transition-all ${
-                                            processing || items.length === 0 || isCryptoLoading
+                                            processing || items.length === 0 || fetchingPrice
                                                 ? 'cursor-not-allowed bg-gray-100 text-gray-400'
                                                 : selectedMethod === 'crypto'
                                                   ? 'bg-orange-500 text-white hover:bg-orange-600'

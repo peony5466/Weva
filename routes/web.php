@@ -65,6 +65,9 @@ Route::get('/checkout', function () {
 
 Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
 Route::get('/checkout/success/{order_number}', [OrderController::class, 'success'])->name('checkout.success');
+Route::get('/checkout/pending/{order_number}', [OrderController::class, 'pending'])->name('checkout.pending');
+Route::get('/api/check-payment/{order_number}', [OrderController::class, 'checkPayment'])->name('orders.check-payment');
+Route::post('/admin/orders/{order_number}/confirm-crypto', [OrderController::class, 'confirmCrypto'])->name('orders.confirm-crypto')->middleware(['auth']);
 
 // Webhook NOWPayments — exempté CSRF car appelé par un service externe
 Route::post('/webhook/nowpayments', [CryptoPaymentController::class, 'webhook'])

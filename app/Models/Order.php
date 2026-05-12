@@ -22,6 +22,7 @@ class Order extends Model
         'email',
         'payment_method',
         'crypto_payment_id',
+        'eth_amount',
     ];
 
     // Relation : Une commande appartient à un utilisateur

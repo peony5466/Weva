@@ -10,6 +10,7 @@ use App\Services\CryptoPaymentService;
 use App\Services\TokenService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Inertia\Inertia;
 use Stripe\Checkout\Session;
 use Stripe\Stripe;
@@ -150,9 +151,9 @@ class OrderController extends Controller
 
             // ── Paiement Crypto (MetaMask / ETH) ─────────────────────────────
             if ($paymentMethod === 'crypto') {
-                $txHash = $request->input('tx_hash', 'METAMASK_' . strtoupper(uniqid()));
-                $order->update(['crypto_payment_id' => $txHash]);
-                return redirect()->route('checkout.success', $order->order_number);
+                $ethAmount = $request->input('eth_amount');
+                $order->update(['eth_amount' => $ethAmount]);
+                return redirect()->route('checkout.pending', $order->order_number);
             }
 
             // ── Paiement Stripe (carte bancaire) — flux existant ─────────────
@@ -188,6 +189,146 @@ class OrderController extends Controller
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Erreur : '.$e->getMessage()]);
         }
+    }
+
+    // ── CHECK PAYMENT : Polling Etherscan pour auto-confirmation ─────────────
+    public function checkPayment($order_number)
+    {
+        $order = Order::where('order_number', $order_number)->firstOrFail();
+
+        if ($order->status === 'paid') {
+            return response()->json(['status' => 'confirmed']);
+        }
+
+        if ($order->payment_method !== 'crypto' || !$order->eth_amount) {
+            return response()->json(['status' => 'pending']);
+        }
+
+        $merchantAddress = env('MERCHANT_ETH_ADDRESS');
+        $apiKey          = env('ETHERSCAN_API_KEY', '');
+        $expectedWei     = bcmul((string) $order->eth_amount, '1000000000000000000', 0);
+
+        $url = 'https://api.etherscan.io/api?' . http_build_query([
+            'module'  => 'account',
+            'action'  => 'txlist',
+            'address' => $merchantAddress,
+            'sort'    => 'desc',
+            'page'    => 1,
+            'offset'  => 20,
+            'apikey'  => $apiKey,
+        ]);
+
+        $response = Http::timeout(8)->get($url);
+
+        if (!$response->successful()) {
+            return response()->json(['status' => 'pending']);
+        }
+
+        $txs = $response->json('result') ?? [];
+
+        // Fenêtre : transactions des 20 dernières minutes
+        $since = now()->subMinutes(20)->timestamp;
+
+        foreach ($txs as $tx) {
+            if ((int) $tx['timeStamp'] < $since) continue;
+            if (strtolower($tx['to']) !== strtolower($merchantAddress)) continue;
+            if ($tx['isError'] !== '0') continue;
+
+            // Tolérance ±3% sur le montant
+            $received = (float) bcdiv($tx['value'], '1000000000000000000', 10);
+            $tolerance = (float) $order->eth_amount * 0.03;
+            if (abs($received - (float) $order->eth_amount) <= $tolerance) {
+                // Confirmer la commande
+                $order->update([
+                    'status'            => 'paid',
+                    'crypto_payment_id' => $tx['hash'],
+                ]);
+
+                if ($order->user_id) {
+                    $user         = User::find($order->user_id);
+                    $tokenService = new TokenService;
+
+                    $order->load('items.product');
+                    $wtTotal = $order->items->sum(function ($item) {
+                        $product = $item->product;
+                        if ($product && $product->is_exclusive && $product->wt_price) {
+                            return $product->wt_price * $item->quantity;
+                        }
+                        return 0;
+                    });
+
+                    if ($wtTotal > 0) {
+                        $tokenService->spendTokens($user, $wtTotal);
+                    }
+                    $tokenService->rewardOrderTokens($user, $order);
+                }
+
+                return response()->json([
+                    'status'       => 'confirmed',
+                    'tx_hash'      => $tx['hash'],
+                    'redirect'     => route('checkout.success', $order->order_number),
+                ]);
+            }
+        }
+
+        return response()->json(['status' => 'pending']);
+    }
+
+    // ── PENDING : Page d'attente après paiement crypto ───────────────────────
+    public function pending($order_number)
+    {
+        $order           = Order::where('order_number', $order_number)->firstOrFail();
+        $merchantAddress = env('MERCHANT_ETH_ADDRESS');
+        session()->forget('cart');
+
+        $qrUri = null;
+        if ($order->eth_amount && $merchantAddress) {
+            $wei   = bcmul((string) $order->eth_amount, '1000000000000000000', 0);
+            $qrUri = "ethereum:{$merchantAddress}?value={$wei}";
+        }
+
+        return Inertia::render('shop/pending', [
+            'order'           => $order,
+            'merchantAddress' => $merchantAddress,
+            'qrUri'           => $qrUri,
+        ]);
+    }
+
+    // ── CONFIRM CRYPTO : Admin confirme manuellement ─────────────────────────
+    public function confirmCrypto($order_number)
+    {
+        $order = Order::where('order_number', $order_number)
+            ->where('payment_method', 'crypto')
+            ->firstOrFail();
+
+        if ($order->status !== 'pending_payment') {
+            return back()->with('error', 'Cette commande est déjà traitée.');
+        }
+
+        $order->update(['status' => 'paid']);
+
+        $order->load('items.product');
+
+        if ($order->user_id) {
+            $user         = User::find($order->user_id);
+            $tokenService = new TokenService;
+
+            $wtTotal = $order->items->sum(function ($item) {
+                $product = $item->product;
+                if ($product && $product->is_exclusive && $product->wt_price) {
+                    return $product->wt_price * $item->quantity;
+                }
+                return 0;
+            });
+
+            if ($wtTotal > 0) {
+                $tokenService->spendTokens($user, $wtTotal);
+            }
+
+            $tokenService->rewardOrderTokens($user, $order);
+        }
+
+        return back()->with('success', 'Paiement crypto confirmé.');
     }
 
     // ── SUCCESS : Appelé après retour Stripe ─────────────────────────────────

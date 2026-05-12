@@ -1,5 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { CheckCircle, ExternalLink } from 'lucide-react';
 
 export default function OrderShow({ order }) {
     const breadcrumbs = [
@@ -34,12 +35,26 @@ export default function OrderShow({ order }) {
             return sum;
         }, 0) || 0;
 
+    const { flash } = usePage().props;
+    const isCryptoPending = order.payment_method === 'crypto' && order.status === 'pending_payment';
+
+    const confirmCrypto = () => {
+        router.post(route('orders.confirm-crypto', order.order_number));
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Order ${order.order_number} — WEVA Admin`} />
 
             <div className="min-h-screen bg-[#0A0A0A] p-6 text-white lg:p-10">
                 <div className="mx-auto max-w-5xl space-y-10">
+                    {/* FLASH */}
+                    {flash?.success && (
+                        <div className="flex items-center gap-2 border border-green-500/20 bg-green-500/10 px-4 py-3 text-[11px] font-bold text-green-400">
+                            <CheckCircle className="h-4 w-4" /> {flash.success}
+                        </div>
+                    )}
+
                     {/* HEADER */}
                     <div className="flex items-center justify-between">
                         <div>
@@ -55,6 +70,36 @@ export default function OrderShow({ order }) {
                             {order.status}
                         </span>
                     </div>
+
+                    {/* CRYPTO PENDING BANNER */}
+                    {isCryptoPending && (
+                        <div className="border border-orange-500/30 bg-orange-500/10 p-6">
+                            <p className="mb-1 text-[9px] font-bold tracking-[0.3em] text-orange-400 uppercase">
+                                Paiement crypto en attente de vérification
+                            </p>
+                            {order.crypto_payment_id && (
+                                <div className="mt-3 flex items-center gap-3">
+                                    <p className="flex-1 break-all font-mono text-[10px] text-neutral-400">
+                                        {order.crypto_payment_id}
+                                    </p>
+                                    <a
+                                        href={`https://etherscan.io/tx/${order.crypto_payment_id}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex shrink-0 items-center gap-1 text-[10px] font-bold text-orange-400 hover:text-orange-300"
+                                    >
+                                        Etherscan <ExternalLink className="h-3 w-3" />
+                                    </a>
+                                </div>
+                            )}
+                            <button
+                                onClick={confirmCrypto}
+                                className="mt-4 bg-orange-500 px-6 py-2 text-[10px] font-black tracking-[0.3em] text-white uppercase transition-colors hover:bg-orange-600"
+                            >
+                                ✓ Confirmer le paiement
+                            </button>
+                        </div>
+                    )}
 
                     {/* CLIENT INFO */}
                     <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
