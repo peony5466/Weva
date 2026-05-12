@@ -34,6 +34,8 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
+Route::get('/portfolio', fn () => Inertia::render('portfolio'))->name('portfolio');
+
 Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
 Route::get('/shop/{product:slug}', [ShopController::class, 'show'])->name('shop.show');
 
